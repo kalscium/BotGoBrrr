@@ -1,7 +1,7 @@
 {
-    "[rust]": {
-        "editor.formatOnSave": true,
-    },
+    "rust-analyzer.linkedProjects": [
+        "./Cargo.toml",
+    ],
     "rust-analyzer.checkOnSave.allTargets": false,
     "rust-analyzer.cargo.loadOutDirsFromCheck": true,
     "rust-analyzer.procMacro.enable": true,
