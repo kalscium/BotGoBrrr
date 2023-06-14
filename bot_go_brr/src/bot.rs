@@ -11,6 +11,32 @@ pub struct Bot {
 
 impl Robot for Bot {
     fn new(peripherals: Peripherals) -> Self {
+        // True before code before errors
+        list_ports([
+            &peripherals.port01,
+            &peripherals.port02,
+            &peripherals.port03,
+            &peripherals.port04,
+            &peripherals.port05,
+            &peripherals.port06,
+            &peripherals.port07,
+            &peripherals.port08,
+            &peripherals.port09,
+            &peripherals.port10,
+            &peripherals.port11,
+            &peripherals.port12,
+            &peripherals.port13,
+            &peripherals.port14,
+            &peripherals.port15,
+            &peripherals.port16,
+            &peripherals.port17,
+            &peripherals.port18,
+            &peripherals.port19,
+            &peripherals.port20,
+            &peripherals.port21,
+        ].iter());
+
+        // Robot init
         Self {
             drive: Mutex::new(Drive::new()),
             controller: peripherals.master_controller,

@@ -115,6 +115,9 @@ impl Drive {
                 Config::MOTORS.units,
                 Config::MOTORS.id_to_reverse(id),
             )
-        }.expect("Error: Could not configure / generate motor!")
+        }.unwrap_or_else(|_|
+            panic!("Error: Could not configure / generate motor id '{0}' at port '{1}'!", id, Config::MOTORS.id_to_port(id))
+        )
+        
     }
 }

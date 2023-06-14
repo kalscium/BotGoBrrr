@@ -3,16 +3,16 @@ use vex_rt::prelude::*;
 pub struct Config {}
 
 impl Config {
-    pub const TICK_SPEED: u64 = 500; // Robot update speed in milliseconds
-    pub const CONTROLLER_STICK_THRESHOLD: u8 = 10;
+    pub const TICK_SPEED: u64 = 200; // Robot update speed in milliseconds
+    pub const CONTROLLER_STICK_THRESHOLD: u8 = 30; // Controller sensitivity ?/127
 
     pub const MOTORS: MotorConfig = MotorConfig {
         units: EncoderUnits::Rotations,
 
-        motor1: 1,
-        motor2: 2,
-        motor3: 3,
-        motor4: 4,
+        motor1: 11,
+        motor2: 12,
+        motor3: 13,
+        motor4: 14,
 
         reverse1: false,
         reverse2: false,
