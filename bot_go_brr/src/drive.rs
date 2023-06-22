@@ -1,44 +1,56 @@
 use vex_rt::motor::Motor;
 use crate::config::Config;
+use crate::button::ButtonArg;
 
 #[derive(Debug)]
-pub enum Arg {
-    Forward,
-    Backward,
-    Left,
-    Right,
-    Stop,
-    Stall,
+pub enum DriveArg {
+    Forward(ButtonArg),
+    Backward(ButtonArg),
+    Left(ButtonArg),
+    Right(ButtonArg),
+    Stop(ButtonArg),
+    Stall(ButtonArg),
 }
 
-impl Arg {
+impl DriveArg {
     pub fn execute(&self, drive: &mut Drive) {
         match self {
-            Arg::Forward => drive.forwards(),
-            Arg::Backward => drive.backwards(),
-            Arg::Left => drive.left(),
-            Arg::Right => drive.right(),
-            Arg::Stop => drive.stop(),
-            Arg::Stall => (),
+            DriveArg::Forward(_) => drive.forwards(),
+            DriveArg::Backward(_) => drive.backwards(),
+            DriveArg::Left(_) => drive.left(),
+            DriveArg::Right(_) => drive.right(),
+            DriveArg::Stop(_) => drive.stop(),
+            DriveArg::Stall(_) => (),
         }
     }
 
     pub fn add(first: Self, second: Self) -> Self {
         match (first, second) {
-            (x, Arg::Stop) => x,
-            (Arg::Stop, y) => y,
-            (_, _) => Arg::Stall,
+            (x, DriveArg::Stop(_)) => x,
+            (DriveArg::Stop(_), y) => y,
+            (_, _) => DriveArg::Stall(ButtonArg::Null),
         }
     }
 
-    pub fn to_string(&self) -> &str {
+    pub fn to_string(&self) -> (&str, &str) {
         match self {
-            Arg::Forward => "Forward",
-            Arg::Backward => "Backward",
-            Arg::Left => "Left",
-            Arg::Right => "Right",
-            Arg::Stop => "Stop",
-            Arg::Stall => "Stall",
+            DriveArg::Forward(x) => ("Forward", x.to_string()),
+            DriveArg::Backward(x) => ("Backward", x.to_string()),
+            DriveArg::Left(x) => ("Left", x.to_string()),
+            DriveArg::Right(x) => ("Right", x.to_string()),
+            DriveArg::Stop(x) => ("Stop", x.to_string()),
+            DriveArg::Stall(x) => ("Stall", x.to_string()),
+        }
+    }
+
+    pub fn get_misc(&self) -> &ButtonArg {
+        match self {
+            DriveArg::Forward(x) => x,
+            DriveArg::Backward(x) => x,
+            DriveArg::Left(x) => x,
+            DriveArg::Right(x) => x,
+            DriveArg::Stop(x) => x,
+            DriveArg::Stall(x) => x,
         }
     }
 }
@@ -61,7 +73,7 @@ impl Drive {
         }
     }
 
-    pub fn drive(&mut self, arg: Arg) { arg.execute(self); }
+    pub fn drive(&mut self, arg: DriveArg) { arg.execute(self); }
 
     pub fn forwards(&mut self) {
         self.map(|x, _| x.move_i8(Drive::cal_volt(Config::FORWARD_SPEED)).unwrap());
@@ -118,6 +130,5 @@ impl Drive {
         }.unwrap_or_else(|_|
             panic!("Error: Could not configure / generate motor id '{0}' at port '{1}'!", id, Config::MOTORS.id_to_port(id))
         )
-        
     }
 }

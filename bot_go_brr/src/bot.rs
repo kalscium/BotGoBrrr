@@ -1,7 +1,7 @@
 use crate::drive::Drive;
 use core::time::Duration;
 use vex_rt::{prelude::*, select};
-use crate::{controller, drive::Arg, config::Config};
+use crate::{controller, drive::DriveArg, config::Config};
 use crate::utils::*;
 
 pub struct Bot {
@@ -60,8 +60,9 @@ impl Robot for Bot {
         let mut tick: u128 = 0;
         loop {
             // Update drive according to controller packet
-            let arg: Arg = controller::Packet::new(&self.controller).gen_arg();
-            log(&tick, "Movement Arg", arg.to_string());
+            let arg: DriveArg = controller::Packet::new(&self.controller).gen_arg();
+            let strings: (&str, &str) = arg.to_string();
+            log_extra(&tick, "Movement Arg", strings.0, strings.1);
             self.drive.lock().drive(arg);
 
             select! {

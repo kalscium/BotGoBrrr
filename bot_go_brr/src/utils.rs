@@ -5,6 +5,10 @@ pub fn log(tick: &u128, title: &str, body: &str) {
     println!("\x1b[35;1m[\x1b[0m{0}\x1b[35;1m] \x1b[0m{1}\x1b[35;1m => \x1b[0m{2}", *tick, title, body);
 }
 
+pub fn log_extra(tick: &u128, title: &str, body: &str, extra: &str) {
+    println!("\x1b[35;1m[\x1b[0m{0}\x1b[35;1m] \x1b[0m{1}\x1b[35;1m => \x1b[0m{2} \x1b[35;1m( \x1b[0m{3} \x1b[35;1m)\x1b[0m", *tick, title, body, extra);
+}
+
 pub fn list_ports(ports: Iter<&SmartPort>) {
     println!("\x1b[35;1m===( Port Mapping )===\x1b[0m");
 

@@ -8,5 +8,6 @@ mod config;
 pub mod bot;
 mod controller;
 mod utils;
+mod button;
 
 entry!(bot::Bot);

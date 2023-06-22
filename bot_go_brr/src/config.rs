@@ -9,10 +9,10 @@ impl Config {
     pub const MOTORS: MotorConfig = MotorConfig {
         units: EncoderUnits::Rotations,
 
-        motor1: 11,
-        motor2: 12,
-        motor3: 13,
-        motor4: 14,
+        motor1: 17,
+        motor2: 18,
+        motor3: 19,
+        motor4: 20,
 
         reverse1: false,
         reverse2: false,
@@ -20,10 +20,12 @@ impl Config {
         reverse4: false,
     };
 
+    pub const _FUCKED_PORTS: [u8; 5] = [6, 7, 8, 10, 11];
+
     // Robot speeds
-    pub const FORWARD_SPEED: i8 = 100;
-    pub const BACKWARD_SPEED: i8 = 80;
-    pub const TURN_SPEED: i8 = 50;
+    pub const FORWARD_SPEED: i8 = 100; // 100
+    pub const BACKWARD_SPEED: i8 = 80; // 80
+    pub const TURN_SPEED: i8 = 50; // 50
     pub const GEAR_RATIO: Gearset = Gearset::ThirtySixToOne;
 }
 
