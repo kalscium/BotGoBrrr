@@ -1,8 +1,7 @@
 use crate::drive::Drive;
 use core::time::Duration;
 use vex_rt::{prelude::*, select};
-use crate::{controller, drive::DriveArg, config::Config};
-use crate::utils::*;
+use crate::{controller, drive::DriveArg, config::{Config, RunMode}, algor::Algor, utils::*, button::ButtonArg, record::Record};
 
 pub struct Bot {
     drive: Mutex<Drive>,
@@ -52,15 +51,23 @@ impl Robot for Bot {
         // Write your autonomous routine here.
     }
 
-    fn opcontrol(&mut self, ctx: Context) {
-        println!("opcontrol");
+    
 
-        // This loop construct makes sure the drive is updated every 50 milliseconds.
+    fn opcontrol(&mut self, ctx: Context) {
+        // This loop construct makes sure the drive is updated every 200 milliseconds.
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u128 = 0;
+        let mut record: Record = Record::new(DriveArg::Stall(ButtonArg::Null));
         loop {
-            // Update drive according to controller packet
-            let arg: DriveArg = controller::Packet::new(&self.controller).gen_arg();
+            let arg: DriveArg = match Config::RUN_MODE {
+                RunMode::_Practice => controller::Packet::new(&self.controller).gen_arg(), // Update drive according to controller packet
+                RunMode::_Autonomous => Algor::get(Algor::AUTONOMOUS, tick), // Update drive according to Autonomous algorithm
+                // (Similar to practice)
+                RunMode::_Competition if tick <= Config::GAME_TIME as u128 => controller::Packet::new(&self.controller).gen_arg(), // Checks if competition time limit passed
+                RunMode::_Competition => quit(&tick, "Competition Time Limit Reached!"), // <else>
+                RunMode::_Record => record.record(controller::Packet::new(&self.controller).gen_arg()), // Records new packets and logs them
+            };
+            
             let strings: (&str, &str) = arg.to_string();
             log_extra(&tick, "Movement Arg", strings.0, strings.1);
             self.drive.lock().drive(arg);

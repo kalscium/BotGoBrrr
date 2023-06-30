@@ -43,7 +43,7 @@ impl DriveArg {
         }
     }
 
-    pub fn get_misc(&self) -> &ButtonArg {
+    pub fn get_button(&self) -> &ButtonArg {
         match self {
             DriveArg::Forward(x) => x,
             DriveArg::Backward(x) => x,
@@ -51,6 +51,17 @@ impl DriveArg {
             DriveArg::Right(x) => x,
             DriveArg::Stop(x) => x,
             DriveArg::Stall(x) => x,
+        }
+    }
+
+    pub const fn duplicate(&self) -> Self {
+        match self {
+            DriveArg::Forward(x) => DriveArg::Forward(x.duplicate()),
+            DriveArg::Backward(x) => DriveArg::Backward(x.duplicate()),
+            DriveArg::Left(x) => DriveArg::Left(x.duplicate()),
+            DriveArg::Right(x) => DriveArg::Right(x.duplicate()),
+            DriveArg::Stop(x) => DriveArg::Stop(x.duplicate()),
+            DriveArg::Stall(x) => DriveArg::Stall(x.duplicate()),
         }
     }
 }
@@ -73,7 +84,10 @@ impl Drive {
         }
     }
 
-    pub fn drive(&mut self, arg: DriveArg) { arg.execute(self); }
+    pub fn drive(&mut self, arg: DriveArg) {
+        arg.execute(self);
+        arg.get_button().execute();
+    }
 
     pub fn forwards(&mut self) {
         self.map(|x, _| x.move_i8(Drive::cal_volt(Config::FORWARD_SPEED)).unwrap());
@@ -117,7 +131,7 @@ impl Drive {
         f(&mut self.motor4, 4);
     }
 
-    fn cal_volt(speed: i8) -> i8 { (127i16 * speed as i16 / 100i16) as i8 }
+    fn cal_volt(speed: i8) -> i8 { (127i16 * speed as i16 / 100i16) as i8 } // Normalised speed from 1 - 100
 
     fn build_motor(id: u8) -> Motor {
         unsafe {

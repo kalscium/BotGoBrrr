@@ -52,6 +52,7 @@ pub struct Packet {
     left_stick: Stick,
     right_stick: Stick,
     button_x: bool,
+    button_b: bool,
 }
 
 impl Packet {
@@ -66,17 +67,19 @@ impl Packet {
                 controller.right_stick.get_y().unwrap(),
             ),
             button_x: controller.x.is_pressed().unwrap(),
+            button_b: controller.b.is_pressed().unwrap(),
         }
     }
 
     pub fn gen_arg(&self) -> DriveArg {
-        let left: DriveArg = self.left_stick.abs_arg(self.gen_misc());
-        let right: DriveArg = self.right_stick.abs_arg(self.gen_misc()); // Change later to relative arguments to gyro
+        let left: DriveArg = self.left_stick.abs_arg(self.gen_button());
+        let right: DriveArg = self.right_stick.abs_arg(self.gen_button()); // Change later to relative arguments to gyro
         DriveArg::add(left, right)
     }
 
-    pub fn gen_misc(&self) -> ButtonArg {
+    pub fn gen_button(&self) -> ButtonArg {
         if self.button_x { ButtonArg::X }
+        else if self.button_b { ButtonArg::Quit }
         else { ButtonArg::Null }
     }
 }

@@ -9,5 +9,7 @@ pub mod bot;
 mod controller;
 mod utils;
 mod button;
+mod algor;
+mod record;
 
 entry!(bot::Bot);

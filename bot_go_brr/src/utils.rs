@@ -18,3 +18,8 @@ pub fn list_ports(ports: Iter<&SmartPort>) {
         println!("    \x1b[35;1m- Port (\x1b[0m{0}\x1b[35;1m) => \x1b[0m{1:?}", i, port.plugged_type());
     }
 }
+
+pub fn quit<T>(tick: &u128, msg: &str) -> T {
+    log(tick, "Quiting...", msg);
+    unsafe { core::hint::unreachable_unchecked() };
+}
