@@ -1,7 +1,18 @@
+extern crate alloc;
+
 use crate::drive::Drive;
 use core::time::Duration;
 use vex_rt::{prelude::*, select};
-use crate::{controller, drive::DriveArg, config::{Config, RunMode}, algor::Algor, utils::*, button::ButtonArg, record::Record};
+use alloc::string::*;
+use crate::{
+    controller,
+    drive::DriveArg,
+    config::{Config, RunMode},
+    algor::Algor,
+    utils::*,
+    button::ButtonArg,
+    record::Record
+};
 
 pub struct Bot {
     drive: Mutex<Drive>,
@@ -44,6 +55,12 @@ impl Robot for Bot {
 
     fn initialize(&mut self, _ctx: Context) {
         // Do any extra initialization here.
+
+        // Init controller screen data
+        let screen: &mut vex_rt::controller::Screen = &mut self.controller.screen;
+        screen.print(0, 0, "=== Box Go Brr ===");
+        screen.print(1, 0, "tick: null");
+        screen.print(2, 0, "time: 0");
     }
 
     fn autonomous(&mut self, _ctx: Context) {
@@ -51,14 +68,15 @@ impl Robot for Bot {
         // Write your autonomous routine here.
     }
 
-    
-
     fn opcontrol(&mut self, ctx: Context) {
         // This loop construct makes sure the drive is updated every 200 milliseconds.
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u128 = 0;
         let mut record: Record = Record::new(DriveArg::Stall(ButtonArg::Null));
         loop {
+            self.update_screen(&tick);
+
+            // Movement
             let arg: DriveArg = match Config::RUN_MODE {
                 RunMode::_Practice => controller::Packet::new(&self.controller).gen_arg(), // Update drive according to controller packet
                 RunMode::_Autonomous => Algor::get(Algor::AUTONOMOUS, tick), // Update drive according to Autonomous algorithm
@@ -88,5 +106,15 @@ impl Robot for Bot {
     fn disabled(&mut self, _ctx: Context) {
         println!("disabled");
         // This runs when the robot is in disabled mode.
+    }
+}
+
+impl Bot {
+    pub fn update_screen(&mut self, tick: &u128) {
+        let screen = &mut self.controller.screen;
+        screen.clear_line(1);
+        screen.clear_line(2);
+        screen.print(1, 0, &(String::from("tick: ") + &tick.to_string()));
+        screen.print(2, 0, &(String::from("time: ") + &(*tick as f64 / Config::TICK_PER_SECOND_F64).to_string()));
     }
 }
