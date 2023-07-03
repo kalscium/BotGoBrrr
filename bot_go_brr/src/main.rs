@@ -11,5 +11,6 @@ mod utils;
 mod button;
 mod algor;
 mod record;
+mod relative;
 
 entry!(bot::Bot);

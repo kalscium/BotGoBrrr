@@ -1,3 +1,5 @@
+extern crate alloc;
+
 use vex_rt::motor::Motor;
 use crate::config::Config;
 use crate::button::ButtonArg;
@@ -32,7 +34,7 @@ impl DriveArg {
         }
     }
 
-    pub fn to_string(&self) -> (&str, &str) {
+    pub fn to_strings(&self) -> (&str, &str) {
         match self {
             DriveArg::Forward(x) => ("Forward", x.to_string()),
             DriveArg::Backward(x) => ("Backward", x.to_string()),
@@ -41,6 +43,19 @@ impl DriveArg {
             DriveArg::Stop(x) => ("Stop", x.to_string()),
             DriveArg::Stall(x) => ("Stall", x.to_string()),
         }
+    }
+
+    pub fn log(&self, tick: &u128) {
+        use crate::utils::Log::*;
+        let (name, button) = self.to_strings();
+        Base(
+            tick,
+            "Drive Arg",
+            &List(
+                &Title(name), "",
+                &Wrap("(", &Title(button), ")"),
+            )
+        ).log();
     }
 
     pub fn get_button(&self) -> &ButtonArg {

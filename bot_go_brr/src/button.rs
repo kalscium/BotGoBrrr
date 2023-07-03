@@ -24,7 +24,7 @@ impl ButtonArg {
         }
     }
 
-    pub fn stop() {
+    pub fn stop() { // Stops all button activities
     }
 
     pub fn execute(&self) {

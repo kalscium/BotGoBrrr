@@ -1,5 +1,7 @@
+extern crate alloc;
+
 use crate::drive::DriveArg;
-use crate::utils::log_extra;
+use alloc::string::ToString;
 
 pub struct Record {
     arg: DriveArg,
@@ -20,15 +22,25 @@ impl Record {
     }
     
     pub fn record(&mut self, arg: DriveArg) -> DriveArg {
-        if self.arg.to_string() == arg.to_string() { self.held += 1 }
+        if self.arg.to_strings() == arg.to_strings() { self.held += 1 }
         else {
-            self.release();
+            self.log();
             self.clear(arg.duplicate());
         }; arg
     }
 
-    pub fn release(&self) {
-        let arg: (&str, &str) = self.arg.to_string();
-        log_extra(&(self.held as u128), "Record", arg.0, arg.1);
+    pub fn log(&self) {
+        use crate::utils::Log::*;
+        let (name, button) = self.arg.to_strings();
+        List(
+            &Wrap("[", &List(
+                &Title("held"), ": ",
+                &String(self.held.to_string()),
+            ), "]"), " ",
+            &List(
+                &Title(name), "",
+                &Wrap("(", &Title(button), ")"),
+            ),
+        ).log();
     }
 }

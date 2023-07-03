@@ -1,21 +1,66 @@
+extern crate alloc;
+
 use core::slice::Iter;
 use vex_rt::prelude::*;
+use alloc::{fmt::format, string::{ToString, String}};
 
-pub fn log(tick: &u128, title: &str, body: &str) {
-    println!("\x1b[35;1m[\x1b[0m{0}\x1b[35;1m] \x1b[0m{1}\x1b[35;1m => \x1b[0m{2}", *tick, title, body);
+pub enum Log<'a> {
+    String(String), // basic string
+    Str(&'a str), // basic str
+    Base(&'a u128, &'a str, &'a Log<'a>), // Base of every log ( tick, title, body )
+    Wrap(&'a str, &'a Log<'a>, &'a str), // wrapping eg. '['value']'
+    List(&'a Log<'a>, &'a str, &'a Log<'a>), // List with separator
+    Title(&'a str), // Blue title
+    Void,
 }
 
-pub fn log_extra(tick: &u128, title: &str, body: &str, extra: &str) {
-    println!("\x1b[35;1m[\x1b[0m{0}\x1b[35;1m] \x1b[0m{1}\x1b[35;1m => \x1b[0m{2} \x1b[35;1m( \x1b[0m{3} \x1b[35;1m)\x1b[0m", *tick, title, body, extra);
+impl<'a> Log<'a> {
+    pub fn to_string(&self) -> String {
+        use Log::*;
+        match self {
+            // basic
+            String(x) => x.clone(),
+            Str(x) => x.to_string(),
+            Title(x) => Self::blue(x),
+            Void => alloc::string::String::new(),
+
+            // not basic
+            Wrap(a, log, b) => format(format_args!( "{0} {1} {2}", Self::pink(a), log.to_string(), Self::pink(b) )),
+            Base(tick, title, body) => format(format_args!( "{0} {1} {2} {3}", Wrap("[", &String(tick.to_string()), "]").to_string(), Self::blue(title), Self::pink("=>"), body.to_string())),
+            List(x, sep, y) => format(format_args!( "{0}{1}{2}", x.to_string(), Self::pink(sep), y.to_string())),
+        }
+    }
+
+    pub fn log(self) {
+        println!("{}", self.to_string());
+    }
+
+    // colours
+    fn colour(log: &str, colour: &str) -> String {
+        format(format_args!( "{colour}{log}\x1b[0m" ))
+    }
+
+    fn blue(log: &str) -> String { Self::colour(log, "\x1b[34m") }
+    fn pink(log: &str) -> String { Self::colour(log, "\x1b[35;1m") }
+}
+
+pub fn log(tick: &u128, title: &str, body: &str) {
+    use Log::*;
+    Base(tick, title, &Str(body)).log();
 }
 
 pub fn list_ports(ports: Iter<&SmartPort>) {
-    println!("\x1b[35;1m===( Port Mapping )===\x1b[0m");
+    use Log::*;
+    Wrap("===(", &Title("Port Mapping"), ")===").log();
 
-    let mut i: u8 = 0;
-    for port in ports {
-        i += 1;
-        println!("    \x1b[35;1m- Port (\x1b[0m{0}\x1b[35;1m) => \x1b[0m{1:?}", i, port.plugged_type());
+    for (i, port) in ports.enumerate() {
+        List(
+            &List(
+                &List(&Void, "- ", &Title("Port")), "",
+                &Wrap("(", &String((i + 1).to_string()), ")"),
+            ), " => ",
+            &String(format(format_args!("{:?}", port.plugged_type()))),
+        ).log();
     }
 }
 

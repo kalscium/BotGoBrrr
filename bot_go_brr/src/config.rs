@@ -6,7 +6,12 @@ impl Config {
     pub const TICK_SPEED: u64 = 200; // Robot update speed in milliseconds
     pub const GAME_TIME: u64 = 2 * 61 * Config::TICK_PER_SECOND; // Ticks within a competition
     pub const TICK_PER_SECOND: u64 = 1000 / Config::TICK_SPEED;
+    pub const TICK_PER_SECOND_F64: f64 = Config::TICK_PER_SECOND as f64;
     pub const CONTROLLER_STICK_THRESHOLD: u8 = 30; // Controller sensitivity ?/127
+    
+    // Logging stuff
+    pub const LOG_DRIVE_ARG: bool = true;
+    pub const LOG_REL_ROTATION: bool = true;
 
     pub const MOTORS: MotorConfig = MotorConfig {
         units: EncoderUnits::Rotations,
@@ -23,6 +28,10 @@ impl Config {
     };
 
     pub const _FUCKED_PORTS: [u8; 5] = [6, 7, 8, 10, 11]; // Ports that don't work
+
+    pub const ROTATION_THRESHOLD: u8 = 5; // Exactness of relative turning ( in degrees )
+    // Assumes that turning is constant
+    pub const DEGREES_PER_TICK: i16 = 2; // Amount of degrees per tick of turning
 
     // Robot speeds
     pub const FORWARD_SPEED: i8 = 100; // 100 / 100

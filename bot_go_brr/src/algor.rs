@@ -38,9 +38,10 @@ impl Algor {
 
     pub const fn repeat(self, arg: DriveArg, ticks: u8) -> Self {
         let mut algor = self;
-        let i: u8 = 0;
+        let mut i: u8 = 0;
         while i <= ticks {
             algor = algor.add(arg.duplicate());
+            i += 1;
         };
         algor
     }
@@ -48,7 +49,7 @@ impl Algor {
     pub const fn stop(self, arg: ButtonArg, ticks: u8) -> Self { self.repeat(DriveArg::Stop(arg), ticks) }
     pub const fn stall(self, arg: ButtonArg, ticks: u8) -> Self { self.repeat(DriveArg::Stall(arg), ticks) }
 
-    pub fn get(this: Self, tick: u128) -> DriveArg {
+    pub fn get(this: &Self, tick: u128) -> DriveArg {
         let mut item: &Item = this.item();
         let mut i: u128 = 0;
         while i < tick {
