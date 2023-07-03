@@ -2,7 +2,7 @@ extern crate alloc;
 
 use core::slice::Iter;
 use vex_rt::prelude::*;
-use alloc::{fmt::format, string::{ToString, String}};
+use alloc::{fmt::{format, Display, self}, string::{ToString, String}};
 
 pub enum Log<'a> {
     String(String), // basic string
@@ -14,23 +14,29 @@ pub enum Log<'a> {
     Void,
 }
 
-impl<'a> Log<'a> {
-    pub fn to_string(&self) -> String {
+impl<'a> Display for Log<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use Log::*;
-        match self {
-            // basic
-            String(x) => x.clone(),
-            Str(x) => x.to_string(),
-            Title(x) => Self::blue(x),
-            Void => alloc::string::String::new(),
+        write!(
+            f,
+            "{}",
+            match self {
+                // basic
+                String(x) => x.clone(),
+                Str(x) => x.to_string(),
+                Title(x) => Self::blue(x),
+                Void => alloc::string::String::new(),
 
-            // not basic
-            Wrap(a, log, b) => format(format_args!( "{0} {1} {2}", Self::pink(a), log.to_string(), Self::pink(b) )),
-            Base(tick, title, body) => format(format_args!( "{0} {1} {2} {3}", Wrap("[", &String(tick.to_string()), "]").to_string(), Self::blue(title), Self::pink("=>"), body.to_string())),
-            List(x, sep, y) => format(format_args!( "{0}{1}{2}", x.to_string(), Self::pink(sep), y.to_string())),
-        }
+                // not basic
+                Wrap(a, log, b) => format(format_args!( "{0} {1} {2}", Self::pink(a), log, Self::pink(b) )),
+                Base(tick, title, body) => format(format_args!( "{0} {1} {2} {3}", Wrap("[", &String(tick.to_string()), "]"), Self::blue(title), Self::pink("=>"), body)),
+                List(x, sep, y) => format(format_args!( "{0}{1}{2}", x, Self::pink(sep), y)),
+            }
+        )
     }
+}
 
+impl<'a> Log<'a> {
     pub fn log(self) {
         println!("{}", self.to_string());
     }

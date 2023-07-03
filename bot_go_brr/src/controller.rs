@@ -14,8 +14,8 @@ pub struct Stick {
 impl Stick {
     pub fn new(x: i8, y: i8) -> Self {
         Self {
-            abs_x: x.abs() as u8,
-            abs_y: y.abs() as u8,
+            abs_x: x.unsigned_abs(),
+            abs_y: y.unsigned_abs(),
             pos_x: x > -1i8,
             pos_y: y > -1i8,
         }
@@ -25,10 +25,8 @@ impl Stick {
         if self.abs_x > Config::CONTROLLER_STICK_THRESHOLD {
             if self.abs_y > Config::CONTROLLER_STICK_THRESHOLD { 3 }
             else { 1 }
-        } else {
-            if self.abs_y > Config::CONTROLLER_STICK_THRESHOLD { 2 }
-            else { 0 }
-        }
+        } else if self.abs_y > Config::CONTROLLER_STICK_THRESHOLD { 2 }
+        else { 0 }
     }
 
     pub fn get_rel_align(&self) -> Option<RelAlign> {
