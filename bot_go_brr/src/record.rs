@@ -5,7 +5,7 @@ use alloc::string::ToString;
 
 pub struct Record {
     arg: DriveArg,
-    held: u8,
+    held: u16,
 }
 
 impl Record {

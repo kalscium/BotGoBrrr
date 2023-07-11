@@ -2,23 +2,51 @@ use vex_rt::prelude::*;
 pub struct Config {}
 
 impl Config {
-    pub const RUN_MODE: RunMode = RunMode::_Practice;
-    pub const TICK_SPEED: u64 = 200; // Robot update speed in milliseconds
-    pub const GAME_TIME: u64 = 2 * 61 * Config::TICK_PER_SECOND; // Ticks within a competition
+    /// ### Bot Drive / Run Mode
+    /// **Practice:** complete freedom and driver control
+    /// 
+    /// **Competition:** like `Practice` but has a set time limit of 2 min
+    /// 
+    /// **Autonomous:** runs the user defined autonomous algorithm
+    /// 
+    /// **Record:** like `Practice` but records driver movements consisely ( for writing autonomous )
+    pub const RUN_MODE: RunMode = RunMode::_Record;
+    /// Robot's fixed update speed in milliseconds
+    pub const TICK_SPEED: u64 = 200;
+    /// Amount of ticks within competition game ( 2min )
+    pub const GAME_TIME: u64 = 2 * 61 * Config::TICK_PER_SECOND;
+    /// Ticks per second
     pub const TICK_PER_SECOND: u64 = 1000 / Config::TICK_SPEED;
+    /// `[f64]` Ticks per second
     pub const TICK_PER_SECOND_F64: f64 = Config::TICK_PER_SECOND as f64;
+    /// ### Controller sensitivity
+    /// Controller stick movement tolerance / threshold
+    /// ( to combat stick drift )
+    /// ```
+    /// ? / 127
+    /// default( 30 )
+    /// ```
     pub const CONTROLLER_STICK_THRESHOLD: u8 = 30; // Controller sensitivity ?/127
     
     // Logging stuff
+    /// Log drive args?
+    /// ```
+    /// default( true )
+    /// ```
     pub const LOG_DRIVE_ARG: bool = true;
+    /// Log drive args?
+    /// ```
+    /// default( true )
+    /// ```
     pub const LOG_REL_ROTATION: bool = true;
 
+    /// ### Motors
     pub const MOTORS: MotorConfig = MotorConfig {
         units: EncoderUnits::Rotations,
 
-        motor1: 17,
-        motor2: 18,
-        motor3: 19,
+        motor1: 3,
+        motor2: 9,
+        motor3: 12,
         motor4: 20,
 
         reverse1: false,
@@ -48,10 +76,11 @@ pub enum RunMode {
     _Record,
 }
 
+/// ( Motor order goes from top to down, left to right )
 pub struct MotorConfig {
-    // Order goes from top to down, left to right
+    /// I don't know what this does
     pub units: EncoderUnits,
-
+    
     // Ports
     pub motor1: u8,
     pub motor2: u8,
