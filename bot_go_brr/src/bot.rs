@@ -59,9 +59,7 @@ impl Robot for Bot {
 
         // Init controller screen data
         let screen: &mut vex_rt::controller::Screen = &mut self.controller.screen;
-        screen.print(0, 0, "=== Bot Go Brr ===");
-        screen.print(1, 0, "tick: null");
-        screen.print(2, 0, "time: null");
+        screen.print(0, 0, "tick: null");
     }
 
     fn autonomous(&mut self, _ctx: Context) {
@@ -119,9 +117,7 @@ impl Robot for Bot {
 impl Bot {
     pub fn update_screen(&mut self, tick: &u128) {
         let screen = &mut self.controller.screen;
-        screen.clear_line(1);
-        screen.clear_line(2);
-        screen.print(1, 0, &(String::from("tick: ") + &tick.to_string()));
-        screen.print(2, 0, &(String::from("time: ") + &(*tick as f64 / Config::TICK_PER_SECOND_F64).to_string()));
+        screen.clear_line(0);
+        screen.print(0, 0, &(String::from("tick: ") + &tick.to_string()));
     }
 }

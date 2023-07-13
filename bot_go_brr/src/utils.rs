@@ -72,5 +72,5 @@ pub fn list_ports(ports: Iter<&SmartPort>) {
 
 pub fn quit<T>(tick: &u128, msg: &str) -> T {
     log(tick, "Quiting...", msg);
-    unsafe { core::hint::unreachable_unchecked() };
+    panic!("Imma bout to end this whole fuckin program.")
 }

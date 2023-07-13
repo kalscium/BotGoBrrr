@@ -17,8 +17,6 @@ impl Config {
     pub const GAME_TIME: u64 = 2 * 61 * Config::TICK_PER_SECOND;
     /// Ticks per second
     pub const TICK_PER_SECOND: u64 = 1000 / Config::TICK_SPEED;
-    /// `[f64]` Ticks per second
-    pub const TICK_PER_SECOND_F64: f64 = Config::TICK_PER_SECOND as f64;
     /// ### Controller sensitivity
     /// Controller stick movement tolerance / threshold
     /// ( to combat stick drift )
@@ -38,7 +36,7 @@ impl Config {
     /// ```
     /// default( true )
     /// ```
-    pub const LOG_REL_ROTATION: bool = true;
+    pub const LOG_REL_ROTATION: bool = false;
 
     /// ### Motors
     pub const MOTORS: MotorConfig = MotorConfig {
@@ -59,7 +57,8 @@ impl Config {
 
     pub const ROTATION_THRESHOLD: u8 = 5; // Exactness of relative turning ( in degrees )
     // Assumes that turning is constant
-    pub const DEGREES_PER_TICK: i16 = 2; // Amount of degrees per tick of turning
+    pub const DEGREES_PER_TICK: i16 = 360 / Config::TICK_PER_360; // Amount of degrees per tick of turning
+    pub const TICK_PER_360: i16 = 180; // Amount of ticks per whole rotation
 
     // Robot speeds
     pub const FORWARD_SPEED: i8 = 100; // 100 / 100

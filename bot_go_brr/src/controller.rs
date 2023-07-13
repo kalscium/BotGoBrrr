@@ -79,7 +79,7 @@ impl Stick {
 pub struct Packet {
     left_stick: Stick,
     right_stick: Stick,
-    button_x: bool,
+    button_a: bool,
     button_b: bool,
 }
 
@@ -94,7 +94,7 @@ impl Packet {
                 controller.right_stick.get_x().unwrap(),
                 controller.right_stick.get_y().unwrap(),
             ),
-            button_x: controller.x.is_pressed().unwrap(),
+            button_a: controller.a.is_pressed().unwrap(),
             button_b: controller.b.is_pressed().unwrap(),
         }
     }
@@ -106,7 +106,7 @@ impl Packet {
     }
 
     pub fn gen_button(&self) -> ButtonArg {
-        if self.button_x { ButtonArg::X }
+        if self.button_a { ButtonArg::A }
         else if self.button_b { ButtonArg::Quit }
         else { ButtonArg::Null }
     }

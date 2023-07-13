@@ -4,14 +4,14 @@ use crate::utils::quit;
 pub enum ButtonArg {
     Null,
     Quit,
-    X, // change later
+    A, // change later
 }
 
 impl ButtonArg {
     pub fn to_string(&self) -> &str {
         match self {
             Self::Null => "Null",
-            Self::X => "X",
+            Self::A => "A",
             Self::Quit => "Quit",
         }
     }
@@ -19,7 +19,7 @@ impl ButtonArg {
     pub const fn duplicate(&self) -> Self {
         match self {
             ButtonArg::Null => ButtonArg::Null,
-            ButtonArg::X => ButtonArg::X,
+            ButtonArg::A => ButtonArg::A,
             ButtonArg::Quit => ButtonArg::Quit,
         }
     }
@@ -30,7 +30,7 @@ impl ButtonArg {
     pub fn execute(&self) {
         match self {
             Self::Quit => quit(&0u128, "Hit quit button!"),
-            Self::X => (),
+            Self::A => (),
             Self::Null => Self::stop(),
         }
     }
