@@ -1,63 +1,54 @@
 use super::drive::DriveArg;
 use super::button::ButtonArg;
 
-pub struct Item {
-    data: DriveArg,
-    before: Option<*const Item>,
+pub struct Position {
+    array_idx: u8,
+    idx: u16,
 }
 
+impl Position {
+    pub const fn new() -> Self {
+        Self {
+            array_idx: 0,
+            idx: 0,
+        }
+    }
+
+    pub fn advance(&mut self, len: u16) { // Run every tick
+        if self.idx < len -1 { self.idx += 1; return; }
+        self.array_idx += 1;
+        self.idx = 0;
+    }
+
+    pub fn get(&mut self, args: &[ArgWrapper]) -> DriveArg { // Run every tick
+        if self.array_idx >= args.len() as u8 { return DriveArg::Stop(ButtonArg::Quit) }
+        let wrapped_arg: &ArgWrapper = &args[self.array_idx as usize];
+        self.advance(wrapped_arg.1);
+        wrapped_arg.0.duplicate()
+    }
+}
+
+pub struct ArgWrapper(DriveArg, u16);
+
 pub struct Algor {
-    item: Item,
+    wrapped_args: &'static [ArgWrapper],
 }
 
 // Algorithms
 impl Algor {
-    pub const AUTONOMOUS: Algor = Algor::new();
+    pub const AUTONOMOUS: Algor = Algor::new(&[
+        ArgWrapper(DriveArg::Stall(ButtonArg::Null), 256),
+    ]);
 }
 
 impl Algor {
-    pub const fn item(&self) -> &Item { &self.item }
-
-    pub const fn new() -> Self {
+    pub const fn new(wrapped_args: &'static [ArgWrapper]) -> Self {
         Self {
-            item: Item {
-                data: DriveArg::Stall(ButtonArg::Null),
-                before: None,
-            },
+            wrapped_args,
         }
     }
 
-    pub const fn add(self, arg: DriveArg) -> Self {
-        Self {
-            item: Item {
-                data: arg,
-                before: Some(&self.item as *const Item),
-            }
-        }
-    }
-
-    pub const fn repeat(self, arg: DriveArg, ticks: u8) -> Self {
-        let mut algor = self;
-        let mut i: u8 = 0;
-        while i <= ticks {
-            algor = algor.add(arg.duplicate());
-            i += 1;
-        };
-        algor
-    }
-
-    pub const fn stop(self, arg: ButtonArg, ticks: u8) -> Self { self.repeat(DriveArg::Stop(arg), ticks) }
-    pub const fn stall(self, arg: ButtonArg, ticks: u8) -> Self { self.repeat(DriveArg::Stall(arg), ticks) }
-
-    pub fn get(this: &Self, tick: u128) -> DriveArg {
-        let mut item: &Item = this.item();
-        let mut i: u128 = 0;
-        while i < tick {
-            if item.before.is_none() { return DriveArg::Stop(ButtonArg::Null) }
-            item = unsafe { &*item.before.unwrap() };
-            i += 1;
-        };
-
-        item.data.duplicate()
+    pub fn get(&self, pos: &mut Position) -> DriveArg { // Run every tick
+        pos.get(self.wrapped_args)
     }
 }

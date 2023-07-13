@@ -42,15 +42,15 @@ impl Config {
     pub const MOTORS: MotorConfig = MotorConfig {
         units: EncoderUnits::Rotations,
 
-        motor1: 3,
-        motor2: 9,
-        motor3: 12,
-        motor4: 20,
+        motor1: 12,
+        motor2: 3,
+        motor3: 20,
+        motor4: 9,
 
         reverse1: false,
-        reverse2: false,
+        reverse2: true,
         reverse3: false,
-        reverse4: false,
+        reverse4: true,
     };
 
     pub const _FUCKED_PORTS: [u8; 5] = [6, 7, 8, 10, 11]; // Ports that don't work
