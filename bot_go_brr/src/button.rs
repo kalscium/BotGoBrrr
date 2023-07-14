@@ -1,9 +1,6 @@
-use crate::utils::quit;
-
 #[derive(Debug)]
 pub enum ButtonArg {
     Null,
-    Quit,
     A, // change later
 }
 
@@ -12,7 +9,6 @@ impl ButtonArg {
         match self {
             Self::Null => "Null",
             Self::A => "A",
-            Self::Quit => "Quit",
         }
     }
 
@@ -20,7 +16,6 @@ impl ButtonArg {
         match self {
             ButtonArg::Null => ButtonArg::Null,
             ButtonArg::A => ButtonArg::A,
-            ButtonArg::Quit => ButtonArg::Quit,
         }
     }
 
@@ -29,7 +24,6 @@ impl ButtonArg {
 
     pub fn execute(&self) {
         match self {
-            Self::Quit => quit(&0u128, "Hit quit button!"),
             Self::A => (),
             Self::Null => Self::stop(),
         }
