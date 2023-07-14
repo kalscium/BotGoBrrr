@@ -21,7 +21,7 @@ impl Position {
     }
 
     pub fn get(&mut self, args: &[ArgWrapper]) -> DriveArg { // Run every tick
-        if self.array_idx >= args.len() as u8 { return DriveArg::Stop(ButtonArg::Quit) }
+        if self.array_idx >= args.len() as u8 { return DriveArg::Stop(ButtonArg::Null) }
         let wrapped_arg: &ArgWrapper = &args[self.array_idx as usize];
         self.advance(wrapped_arg.1);
         wrapped_arg.0.duplicate()
@@ -37,7 +37,7 @@ pub struct Algor {
 // Algorithms
 impl Algor {
     pub const AUTONOMOUS: Algor = Algor::new(&[
-        ArgWrapper(DriveArg::Stall(ButtonArg::Null), 256),
+        ArgWrapper(DriveArg::Forward(ButtonArg::Null), 12),
     ]);
 }
 

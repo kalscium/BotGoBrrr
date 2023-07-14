@@ -64,11 +64,33 @@ impl Robot for Bot {
 
     fn autonomous(&mut self, _ctx: Context) {
         println!("autonomous");
-        // Write your autonomous routine here.
+        let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
+        let mut tick: u128 = 0;
+        let mut algor_pos = crate::algor::Position::new();
+        loop {
+            self.update_screen(&tick);
+
+            // Autonomous Movement
+            let arg: DriveArg = Algor::AUTONOMOUS.get(&mut algor_pos); // Update drive according to Autonomous algorithm
+            
+            // Logging
+            self.drive.lock().drive(arg);
+
+            select! {
+                _ = _ctx.done() => break,
+
+                // Otherwise, when it's time for the next loop cycle, continue.
+                _ = l.select() => {
+                    tick += 1; // update tick
+                    continue;
+                },
+            }
+        }
     }
 
     fn opcontrol(&mut self, ctx: Context) {
-        // This loop construct makes sure the drive is updated every 200 milliseconds.
+        println!("opcontrol");
+        // This loop construct makes sure the drive is updated every 100 milliseconds.
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u128 = 0;
         let mut record: Record = Record::new(DriveArg::Stall(ButtonArg::Null));
