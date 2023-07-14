@@ -12,7 +12,7 @@ impl Config {
     /// **Record:** like `Practice` but records driver movements consisely ( for writing autonomous )
     pub const RUN_MODE: RunMode = RunMode::_Record;
     /// Robot's fixed update speed in milliseconds
-    pub const TICK_SPEED: u64 = 200;
+    pub const TICK_SPEED: u64 = 100;
     /// Amount of ticks within competition game ( 2min )
     pub const GAME_TIME: u64 = 2 * 61 * Config::TICK_PER_SECOND;
     /// Ticks per second
@@ -55,15 +55,15 @@ impl Config {
 
     pub const _FUCKED_PORTS: [u8; 5] = [6, 7, 8, 10, 11]; // Ports that don't work
 
-    pub const ROTATION_THRESHOLD: u8 = 5; // Exactness of relative turning ( in degrees )
+    pub const ROTATION_THRESHOLD: u8 = 10; // Exactness of relative turning ( in degrees )
     // Assumes that turning is constant
     pub const DEGREES_PER_TICK: i16 = 360 / Config::TICK_PER_360; // Amount of degrees per tick of turning
-    pub const TICK_PER_360: i16 = 180; // Amount of ticks per whole rotation
+    pub const TICK_PER_360: i16 = 21; // Amount of ticks per whole rotation
 
     // Robot speeds
     pub const FORWARD_SPEED: i8 = 100; // 100 / 100
     pub const BACKWARD_SPEED: i8 = 80; // 80 / 100
-    pub const TURN_SPEED: i8 = 50; // 50 / 100
+    pub const TURN_SPEED: i8 = 40; // 50 / 100
     pub const GEAR_RATIO: Gearset = Gearset::ThirtySixToOne;
 
 }
