@@ -71,7 +71,9 @@ impl Robot for Bot {
             self.update_screen(&tick);
 
             // Autonomous Movement
-            let arg: DriveArg = Algor::AUTONOMOUS.get(&mut algor_pos); // Update drive according to Autonomous algorithm
+            let arg: Option<DriveArg> = Algor::AUTONOMOUS.get(&mut algor_pos); // Update drive according to Autonomous algorithm
+            if arg.is_none() { break }
+            let arg: DriveArg = arg.unwrap();
             
             // Logging
             self.drive.lock().drive(arg);
@@ -102,7 +104,7 @@ impl Robot for Bot {
             // Movement
             let arg: DriveArg = match Config::RUN_MODE {
                 RunMode::_Practice => controller::Packet::new(&self.controller).gen_arg(&mut relative), // Update drive according to controller packet
-                RunMode::_Autonomous => Algor::AUTONOMOUS.get(&mut algor_pos), // Update drive according to Autonomous algorithm
+                RunMode::_Autonomous => Algor::AUTONOMOUS.get(&mut algor_pos).unwrap(), // Update drive according to Autonomous algorithm
                 // (Similar to practice)
                 RunMode::_Competition if tick <= Config::GAME_TIME as u128 => controller::Packet::new(&self.controller).gen_arg(&mut relative), // Checks if competition time limit passed
                 RunMode::_Competition => quit(&tick, "Competition Time Limit Reached!"), // <else>

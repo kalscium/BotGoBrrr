@@ -10,7 +10,7 @@ impl Config {
     /// **Autonomous:** runs the user defined autonomous algorithm
     /// 
     /// **Record:** like `Practice` but records driver movements consisely ( for writing autonomous )
-    pub const RUN_MODE: RunMode = RunMode::_Practice;
+    pub const RUN_MODE: RunMode = RunMode::_Record;
     /// Robot's fixed update speed in milliseconds
     pub const TICK_SPEED: u64 = 100;
     /// Amount of ticks within competition game ( 2min )

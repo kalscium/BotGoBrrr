@@ -20,11 +20,11 @@ impl Position {
         self.idx = 0;
     }
 
-    pub fn get(&mut self, args: &[ArgWrapper]) -> DriveArg { // Run every tick
-        if self.array_idx >= args.len() as u8 { return DriveArg::Stop(ButtonArg::Null) }
+    pub fn get(&mut self, args: &[ArgWrapper]) -> Option<DriveArg> { // Run every tick
+        if self.array_idx >= args.len() as u8 { return None }
         let wrapped_arg: &ArgWrapper = &args[self.array_idx as usize];
         self.advance(wrapped_arg.1);
-        wrapped_arg.0.duplicate()
+        Some(wrapped_arg.0.duplicate())
     }
 }
 
@@ -48,7 +48,7 @@ impl Algor {
         }
     }
 
-    pub fn get(&self, pos: &mut Position) -> DriveArg { // Run every tick
+    pub fn get(&self, pos: &mut Position) -> Option<DriveArg> { // Run every tick
         pos.get(self.wrapped_args)
     }
 }
