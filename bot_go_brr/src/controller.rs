@@ -28,16 +28,16 @@ impl Stick {
         else { 0 }
     }
 
-    pub fn abs_arg(&self, button: ButtonArg) -> DriveArg {
+    pub fn abs_arg(&self, button: ButtonArg, right: bool) -> DriveArg {
         let code: u8 = self.above_threshold();
         match code {
             0 => DriveArg::Stop(button),
 
-            1 if self.pos_x => DriveArg::Right(button),
-            1 => DriveArg::Left(button), // <else>
+            1 if self.pos_x => DriveArg::Right(button, right),
+            1 => DriveArg::Left(button, right), // <else>
 
-            2 if self.pos_y => DriveArg::Forward(button),
-            2 => DriveArg::Backward(button), // <else>
+            2 if self.pos_y => DriveArg::Forward(button, right),
+            2 => DriveArg::Backward(button, right), // <else>
 
             3 => DriveArg::Stall(button),
             _ => panic!("should logically not panic"),
@@ -67,8 +67,8 @@ impl Packet {
     }
 
     pub fn gen_arg(&self) -> DriveArg {
-        let left: DriveArg = self.left_stick.abs_arg(self.gen_button());
-        let right: DriveArg = self.right_stick.abs_arg(self.gen_button());
+        let left: DriveArg = self.left_stick.abs_arg(self.gen_button(), false);
+        let right: DriveArg = self.right_stick.abs_arg(self.gen_button(), true);
         DriveArg::add(left, right)
     }
 

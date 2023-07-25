@@ -37,7 +37,7 @@ pub struct Algor {
 // Algorithms
 impl Algor {
     pub const AUTONOMOUS: Algor = Algor::new(&[
-        ArgWrapper(DriveArg::Forward(ButtonArg::Null), 12),
+        ArgWrapper(DriveArg::Forward(ButtonArg::Null, false), 12),
     ]);
 }
 

@@ -1,15 +1,17 @@
 extern crate alloc;
 
+use crate::niceif;
 use vex_rt::motor::Motor;
 use crate::config::Config;
 use crate::button::ButtonArg;
+use alloc::string::ToString;
 
 #[derive(Debug)]
 pub enum DriveArg {
-    Forward(ButtonArg),
-    Backward(ButtonArg),
-    Left(ButtonArg),
-    Right(ButtonArg),
+    Forward(ButtonArg, bool),
+    Backward(ButtonArg, bool),
+    Left(ButtonArg, bool),
+    Right(ButtonArg, bool),
     Stop(ButtonArg),
     Stall(ButtonArg),
 }
@@ -17,10 +19,10 @@ pub enum DriveArg {
 impl DriveArg {
     pub fn execute(&self, drive: &mut Drive) {
         match self {
-            DriveArg::Forward(_) => drive.forwards(),
-            DriveArg::Backward(_) => drive.backwards(),
-            DriveArg::Left(_) => drive.left(),
-            DriveArg::Right(_) => drive.right(),
+            DriveArg::Forward(_, precise) => drive.forwards(*precise),
+            DriveArg::Backward(_, precise) => drive.backwards(*precise),
+            DriveArg::Left(_, precise) => drive.left(*precise),
+            DriveArg::Right(_, precise) => drive.right(*precise),
             DriveArg::Stop(_) => drive.stop(),
             DriveArg::Stall(_) => (),
         }
@@ -34,36 +36,39 @@ impl DriveArg {
         }
     }
 
-    pub fn to_strings(&self) -> (&str, &str) {
+    pub fn to_strings(&self) -> (&str, &str, bool) {
         match self {
-            DriveArg::Forward(x) => ("Forward", x.to_string()),
-            DriveArg::Backward(x) => ("Backward", x.to_string()),
-            DriveArg::Left(x) => ("Left", x.to_string()),
-            DriveArg::Right(x) => ("Right", x.to_string()),
-            DriveArg::Stop(x) => ("Stop", x.to_string()),
-            DriveArg::Stall(x) => ("Stall", x.to_string()),
+            DriveArg::Forward(x, precise) => ("Forward", x.to_string(), *precise),
+            DriveArg::Backward(x, precise) => ("Backward", x.to_string(), *precise),
+            DriveArg::Left(x, precise) => ("Left", x.to_string(), *precise),
+            DriveArg::Right(x, precise) => ("Right", x.to_string(), *precise),
+            DriveArg::Stop(x) => ("Stop", x.to_string(), false),
+            DriveArg::Stall(x) => ("Stall", x.to_string(), false),
         }
     }
 
     pub fn log(&self, tick: &u128) {
         use crate::utils::Log::*;
-        let (name, button) = self.to_strings();
+        let (name, button, precise) = self.to_strings();
         Base(
             tick,
             "Drive Arg",
             &List(
                 &Title(name), "",
-                &Wrap("(", &Title(button), ")"),
+                &List(
+                    &Wrap("(", &Title(button), ")"), " Precise: ",
+                    &String(precise.to_string()),
+                ),
             )
         ).log();
     }
 
     pub fn get_button(&self) -> &ButtonArg {
         match self {
-            DriveArg::Forward(x) => x,
-            DriveArg::Backward(x) => x,
-            DriveArg::Left(x) => x,
-            DriveArg::Right(x) => x,
+            DriveArg::Forward(x, _) => x,
+            DriveArg::Backward(x, _) => x,
+            DriveArg::Left(x, _) => x,
+            DriveArg::Right(x, _) => x,
             DriveArg::Stop(x) => x,
             DriveArg::Stall(x) => x,
         }
@@ -71,10 +76,10 @@ impl DriveArg {
 
     pub const fn duplicate(&self) -> Self {
         match self {
-            DriveArg::Forward(x) => DriveArg::Forward(x.duplicate()),
-            DriveArg::Backward(x) => DriveArg::Backward(x.duplicate()),
-            DriveArg::Left(x) => DriveArg::Left(x.duplicate()),
-            DriveArg::Right(x) => DriveArg::Right(x.duplicate()),
+            DriveArg::Forward(x, precise) => DriveArg::Forward(x.duplicate(), *precise),
+            DriveArg::Backward(x, precise) => DriveArg::Backward(x.duplicate(), *precise),
+            DriveArg::Left(x, precise) => DriveArg::Left(x.duplicate(), *precise),
+            DriveArg::Right(x, precise) => DriveArg::Right(x.duplicate(), *precise),
             DriveArg::Stop(x) => DriveArg::Stop(x.duplicate()),
             DriveArg::Stall(x) => DriveArg::Stall(x.duplicate()),
         }
@@ -104,34 +109,36 @@ impl Drive {
         arg.get_button().execute();
     }
 
-    pub fn forwards(&mut self) {
-        self.map(|x, _| x.move_i8(Drive::cal_volt(Config::FORWARD_SPEED)).unwrap());
+    pub fn forwards(&mut self, precise: bool) {
+        self.map(|x, _| x.move_i8(Drive::cal_volt(niceif!(if precise, Config::PRECISE_FORWARD_SPEED, else Config::FORWARD_SPEED))).unwrap());
     }
 
     pub fn stop(&mut self) {
         self.map(|x, _| x.move_i8(0).unwrap());
     }
 
-    pub fn backwards(&mut self) {
-        self.map(|x, _| x.move_i8(Drive::cal_volt(-Config::BACKWARD_SPEED)).unwrap())
+    pub fn backwards(&mut self, precise: bool) {
+        self.map(|x, _| x.move_i8(Drive::cal_volt(-niceif!(if precise, Config::PRECISE_BACKWARD_SPEED, else Config::BACKWARD_SPEED))).unwrap())
     }
 
-    pub fn left(&mut self) {
+    pub fn left(&mut self, precise: bool) {
+        let turnspeed: i8 = niceif!(if precise, Config::PRECISE_TURN_SPEED, else Config::TURN_SPEED);
         self.map(|x, i| {
             if i & 1 == 0 { // Right Motors
-                x.move_i8(Drive::cal_volt(Config::TURN_SPEED)).unwrap();
+                x.move_i8(Drive::cal_volt(turnspeed)).unwrap();
             } else { // Left Motors
-                x.move_i8(Drive::cal_volt(-Config::TURN_SPEED)).unwrap();
+                x.move_i8(Drive::cal_volt(-turnspeed)).unwrap();
             }
         });
     }
 
-    pub fn right(&mut self) {
+    pub fn right(&mut self, precise: bool) {
+        let turnspeed: i8 = niceif!(if precise, Config::PRECISE_TURN_SPEED, else Config::TURN_SPEED);
         self.map(|x, i| {
             if i & 1 == 0 { // Right Motors
-                x.move_i8(Drive::cal_volt(-Config::TURN_SPEED)).unwrap();
+                x.move_i8(Drive::cal_volt(-turnspeed)).unwrap();
             } else { // Left Motors
-                x.move_i8(Drive::cal_volt(Config::TURN_SPEED)).unwrap();
+                x.move_i8(Drive::cal_volt(turnspeed)).unwrap();
             }
         });
     }
@@ -146,7 +153,7 @@ impl Drive {
         f(&mut self.motor4, 4);
     }
 
-    fn cal_volt(speed: i8) -> i8 { (127i16 * speed as i16 / 100i16) as i8 } // Normalised speed from 1 - 100
+    fn cal_volt(speed: i8) -> i8 { (127i16 * speed as i16 / 100i16) as i8 } // Normalised speed from 1 to 100
 
     fn build_motor(id: u8) -> Motor {
         unsafe {

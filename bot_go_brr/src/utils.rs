@@ -74,3 +74,14 @@ pub fn quit<T>(tick: &u128, msg: &str) -> T {
     log(tick, "Quiting...", msg);
     panic!("Imma bout to end this whole fuckin program.")
 }
+
+#[macro_export]
+macro_rules! niceif {
+    (if $cond:expr, $one:expr, else $two:expr) => {
+        if $cond {
+            $one
+        } else {
+            $two
+        }
+    }
+}

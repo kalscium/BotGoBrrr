@@ -60,6 +60,10 @@ impl Config {
     pub const TURN_SPEED: i8 = 40; // 50 / 100
     pub const GEAR_RATIO: Gearset = Gearset::ThirtySixToOne;
 
+    // Robot precise speeds
+    pub const PRECISE_FORWARD_SPEED: i8 = 40;
+    pub const PRECISE_BACKWARD_SPEED: i8 = 40;
+    pub const PRECISE_TURN_SPEED: i8 = 20;
 }
 
 pub enum RunMode {

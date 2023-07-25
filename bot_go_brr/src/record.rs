@@ -31,7 +31,7 @@ impl Record {
 
     pub fn log(&self) {
         use crate::utils::Log::*;
-        let (name, button) = self.arg.to_strings();
+        let (name, button, precise) = self.arg.to_strings();
         List(
             &Wrap("[", &List(
                 &Title("held"), ": ",
@@ -39,7 +39,10 @@ impl Record {
             ), "]"), " ",
             &List(
                 &Title(name), "",
-                &Wrap("(", &Title(button), ")"),
+                &List(
+                    &Wrap("(", &Title(button), ")"), " Precise: ",
+                    &String(precise.to_string())
+                ),
             ),
         ).log();
     }
