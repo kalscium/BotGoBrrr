@@ -65,12 +65,11 @@ impl Robot for Bot {
         println!("autonomous");
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u128 = 0;
-        let mut algor_pos = crate::algor::Position::new();
         loop {
             self.update_screen(&tick);
 
             // Autonomous Movement
-            let arg: Option<DriveArg> = Algor::AUTONOMOUS.get(&mut algor_pos); // Update drive according to Autonomous algorithm
+            let arg: Option<DriveArg> = Algor::AUTONOMOUS.get(&tick); // Update drive according to Autonomous algorithm
             if arg.is_none() { break }
             let arg: DriveArg = arg.unwrap();
             
@@ -95,14 +94,13 @@ impl Robot for Bot {
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u128 = 0;
         let mut record: Record = Record::new(DriveArg::Stall(ButtonArg::Null));
-        let mut algor_pos = crate::algor::Position::new();
         loop {
             self.update_screen(&tick);
 
             // Movement
             let arg: DriveArg = match Config::RUN_MODE {
                 RunMode::_Practice => controller::Packet::new(&self.controller).gen_arg(), // Update drive according to controller packet
-                RunMode::_Autonomous => Algor::AUTONOMOUS.get(&mut algor_pos).unwrap(), // Update drive according to Autonomous algorithm
+                RunMode::_Autonomous => Algor::AUTONOMOUS.get(&tick).unwrap(), // Update drive according to Autonomous algorithm
                 // (Similar to practice)
                 RunMode::_Competition if tick <= Config::GAME_TIME as u128 => controller::Packet::new(&self.controller).gen_arg(), // Checks if competition time limit passed
                 RunMode::_Competition => quit(&tick, "Competition Time Limit Reached!"), // <else>
