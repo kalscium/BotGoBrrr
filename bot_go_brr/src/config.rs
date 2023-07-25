@@ -36,7 +36,6 @@ impl Config {
     /// ```
     /// default( true )
     /// ```
-    pub const LOG_REL_ROTATION: bool = false;
 
     /// ### Motors
     pub const MOTORS: MotorConfig = MotorConfig {
@@ -54,11 +53,6 @@ impl Config {
     };
 
     pub const _FUCKED_PORTS: [u8; 5] = [6, 7, 8, 10, 11]; // Ports that don't work
-
-    pub const ROTATION_THRESHOLD: u8 = 6; // Exactness of relative turning ( in degrees )
-    // Assumes that turning is constant
-    pub const DEGREES_PER_TICK: i16 = 360 / Config::TICK_PER_360; // Amount of degrees per tick of turning
-    pub const TICK_PER_360: i16 = 26; // Amount of ticks per whole rotation
 
     // Robot speeds
     pub const FORWARD_SPEED: i8 = 80; // 100 / 100

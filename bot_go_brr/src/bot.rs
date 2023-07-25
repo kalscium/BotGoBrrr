@@ -12,7 +12,6 @@ use crate::{
     utils::*,
     button::ButtonArg,
     record::Record,
-    relative::Rel,
 };
 
 pub struct Bot {
@@ -96,25 +95,21 @@ impl Robot for Bot {
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u128 = 0;
         let mut record: Record = Record::new(DriveArg::Stall(ButtonArg::Null));
-        let mut relative: Rel = Rel::new();
         let mut algor_pos = crate::algor::Position::new();
         loop {
             self.update_screen(&tick);
 
             // Movement
             let arg: DriveArg = match Config::RUN_MODE {
-                RunMode::_Practice => controller::Packet::new(&self.controller).gen_arg(&mut relative), // Update drive according to controller packet
+                RunMode::_Practice => controller::Packet::new(&self.controller).gen_arg(), // Update drive according to controller packet
                 RunMode::_Autonomous => Algor::AUTONOMOUS.get(&mut algor_pos).unwrap(), // Update drive according to Autonomous algorithm
                 // (Similar to practice)
-                RunMode::_Competition if tick <= Config::GAME_TIME as u128 => controller::Packet::new(&self.controller).gen_arg(&mut relative), // Checks if competition time limit passed
+                RunMode::_Competition if tick <= Config::GAME_TIME as u128 => controller::Packet::new(&self.controller).gen_arg(), // Checks if competition time limit passed
                 RunMode::_Competition => quit(&tick, "Competition Time Limit Reached!"), // <else>
-                RunMode::_Record => record.record(controller::Packet::new(&self.controller).gen_arg(&mut relative)), // Records new packets and logs them
+                RunMode::_Record => record.record(controller::Packet::new(&self.controller).gen_arg()), // Records new packets and logs them
             };
 
-            relative.record(&arg);
-            
             // Logging
-            if Config::LOG_REL_ROTATION { relative.log(&tick) } // Log Relative Rotation if wanted in config
             if let RunMode::_Record = Config::RUN_MODE {} // Log Drive Arg if not record mode and if wanted in config
             else if Config::LOG_DRIVE_ARG { arg.log(&tick) }
 

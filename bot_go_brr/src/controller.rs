@@ -2,7 +2,6 @@ use vex_rt::prelude::*;
 use crate::drive::DriveArg;
 use crate::button::ButtonArg;
 use crate::config::Config;
-use crate::relative::{Rel, RelAlign};
 
 pub struct Stick {
     abs_x: u8,
@@ -29,28 +28,6 @@ impl Stick {
         else { 0 }
     }
 
-    pub fn get_rel_align(&self) -> Option<RelAlign> {
-        let code: u8 = self.above_threshold();
-        match code {
-            0 => None,
-
-            1 if self.pos_x => Some(RelAlign::E),
-            1 => Some(RelAlign::W),
-
-            2 if self.pos_y => Some(RelAlign::N),
-            2 => Some(RelAlign::S),
-
-            // if both
-            3 => match (&self.pos_x, &self.pos_y) {
-                (true, true) => Some(RelAlign::NE),
-                (false, true) => Some(RelAlign::NW),
-                (true, false) => Some(RelAlign::SE),
-                (false, false) => Some(RelAlign::SW),
-            },
-            _ => panic!("should logically not panic"),
-        }
-    }
-
     pub fn abs_arg(&self, button: ButtonArg) -> DriveArg {
         let code: u8 = self.above_threshold();
         match code {
@@ -65,14 +42,6 @@ impl Stick {
             3 => DriveArg::Stall(button),
             _ => panic!("should logically not panic"),
         }
-    }
-
-    pub fn rel_arg(&self, button: ButtonArg, rel: &mut Rel) -> DriveArg {
-        // align relative
-        if let Some(rel_align) = self.get_rel_align() { rel.align(rel_align) }
-        else { return DriveArg::Stop(button) };
-        
-        rel.get_arg(button) // return relative driveargs
     }
 }
 
@@ -97,9 +66,9 @@ impl Packet {
         }
     }
 
-    pub fn gen_arg(&self, rel: &mut Rel) -> DriveArg {
+    pub fn gen_arg(&self) -> DriveArg {
         let left: DriveArg = self.left_stick.abs_arg(self.gen_button());
-        let right: DriveArg = self.right_stick.rel_arg(self.gen_button(), rel);
+        let right: DriveArg = self.right_stick.abs_arg(self.gen_button());
         DriveArg::add(left, right)
     }
 
