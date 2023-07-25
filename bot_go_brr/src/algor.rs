@@ -18,7 +18,22 @@ macro_rules! gen_algor {
             result
         };
         Algor(&RESULT)
-    }}
+    }};
+    // ($($((keyword:ident))? $arg:ident$(($butt:ident))? $count:expr);* $(;)?) => {
+    //     if 
+    // };
+    ( $(precise $arg:ident($butt:ident) $count:expr);* $(;)?) => {
+        gen_algor!($([DriveArg::$arg($butt, true), $count],)*)
+    };
+    (hidden $($arg:ident($butt:ident) $count:expr);* $(;)?) => {
+        gen_algor!($([DriveArg::$arg($butt, false), $count],)*)
+    };
+    (hidden $($arg:ident $count:expr);* $(;)?) => {
+        gen_algor!($([DriveArg::$arg(ButtonArg::Null, false), $count],)*)
+    };
+    (hidden $(precise $arg:ident $count:expr);* $(;)?) => {
+        gen_algor!($([DriveArg::$arg(ButtonArg::Null, true), $count],)*)
+    };
 }
 
 pub struct Algor(&'static [Option<DriveArg>]);
@@ -33,6 +48,6 @@ impl Algor {
 // Algorithms
 impl Algor {
     pub const AUTONOMOUS: Algor = gen_algor! {
-        [DriveArg::Forward(ButtonArg::Null, false), 30],
+        hidden precise Forward 30;
     };
 }
