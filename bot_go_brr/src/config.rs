@@ -12,7 +12,7 @@ impl Config {
     /// **Record:** like `Practice` but records driver movements consisely ( for writing autonomous )
     pub const RUN_MODE: RunMode = RunMode::_Practice;
     /// Robot's fixed update speed in milliseconds
-    pub const TICK_SPEED: u64 = 100;
+    pub const TICK_SPEED: u64 = 50;
     /// Amount of ticks within competition game ( 2min )
     pub const GAME_TIME: u64 = 2 * 61 * Config::TICK_PER_SECOND;
     /// Ticks per second
@@ -61,7 +61,7 @@ impl Config {
     pub const TICK_PER_360: i16 = 26; // Amount of ticks per whole rotation
 
     // Robot speeds
-    pub const FORWARD_SPEED: i8 = 100; // 100 / 100
+    pub const FORWARD_SPEED: i8 = 80; // 100 / 100
     pub const BACKWARD_SPEED: i8 = 80; // 80 / 100
     pub const TURN_SPEED: i8 = 40; // 50 / 100
     pub const GEAR_RATIO: Gearset = Gearset::ThirtySixToOne;
