@@ -1,3 +1,5 @@
+extern crate alloc;
+
 use super::drive::DriveArg;
 use super::button::ButtonArg;
 
@@ -19,21 +21,27 @@ macro_rules! gen_algor {
         };
         Algor(&RESULT)
     }};
-    // ($($((keyword:ident))? $arg:ident$(($butt:ident))? $count:expr);* $(;)?) => {
-    //     if 
-    // };
-    ( $(precise $arg:ident($butt:ident) $count:expr);* $(;)?) => {
-        gen_algor!($([DriveArg::$arg($butt, true), $count],)*)
-    };
-    (hidden $($arg:ident($butt:ident) $count:expr);* $(;)?) => {
-        gen_algor!($([DriveArg::$arg($butt, false), $count],)*)
-    };
-    (hidden $($arg:ident $count:expr);* $(;)?) => {
-        gen_algor!($([DriveArg::$arg(ButtonArg::Null, false), $count],)*)
-    };
-    (hidden $(precise $arg:ident $count:expr);* $(;)?) => {
-        gen_algor!($([DriveArg::$arg(ButtonArg::Null, true), $count],)*)
-    };
+    ($($(($keyword:ident))? $arg:ident$(($butt:ident))? for $count:expr);* $(;)?) => {{
+        const RESULT: [Option::<DriveArg>; $($count+)* 0usize] = {
+            let mut result: [Option::<DriveArg>; $($count+)* 0usize] = [Option::<DriveArg>::None; $($count+)* 0usize];
+            let mut idx: usize = 0;
+            $({
+                let _button = ButtonArg::Null;
+                $(let _button = $butt;)?
+                let _precise = false;
+                $(let _precise = match stringify!($keyword) { _ => true };)?
+
+                let mut i: usize = 0;
+                while i < $count {
+                    result[idx] = Some($arg(_button, _precise));
+                    idx += 1;
+                    i += 1;
+                }
+            };)*
+            result
+        };
+        Algor(&RESULT)
+    }};
 }
 
 pub struct Algor(&'static [Option<DriveArg>]);
@@ -46,8 +54,13 @@ impl Algor {
 }
 
 // Algorithms
+use DriveArg::*;
+use ButtonArg::*;
 impl Algor {
     pub const AUTONOMOUS: Algor = gen_algor! {
-        hidden precise Forward 30;
+        Stop for 60;
+        (precise) Forward(A) for 30;
+        Backward for 20;
+        Forward for 40;
     };
 }

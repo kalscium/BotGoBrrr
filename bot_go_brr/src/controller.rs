@@ -31,7 +31,7 @@ impl Stick {
     pub fn abs_arg(&self, button: ButtonArg, right: bool) -> DriveArg {
         let code: u8 = self.above_threshold();
         match code {
-            0 => DriveArg::Stop(button),
+            0 => DriveArg::Stop(button, false),
 
             1 if self.pos_x => DriveArg::Right(button, right),
             1 => DriveArg::Left(button, right), // <else>
@@ -39,7 +39,7 @@ impl Stick {
             2 if self.pos_y => DriveArg::Forward(button, right),
             2 => DriveArg::Backward(button, right), // <else>
 
-            3 => DriveArg::Stall(button),
+            3 => DriveArg::Stall(button, false),
             _ => panic!("should logically not panic"),
         }
     }

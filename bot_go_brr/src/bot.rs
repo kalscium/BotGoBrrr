@@ -93,7 +93,7 @@ impl Robot for Bot {
         // This loop construct makes sure the drive is updated every 100 milliseconds.
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u128 = 0;
-        let mut record: Record = Record::new(DriveArg::Stall(ButtonArg::Null));
+        let mut record: Record = Record::new(DriveArg::Stall(ButtonArg::Null, false));
         loop {
             self.update_screen(&tick);
 

@@ -12,8 +12,8 @@ pub enum DriveArg {
     Backward(ButtonArg, bool),
     Left(ButtonArg, bool),
     Right(ButtonArg, bool),
-    Stop(ButtonArg),
-    Stall(ButtonArg),
+    Stop(ButtonArg, bool),
+    Stall(ButtonArg, bool),
 }
 
 impl DriveArg {
@@ -23,16 +23,16 @@ impl DriveArg {
             DriveArg::Backward(_, precise) => drive.backwards(*precise),
             DriveArg::Left(_, precise) => drive.left(*precise),
             DriveArg::Right(_, precise) => drive.right(*precise),
-            DriveArg::Stop(_) => drive.stop(),
-            DriveArg::Stall(_) => (),
+            DriveArg::Stop(_, _) => drive.stop(),
+            DriveArg::Stall(_, _) => (),
         }
     }
 
     pub fn add(first: Self, second: Self) -> Self {
         match (first, second) {
-            (x, DriveArg::Stop(_)) => x,
-            (DriveArg::Stop(_), y) => y,
-            (_, _) => DriveArg::Stall(ButtonArg::Null),
+            (x, DriveArg::Stop(_, _)) => x,
+            (DriveArg::Stop(_, _), y) => y,
+            (_, _) => DriveArg::Stall(ButtonArg::Null, false),
         }
     }
 
@@ -42,8 +42,8 @@ impl DriveArg {
             DriveArg::Backward(x, precise) => ("Backward", x.to_string(), *precise),
             DriveArg::Left(x, precise) => ("Left", x.to_string(), *precise),
             DriveArg::Right(x, precise) => ("Right", x.to_string(), *precise),
-            DriveArg::Stop(x) => ("Stop", x.to_string(), false),
-            DriveArg::Stall(x) => ("Stall", x.to_string(), false),
+            DriveArg::Stop(x, _) => ("Stop", x.to_string(), false),
+            DriveArg::Stall(x, _) => ("Stall", x.to_string(), false),
         }
     }
 
@@ -69,8 +69,8 @@ impl DriveArg {
             DriveArg::Backward(x, _) => x,
             DriveArg::Left(x, _) => x,
             DriveArg::Right(x, _) => x,
-            DriveArg::Stop(x) => x,
-            DriveArg::Stall(x) => x,
+            DriveArg::Stop(x, _) => x,
+            DriveArg::Stall(x, _) => x,
         }
     }
 
@@ -80,8 +80,8 @@ impl DriveArg {
             DriveArg::Backward(x, precise) => DriveArg::Backward(x.duplicate(), *precise),
             DriveArg::Left(x, precise) => DriveArg::Left(x.duplicate(), *precise),
             DriveArg::Right(x, precise) => DriveArg::Right(x.duplicate(), *precise),
-            DriveArg::Stop(x) => DriveArg::Stop(x.duplicate()),
-            DriveArg::Stall(x) => DriveArg::Stall(x.duplicate()),
+            DriveArg::Stop(x, _) => DriveArg::Stop(x.duplicate(), false),
+            DriveArg::Stall(x, _precise) => DriveArg::Stall(x.duplicate(), false),
         }
     }
 }
