@@ -69,7 +69,7 @@ impl Robot for Bot {
             self.update_screen(&tick);
 
             // Autonomous Movement
-            let arg: Option<DriveArg> = Algor::AUTONOMOUS.get(&tick); // Update drive according to Autonomous algorithm
+            let arg: Option<DriveArg> = Algor::GAME_AUTO.get(&tick); // Update drive according to Autonomous algorithm
             if arg.is_none() { break }
             let arg: DriveArg = arg.unwrap();
             
@@ -100,10 +100,10 @@ impl Robot for Bot {
             // Movement
             let arg: DriveArg = match Config::RUN_MODE {
                 RunMode::Practice => controller::Packet::new(&self.controller).gen_arg(), // Update drive according to controller packet
-                RunMode::Autonomous => Algor::AUTONOMOUS.get(&tick).unwrap(), // Update drive according to Autonomous algorithm
+                RunMode::Autonomous => Algor::FULL_AUTO.get(&tick).unwrap(), // Update drive according to Autonomous algorithm
                 // (Similar to practice)
-                RunMode::Competition if tick <= Config::GAME_TIME as u32 => controller::Packet::new(&self.controller).gen_arg(), // Checks if competition time limit passed
-                RunMode::Competition => quit(&tick, "Competition Time Limit Reached!"), // <else>
+                RunMode::Competition if Algor::GAME_AUTO.is_finished(&tick) => controller::Packet::new(&self.controller).gen_arg(), // If competition autonomous period finished use driver control
+                RunMode::Competition => Algor::GAME_AUTO.get(&tick).unwrap(), // If autonomous period isn't finished, use autonomous control
                 RunMode::Record => record.record(controller::Packet::new(&self.controller).gen_arg()), // Records new packets and logs them
             };
 

@@ -51,13 +51,22 @@ impl Algor {
         if self.0.len() <= tick { None }
         else { Some(self.0[tick].as_ref().unwrap().duplicate()) }
     }
+
+    pub fn is_finished(&self, tick: &u32) -> bool {
+        let tick = *tick as usize;
+        self.0.len() <= tick
+    }
 }
 
 // Algorithms
 use DriveArg::*;
 use ButtonArg::*;
 impl Algor {
-    pub const AUTONOMOUS: Algor = gen_algor! {
+    pub const GAME_AUTO: Algor = gen_algor! {
+        Forward for 20;
+    };
+
+    pub const FULL_AUTO: Algor = gen_algor! {
         Stop for 60;
         (precise) Forward(A) for 30;
         Backward for 20;
