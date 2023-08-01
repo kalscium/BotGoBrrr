@@ -10,7 +10,7 @@ impl Config {
     /// **Autonomous:** runs the user defined autonomous algorithm
     /// 
     /// **Record:** like `Practice` but records driver movements consisely ( for writing autonomous )
-    pub const RUN_MODE: RunMode = RunMode::_Record;
+    pub const RUN_MODE: RunMode = RunMode::Record;
     /// Robot's fixed update speed in milliseconds
     pub const TICK_SPEED: u64 = 50;
     /// Amount of ticks within competition game ( 2min )
@@ -66,11 +66,12 @@ impl Config {
     pub const PRECISE_TURN_SPEED: i8 = 25;
 }
 
+#[allow(unused)]
 pub enum RunMode {
-    _Autonomous,
-    _Practice,
-    _Competition,
-    _Record,
+    Autonomous,
+    Practice,
+    Competition,
+    Record,
 }
 
 /// ( Motor order goes from top to down, left to right )

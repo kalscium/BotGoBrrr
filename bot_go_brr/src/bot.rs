@@ -99,16 +99,16 @@ impl Robot for Bot {
 
             // Movement
             let arg: DriveArg = match Config::RUN_MODE {
-                RunMode::_Practice => controller::Packet::new(&self.controller).gen_arg(), // Update drive according to controller packet
-                RunMode::_Autonomous => Algor::AUTONOMOUS.get(&tick).unwrap(), // Update drive according to Autonomous algorithm
+                RunMode::Practice => controller::Packet::new(&self.controller).gen_arg(), // Update drive according to controller packet
+                RunMode::Autonomous => Algor::AUTONOMOUS.get(&tick).unwrap(), // Update drive according to Autonomous algorithm
                 // (Similar to practice)
-                RunMode::_Competition if tick <= Config::GAME_TIME as u128 => controller::Packet::new(&self.controller).gen_arg(), // Checks if competition time limit passed
-                RunMode::_Competition => quit(&tick, "Competition Time Limit Reached!"), // <else>
-                RunMode::_Record => record.record(controller::Packet::new(&self.controller).gen_arg()), // Records new packets and logs them
+                RunMode::Competition if tick <= Config::GAME_TIME as u128 => controller::Packet::new(&self.controller).gen_arg(), // Checks if competition time limit passed
+                RunMode::Competition => quit(&tick, "Competition Time Limit Reached!"), // <else>
+                RunMode::Record => record.record(controller::Packet::new(&self.controller).gen_arg()), // Records new packets and logs them
             };
 
             // Logging
-            if let RunMode::_Record = Config::RUN_MODE {} // Log Drive Arg if not record mode and if wanted in config
+            if let RunMode::Record = Config::RUN_MODE {} // Log Drive Arg if not record mode and if wanted in config
             else if Config::LOG_DRIVE_ARG { arg.log(&tick) }
 
             self.drive.lock().drive(arg);
