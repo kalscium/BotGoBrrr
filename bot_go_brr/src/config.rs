@@ -13,10 +13,6 @@ impl Config {
     pub const RUN_MODE: RunMode = RunMode::Record;
     /// Robot's fixed update speed in milliseconds
     pub const TICK_SPEED: u64 = 50;
-    /// Amount of ticks within competition game ( 2min )
-    pub const GAME_TIME: u64 = 2 * 61 * Config::TICK_PER_SECOND;
-    /// Ticks per second
-    pub const TICK_PER_SECOND: u64 = 1000 / Config::TICK_SPEED;
     /// ### Controller sensitivity
     /// Controller stick movement tolerance / threshold
     /// ( to combat stick drift )
