@@ -64,7 +64,7 @@ impl Robot for Bot {
     fn autonomous(&mut self, _ctx: Context) {
         println!("autonomous");
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
-        let mut tick: u128 = 0;
+        let mut tick: u32 = 0;
         loop {
             self.update_screen(&tick);
 
@@ -92,7 +92,7 @@ impl Robot for Bot {
         println!("opcontrol");
         // This loop construct makes sure the drive is updated every 100 milliseconds.
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
-        let mut tick: u128 = 0;
+        let mut tick: u32 = 0;
         let mut record: Record = Record::new(DriveArg::Stall(ButtonArg::Null, false));
         loop {
             self.update_screen(&tick);
@@ -102,7 +102,7 @@ impl Robot for Bot {
                 RunMode::Practice => controller::Packet::new(&self.controller).gen_arg(), // Update drive according to controller packet
                 RunMode::Autonomous => Algor::AUTONOMOUS.get(&tick).unwrap(), // Update drive according to Autonomous algorithm
                 // (Similar to practice)
-                RunMode::Competition if tick <= Config::GAME_TIME as u128 => controller::Packet::new(&self.controller).gen_arg(), // Checks if competition time limit passed
+                RunMode::Competition if tick <= Config::GAME_TIME as u32 => controller::Packet::new(&self.controller).gen_arg(), // Checks if competition time limit passed
                 RunMode::Competition => quit(&tick, "Competition Time Limit Reached!"), // <else>
                 RunMode::Record => record.record(controller::Packet::new(&self.controller).gen_arg()), // Records new packets and logs them
             };
@@ -133,7 +133,7 @@ impl Robot for Bot {
 }
 
 impl Bot {
-    pub fn update_screen(&mut self, tick: &u128) {
+    pub fn update_screen(&mut self, tick: &u32) {
         let screen = &mut self.controller.screen;
         screen.clear_line(0);
         screen.print(0, 0, &(String::from("tick: ") + &tick.to_string()));

@@ -7,7 +7,7 @@ use alloc::{fmt::{format, Display, self}, string::{ToString, String}};
 pub enum Log<'a> {
     String(String), // basic string
     Str(&'a str), // basic str
-    Base(&'a u128, &'a str, &'a Log<'a>), // Base of every log ( tick, title, body )
+    Base(&'a u32, &'a str, &'a Log<'a>), // Base of every log ( tick, title, body )
     Wrap(&'a str, &'a Log<'a>, &'a str), // wrapping eg. '['value']'
     List(&'a Log<'a>, &'a str, &'a Log<'a>), // List with separator
     Title(&'a str), // Blue title
@@ -50,7 +50,7 @@ impl<'a> Log<'a> {
     fn pink(log: &str) -> String { Self::colour(log, "\x1b[35;1m") }
 }
 
-pub fn log(tick: &u128, title: &str, body: &str) {
+pub fn log(tick: &u32, title: &str, body: &str) {
     use Log::*;
     Base(tick, title, &Str(body)).log();
 }
@@ -70,7 +70,7 @@ pub fn list_ports(ports: Iter<&SmartPort>) {
     }
 }
 
-pub fn quit<T>(tick: &u128, msg: &str) -> T {
+pub fn quit<T>(tick: &u32, msg: &str) -> T {
     log(tick, "Quiting...", msg);
     panic!("Imma bout to end this whole fuckin program.")
 }

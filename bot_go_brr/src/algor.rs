@@ -46,7 +46,7 @@ macro_rules! gen_algor {
 
 pub struct Algor(&'static [Option<DriveArg>]);
 impl Algor {
-    pub fn get(&self, tick: &u128) -> Option<DriveArg> {
+    pub fn get(&self, tick: &u32) -> Option<DriveArg> {
         let tick = *tick as usize;
         if self.0.len() <= tick { None }
         else { Some(self.0[tick].as_ref().unwrap().duplicate()) }
