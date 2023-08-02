@@ -23,7 +23,7 @@ impl Record {
     }
     
     pub fn record(&mut self, arg: DriveArg) -> DriveArg {
-        if self.arg.to_strings() == arg.to_strings() { self.ticks += 1 }
+        if self.arg == arg { self.ticks += 1 }
         else {
             self.log();
             self.clear(arg.duplicate());
