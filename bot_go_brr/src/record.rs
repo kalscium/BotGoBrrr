@@ -5,24 +5,25 @@ use alloc::string::ToString;
 
 pub struct Record {
     arg: DriveArg,
-    held: u16,
+    /// Amount of ticks `DriveArg` is held for
+    ticks: u16,
 }
 
 impl Record {
     pub fn new(arg: DriveArg) -> Self {
         Self {
             arg,
-            held: 0,
+            ticks: 1,
         }
     }
 
     pub fn clear(&mut self, arg: DriveArg) {
         self.arg = arg;
-        self.held = 0;
+        self.ticks = 1;
     }
     
     pub fn record(&mut self, arg: DriveArg) -> DriveArg {
-        if self.arg.to_strings() == arg.to_strings() { self.held += 1 }
+        if self.arg.to_strings() == arg.to_strings() { self.ticks += 1 }
         else {
             self.log();
             self.clear(arg.duplicate());
@@ -35,7 +36,7 @@ impl Record {
         List(
             &Wrap("[", &List(
                 &Title("held"), ": ",
-                &String(self.held.to_string()),
+                &String(self.ticks.to_string()),
             ), "]"), " ",
             &List(
                 &Title(name), "",
