@@ -3,6 +3,18 @@ use crate::drive::DriveArg;
 use crate::button::ButtonArg;
 use crate::config::Config;
 
+pub enum StickState {
+    None,
+    North,
+    NorthEast(bool), // North Larger?
+    East,
+    SouthEast(bool), // South Larger?
+    South,
+    SouthWest(bool), // South Larger?
+    West,
+    NorthWest(bool), // North Larger?
+}
+
 pub struct Stick {
     abs_x: u8,
     abs_y: u8,
@@ -20,28 +32,29 @@ impl Stick {
         }
     }
 
-    pub fn above_threshold(&self) -> u8 { // 0 => none, 1 => x, 2 => y, 3 => both
-        if self.abs_x > Config::CONTROLLER_STICK_THRESHOLD {
-            if self.abs_y > Config::CONTROLLER_STICK_THRESHOLD { 3 }
-            else { 1 }
-        } else if self.abs_y > Config::CONTROLLER_STICK_THRESHOLD { 2 }
-        else { 0 }
+    pub fn gen_state(&self) -> StickState {
+        match (self.abs_y > Config::CONTROLLER_STICK_THRESHOLD, self.abs_x > Config::CONTROLLER_STICK_THRESHOLD) {
+            (false, false) => StickState::None,
+            (true, false) => if self.pos_y { StickState::North } else { StickState::South },
+            (false, true) => if self.pos_x { StickState::East } else { StickState::West },
+            (true, true) => (match (self.pos_y, self.pos_x) {
+               (true, true) => StickState::NorthEast,
+               (true, false) => StickState::NorthWest,
+               (false, true) => StickState::SouthEast,
+               (false, false) => StickState::SouthWest,
+            }(self.abs_y > self.abs_x))
+        }
     }
 
-    pub fn abs_arg(&self, button: ButtonArg, right: bool) -> DriveArg {
-        let code: u8 = self.above_threshold();
-        match code {
-            0 => DriveArg::Stop(button, false),
-
-            1 if self.pos_x => DriveArg::Right(button, right),
-            1 => DriveArg::Left(button, right), // <else>
-
-            2 if self.pos_y => DriveArg::Forward(button, right),
-            2 => DriveArg::Backward(button, right), // <else>
-
-            3 => DriveArg::Stall(button, false),
-            _ => panic!("should logically not panic"),
-        }
+    pub fn abs_arg(&self, button: ButtonArg, right:bool) -> DriveArg {
+        (match self.gen_state() {
+            StickState::None => DriveArg::Stop,
+            StickState::North => DriveArg::Forward,
+            StickState::East => DriveArg::Right,
+            StickState::South => DriveArg::Backward,
+            StickState::West => DriveArg::Left,
+            _ => DriveArg::Stall,
+        })(button, right)
     }
 }
 

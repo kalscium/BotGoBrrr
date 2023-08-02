@@ -48,7 +48,7 @@ impl Config {
         reverse4: true,
     };
 
-    pub const _FUCKED_PORTS: [u8; 5] = [6, 7, 8, 10, 11]; // Ports that don't work
+    pub const _BROKEN_PORTS: [u8; 5] = [6, 7, 8, 10, 11]; // Ports that don't work
 
     // Robot speeds
     pub const FORWARD_SPEED: i8 = 80; // 100 / 100
