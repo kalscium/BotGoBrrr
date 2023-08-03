@@ -12,6 +12,7 @@ use crate::{
     utils::*,
     button::ButtonArg,
     record::Record,
+    smooth::Smooth,
 };
 
 pub struct Bot {
@@ -93,18 +94,19 @@ impl Robot for Bot {
         // This loop construct makes sure the drive is updated every 100 milliseconds.
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u32 = 0;
-        let mut record: Record = Record::new(DriveArg::Stall(ButtonArg::Null, false));
+        let mut smooth = Smooth::new();
+        let mut record = Record::new(DriveArg::Stall(ButtonArg::Null, false));
         loop {
             self.update_screen(&tick);
 
             // Movement
             let arg: DriveArg = match Config::RUN_MODE {
-                RunMode::Practice => controller::Packet::new(&self.controller).gen_arg(), // Update drive according to controller packet
+                RunMode::Practice => controller::Packet::new(&self.controller).gen_arg(&mut smooth), // Update drive according to controller packet
                 RunMode::Autonomous => Algor::FULL_AUTO.get(&tick).unwrap(), // Update drive according to Autonomous algorithm
                 // (Similar to practice)
-                RunMode::Competition if Algor::GAME_AUTO.is_finished(&tick) => controller::Packet::new(&self.controller).gen_arg(), // If competition autonomous period finished use driver control
+                RunMode::Competition if Algor::GAME_AUTO.is_finished(&tick) => controller::Packet::new(&self.controller).gen_arg(&mut smooth), // If competition autonomous period finished use driver control
                 RunMode::Competition => Algor::GAME_AUTO.get(&tick).unwrap(), // If autonomous period isn't finished, use autonomous control
-                RunMode::Record => record.record(controller::Packet::new(&self.controller).gen_arg()), // Records new packets and logs them
+                RunMode::Record => record.record(controller::Packet::new(&self.controller).gen_arg(&mut smooth)), // Records new packets and logs them
             };
 
             // Logging

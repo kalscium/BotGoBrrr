@@ -2,7 +2,9 @@ use vex_rt::prelude::*;
 use crate::drive::DriveArg;
 use crate::button::ButtonArg;
 use crate::config::Config;
+use crate::smooth::Smooth;
 
+#[derive(PartialEq, Clone, Copy)]
 pub enum StickState {
     None,
     North,
@@ -46,7 +48,7 @@ impl Stick {
         }
     }
 
-    pub fn abs_arg(&self, button: ButtonArg, right:bool) -> DriveArg {
+    pub fn abs_arg(&self, button: ButtonArg) -> DriveArg {
         (match self.gen_state() {
             StickState::None => DriveArg::Stop,
             StickState::North => DriveArg::Forward,
@@ -54,7 +56,13 @@ impl Stick {
             StickState::South => DriveArg::Backward,
             StickState::West => DriveArg::Left,
             _ => DriveArg::Stall,
-        })(button, right)
+        })(button, true)
+    }
+
+    #[inline]
+    pub fn smooth_arg(&self, smooth: &mut Smooth, button: ButtonArg) -> DriveArg {
+        let state = self.gen_state();
+        smooth.gen_arg(state, button)
     }
 }
 
@@ -79,9 +87,9 @@ impl Packet {
         }
     }
 
-    pub fn gen_arg(&self) -> DriveArg {
-        let left: DriveArg = self.left_stick.abs_arg(self.gen_button(), false);
-        let right: DriveArg = self.right_stick.abs_arg(self.gen_button(), true);
+    pub fn gen_arg(&self, smooth: &mut Smooth) -> DriveArg {
+        let left: DriveArg = self.left_stick.smooth_arg(smooth, self.gen_button());
+        let right: DriveArg = self.right_stick.abs_arg(self.gen_button());
         DriveArg::add(left, right)
     }
 

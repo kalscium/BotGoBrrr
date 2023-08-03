@@ -50,6 +50,10 @@ impl Config {
 
     pub const _BROKEN_PORTS: [u8; 5] = [6, 7, 8, 10, 11]; // Ports that don't work
 
+    // Robot Smooth Turning
+    // Ticks it takes to turn 45 degrees
+    pub const TICKS_FOR_45: u8 = 35;
+
     // Robot speeds
     pub const FORWARD_SPEED: i8 = 80; // 100 / 100
     pub const BACKWARD_SPEED: i8 = 80; // 80 / 100
