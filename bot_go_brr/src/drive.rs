@@ -32,7 +32,8 @@ impl DriveArg {
         match (first, second) {
             (x, DriveArg::Stop(_, _)) => x,
             (DriveArg::Stop(_, _), y) => y,
-            (_, _) => DriveArg::Stall(ButtonArg::Null, false),
+            (_, x) => x, // Favours second arg
+            // (_, _) => DriveArg::Stall(ButtonArg::Null, false), // does nothing when both are activated
         }
     }
 

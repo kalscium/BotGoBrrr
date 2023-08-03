@@ -90,7 +90,7 @@ impl Packet {
     pub fn gen_arg(&self, smooth: &mut Smooth) -> DriveArg {
         let left: DriveArg = self.left_stick.smooth_arg(smooth, self.gen_button());
         let right: DriveArg = self.right_stick.abs_arg(self.gen_button());
-        DriveArg::add(left, right)
+        DriveArg::add(left, right) // Favours right control
     }
 
     pub fn gen_button(&self) -> ButtonArg {
