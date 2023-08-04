@@ -66,35 +66,55 @@ impl Stick {
     }
 }
 
-pub struct Packet {
+pub struct PacketRaw {
     left_stick: Stick,
     right_stick: Stick,
     button_a: bool,
 }
 
+pub enum Packet {
+    Disconnected,
+    Connected(PacketRaw),
+}
+
+macro_rules! safe_unwrap {
+    ($item:expr) => {{
+        if let Ok(x) = $item {
+            x
+        } else {
+            return Packet::Disconnected;
+        }
+    }}
+}
+
 impl Packet {
     pub fn new(controller: &Controller) -> Packet {
-        Packet {
+        Packet::Connected(PacketRaw {
             left_stick: Stick::new(
-                controller.left_stick.get_x().unwrap(),
-                controller.left_stick.get_y().unwrap(),
+                safe_unwrap!(controller.left_stick.get_x()),
+                safe_unwrap!(controller.left_stick.get_y()),
             ),
             right_stick: Stick::new(
-                controller.right_stick.get_x().unwrap(),
-                controller.right_stick.get_y().unwrap(),
+                safe_unwrap!(controller.right_stick.get_x()),
+                safe_unwrap!(controller.right_stick.get_y()),
             ),
-            button_a: controller.a.is_pressed().unwrap(),
-        }
+            
+            button_a: safe_unwrap!(controller.a.is_pressed()),
+        })
     }
 
     pub fn gen_arg(&self, smooth: &mut Smooth) -> DriveArg {
-        let left: DriveArg = self.left_stick.smooth_arg(smooth, self.gen_button());
-        let right: DriveArg = self.right_stick.abs_arg(self.gen_button());
-        DriveArg::add(left, right) // Favours right control
+        let this = if let Packet::Connected(this) = self { this }
+            else { return DriveArg::Stop(ButtonArg::Null, false) };
+        let left: DriveArg = this.left_stick.smooth_arg(smooth, self.gen_button());
+        let right: DriveArg = this.right_stick.abs_arg(self.gen_button());
+        DriveArg::add(left, right)
     }
 
     pub fn gen_button(&self) -> ButtonArg {
-        if self.button_a { ButtonArg::A }
+        let this = if let Packet::Connected(this) = self { this }
+            else { return ButtonArg::Null };
+        if this.button_a { ButtonArg::A }
         else { ButtonArg::Null }
     }
 }

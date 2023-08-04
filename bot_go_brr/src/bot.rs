@@ -101,12 +101,12 @@ impl Robot for Bot {
 
             // Movement
             let arg: DriveArg = match Config::RUN_MODE {
-                RunMode::Practice => controller::Packet::new(&self.controller).gen_arg(&mut smooth), // Update drive according to controller packet
+                RunMode::Practice => self.driver(&mut smooth), // Update drive according to controller packet
                 RunMode::Autonomous => Algor::FULL_AUTO.get(&tick).unwrap(), // Update drive according to Autonomous algorithm
                 // (Similar to practice)
-                RunMode::Competition if Algor::GAME_AUTO.is_finished(&tick) => controller::Packet::new(&self.controller).gen_arg(&mut smooth), // If competition autonomous period finished use driver control
+                RunMode::Competition if Algor::GAME_AUTO.is_finished(&tick) => self.driver(&mut smooth), // If competition autonomous period finished use driver control
                 RunMode::Competition => Algor::GAME_AUTO.get(&tick).unwrap(), // If autonomous period isn't finished, use autonomous control
-                RunMode::Record => record.record(controller::Packet::new(&self.controller).gen_arg(&mut smooth)), // Records new packets and logs them
+                RunMode::Record => record.record(self.driver(&mut smooth)), // Records new packets and logs them
             };
 
             // Logging
@@ -139,5 +139,13 @@ impl Bot {
         let screen = &mut self.controller.screen;
         screen.clear_line(0);
         screen.print(0, 0, &(String::from("tick: ") + &tick.to_string()));
+    }
+
+    pub fn driver(&mut self, smooth: &mut Smooth) -> DriveArg{
+        let controller = controller::Packet::new(&self.controller);
+        if let controller::Packet::Disconnected = controller {
+            self.controller.screen.print(1, 0, "CONTROLLER DISCONNECTED :C");
+        };
+        controller.gen_arg(smooth)
     }
 }

@@ -60,15 +60,18 @@ impl Algor {
 
 // Algorithms
 use DriveArg::*;
+#[allow(unused_imports)]
 use ButtonArg::*;
 impl Algor {
     pub const GAME_AUTO: Algor = gen_algor! {
-        Forward for 20;
+        Forward for 30;
+        Right for 20;
+        Stop for 20;
     };
 
     pub const FULL_AUTO: Algor = gen_algor! {
         Stop for 60;
-        (precise) Forward(A) for 30;
+        (precise) Forward for 30;
         Backward for 20;
         Forward for 40;
     };

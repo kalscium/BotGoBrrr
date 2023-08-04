@@ -10,7 +10,7 @@ impl Config {
     /// **Autonomous:** runs the user defined autonomous algorithm
     /// 
     /// **Record:** like `Practice` but records driver movements consisely ( for writing autonomous )
-    pub const RUN_MODE: RunMode = RunMode::Record;
+    pub const RUN_MODE: RunMode = RunMode::Practice;
     /// Robot's fixed update speed in milliseconds
     pub const TICK_SPEED: u64 = 50;
     /// ### Controller sensitivity
@@ -40,7 +40,7 @@ impl Config {
         motor1: 12,
         motor2: 3,
         motor3: 20,
-        motor4: 9,
+        motor4: 5,
 
         reverse1: false,
         reverse2: true,
