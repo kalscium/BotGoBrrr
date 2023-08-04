@@ -52,7 +52,9 @@ impl Config {
 
     // Robot Smooth Turning
     // Ticks it takes to turn 45 degrees
-    pub const TICKS_FOR_45: u8 = 35;
+    pub const TICKS_FOR_45: u8 = 4;
+    // Minimum amount of ticks to be held for smooth to register
+    pub const MIN_TICK_SMOOTH: u8 = 3;
 
     // Robot speeds
     pub const FORWARD_SPEED: i8 = 80; // 100 / 100

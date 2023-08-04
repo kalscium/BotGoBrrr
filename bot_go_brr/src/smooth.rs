@@ -19,7 +19,7 @@ impl Smooth {
     }
 
     pub fn reset(&mut self, state: StickState) {
-        self.modifier = self.action;
+        if self.ticks >= Config::MIN_TICK_SMOOTH as u16 { self.modifier = self.action; }
         self.action = state;
         self.ticks = 0;
     }
@@ -49,28 +49,34 @@ impl Smooth {
             NorthEast(n) => match self.modifier {
                 North if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Right,
                 North => DriveArg::Forward,
-                // so it only does the 45 degree thing when changing from north
+                NorthWest(_) if self.ticks < (Config::TICKS_FOR_45 as u16 * 2) => DriveArg::Right,
+                NorthWest(_) => DriveArg::Forward,
+                // so it only does the 45 degree thing when changing from north or north diagonals
                 _ if n => DriveArg::Forward,
                 _ => DriveArg::Right,
             },
             NorthWest(n) => match self.modifier {
                 North if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Left,
                 North => DriveArg::Forward,
-                // so it only does the 45 degree thing when changing from north
+                NorthEast(_) if self.ticks < (Config::TICKS_FOR_45 as u16 * 2) => DriveArg::Left,
+                NorthEast(_) => DriveArg::Forward,
+                // so it only does the 45 degree thing when changing from north or north diagonals
                 _ if n => DriveArg::Forward,
                 _ => DriveArg::Left,
             },
             SouthEast(n) => match self.modifier {
                 South if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Left,
-                South => DriveArg::Backward,
-                // so it only does the 45 degree thing when changing from north
+                SouthWest(_) if self.ticks < (Config::TICKS_FOR_45 as u16 * 2) => DriveArg::Left,
+                SouthWest(_) => DriveArg::Backward,
+                // so it only does the 45 degree thing when changing from south or south diagonals
                 _ if n => DriveArg::Backward,
                 _ => DriveArg::Left,
             },
             SouthWest(n) => match self.modifier {
                 South if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Right,
-                South => DriveArg::Backward,
-                // so it only does the 45 degree thing when changing from north
+                SouthEast(_) if self.ticks < (Config::TICKS_FOR_45 as u16 * 2) => DriveArg::Right,
+                SouthEast(_) => DriveArg::Backward,
+                // so it only does the 45 degree thing when changing from south or south diagonals
                 _ if n => DriveArg::Backward,
                 _ => DriveArg::Right,
             },
