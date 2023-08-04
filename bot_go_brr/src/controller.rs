@@ -56,7 +56,7 @@ pub enum Packet {
     Connected(PacketRaw),
 }
 
-macro_rules! return_disconnect {
+macro_rules! safe_unwrap {
     ($item:expr) => {{
         if let Ok(x) = $item {
             x
@@ -70,15 +70,15 @@ impl Packet {
     pub fn new(controller: &Controller) -> Packet {
         Packet::Connected(PacketRaw {
             left_stick: Stick::new(
-                return_disconnect!(controller.left_stick.get_x()),
-                return_disconnect!(controller.left_stick.get_y()),
+                safe_unwrap!(controller.left_stick.get_x()),
+                safe_unwrap!(controller.left_stick.get_y()),
             ),
             right_stick: Stick::new(
-                return_disconnect!(controller.right_stick.get_x()),
-                return_disconnect!(controller.right_stick.get_y()),
+                safe_unwrap!(controller.right_stick.get_x()),
+                safe_unwrap!(controller.right_stick.get_y()),
             ),
             
-            button_a: return_disconnect!(controller.a.is_pressed()),
+            button_a: safe_unwrap!(controller.a.is_pressed()),
         })
     }
 
