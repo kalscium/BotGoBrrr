@@ -65,8 +65,7 @@ use ButtonArg::*;
 impl Algor {
     pub const GAME_AUTO: Algor = gen_algor! {
         Forward for 30;
-        Right for 20;
-        Stop for 20;
+        Left for 80;
     };
 
     pub const FULL_AUTO: Algor = gen_algor! {

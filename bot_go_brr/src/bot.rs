@@ -66,11 +66,14 @@ impl Robot for Bot {
         println!("autonomous");
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u32 = 0;
+        let algor =
+            if let crate::config::RunMode::Autonomous = Config::RUN_MODE { &Algor::FULL_AUTO }
+            else { &Algor::GAME_AUTO };
         loop {
             self.update_screen(&tick);
 
             // Autonomous Movement
-            let arg: Option<DriveArg> = Algor::GAME_AUTO.get(&tick); // Update drive according to Autonomous algorithm
+            let arg: Option<DriveArg> = algor.get(&tick); // Update drive according to Autonomous algorithm
             if arg.is_none() { break }
             let arg: DriveArg = arg.unwrap();
             
