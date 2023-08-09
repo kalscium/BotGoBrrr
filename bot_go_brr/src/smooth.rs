@@ -70,7 +70,7 @@ impl Smooth {
                 SouthWest(_) => DriveArg::Backward,
                 // so it only does the 45 degree thing when changing from south or south diagonals
                 _ if n => DriveArg::Backward,
-                _ => DriveArg::Left,
+                _ => DriveArg::Right,
             },
             SouthWest(n) => match self.modifier {
                 South if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Right,
@@ -78,7 +78,7 @@ impl Smooth {
                 SouthEast(_) => DriveArg::Backward,
                 // so it only does the 45 degree thing when changing from south or south diagonals
                 _ if n => DriveArg::Backward,
-                _ => DriveArg::Right,
+                _ => DriveArg::Left,
             },
         }
     }

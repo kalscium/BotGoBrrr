@@ -10,7 +10,7 @@ impl Config {
     /// **Autonomous:** runs the user defined autonomous algorithm
     /// 
     /// **Record:** like `Practice` but records driver movements consisely ( for writing autonomous )
-    pub const RUN_MODE: RunMode = RunMode::Practice;
+    pub const RUN_MODE: RunMode = RunMode::Record;
     /// Robot's fixed update speed in milliseconds
     pub const TICK_SPEED: u64 = 50;
     /// ### Controller sensitivity
@@ -48,7 +48,7 @@ impl Config {
         reverse4: true,
     };
 
-    pub const _BROKEN_PORTS: [u8; 5] = [6, 7, 8, 10, 11]; // Ports that don't work
+    pub const _BROKEN_PORTS: [u8; 6] = [2, 6, 7, 8, 10, 11]; // Ports that don't work
 
     // Robot Smooth Turning
     // Ticks it takes to turn 45 degrees
