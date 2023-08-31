@@ -111,24 +111,24 @@ impl Drive {
     }
 
     pub fn forwards(&mut self, precise: bool) {
-        self.map(|x, _| x.move_i8(Drive::cal_volt(niceif!(if precise, Config::PRECISE_FORWARD_SPEED, else Config::FORWARD_SPEED))).unwrap());
+        self.map(|x, _| x.move_voltage(Drive::cal_volt(niceif!(if precise, Config::PRECISE_FORWARD_SPEED, else Config::FORWARD_SPEED))).unwrap());
     }
 
     pub fn stop(&mut self) {
-        self.map(|x, _| x.move_i8(0).unwrap());
+        self.map(|x, _| x.move_voltage(0).unwrap());
     }
 
     pub fn backwards(&mut self, precise: bool) {
-        self.map(|x, _| x.move_i8(Drive::cal_volt(-niceif!(if precise, Config::PRECISE_BACKWARD_SPEED, else Config::BACKWARD_SPEED))).unwrap())
+        self.map(|x, _| x.move_voltage(Drive::cal_volt(-niceif!(if precise, Config::PRECISE_BACKWARD_SPEED, else Config::BACKWARD_SPEED))).unwrap())
     }
 
     pub fn left(&mut self, precise: bool) {
         let turnspeed: i8 = niceif!(if precise, Config::PRECISE_TURN_SPEED, else Config::TURN_SPEED);
         self.map(|x, i| {
             if i & 1 == 0 { // Right Motors
-                x.move_i8(Drive::cal_volt(turnspeed)).unwrap();
+                x.move_voltage(Drive::cal_volt(turnspeed)).unwrap();
             } else { // Left Motors
-                x.move_i8(Drive::cal_volt(-turnspeed)).unwrap();
+                x.move_voltage(Drive::cal_volt(-turnspeed)).unwrap();
             }
         });
     }
@@ -137,9 +137,9 @@ impl Drive {
         let turnspeed: i8 = niceif!(if precise, Config::PRECISE_TURN_SPEED, else Config::TURN_SPEED);
         self.map(|x, i| {
             if i & 1 == 0 { // Right Motors
-                x.move_i8(Drive::cal_volt(-turnspeed)).unwrap();
+                x.move_voltage(Drive::cal_volt(-turnspeed)).unwrap();
             } else { // Left Motors
-                x.move_i8(Drive::cal_volt(turnspeed)).unwrap();
+                x.move_voltage(Drive::cal_volt(turnspeed)).unwrap();
             }
         });
     }
@@ -155,7 +155,7 @@ impl Drive {
     }
 
     #[inline]
-    pub fn cal_volt(speed: i8) -> i8 { (127i16 * speed as i16 / 100i16) as i8 } // Normalised speed from 1 to 100
+    pub fn cal_volt(speed: i8) -> i32 { 12000 * (speed as i32) / 100 } // Normalised speed from 1 to 100
 
     fn build_motor(id: u8) -> Motor {
         unsafe {

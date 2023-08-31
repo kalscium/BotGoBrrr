@@ -36,7 +36,7 @@ impl ButtonArg {
     }
 
     pub fn stop(man: &mut ButtonMan) { // Stops all button activities
-        man.arm.move_i8(0).unwrap();
+        man.arm.move_voltage(0).unwrap();
     }
 
     pub fn execute(&self, man: &mut ButtonMan) {
@@ -51,9 +51,9 @@ impl ButtonArg {
 
     fn move_arm(man: &mut ButtonMan, up: bool) {
         if up {
-            man.arm.move_i8(Drive::cal_volt(Config::ARM_SPEED)).unwrap();
+            man.arm.move_voltage(Drive::cal_volt(Config::ARM_SPEED)).unwrap();
         } else {
-            man.arm.move_i8(-Drive::cal_volt(Config::ARM_SPEED)).unwrap();
+            man.arm.move_voltage(-Drive::cal_volt(Config::ARM_SPEED)).unwrap();
         }
     }
 }
