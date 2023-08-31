@@ -67,23 +67,18 @@ impl Robot for Bot {
         // Do any extra initialization here.
 
         // Init controller screen data
-        self.log("Program not startin' yet :I...");
     }
 
     fn autonomous(&mut self, _ctx: Context) {
-        println!("autonomous");
-        self.log("Autonomous block run");
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u32 = 0;
         let algor =
             if let crate::config::RunMode::Autonomous = Config::RUN_MODE { &Algor::FULL_AUTO }
             else { &Algor::GAME_AUTO };
         loop {
-            self.log_tick(&(tick as u128), "Autonomous looping...");
             // Autonomous Movement
             let arg: Option<DriveArg> = algor.get(&tick); // Update drive according to Autonomous algorithm
             if arg.is_none() {
-                self.log_tick(&(tick as u128), "End of autonomous");
                 break;
             }
             let arg: DriveArg = arg.unwrap();
@@ -92,7 +87,6 @@ impl Robot for Bot {
 
             select! {
                 _ = _ctx.done() => {
-                    self.log_tick(&(tick as u128), "End of autonomous");
                     break;
                 },
 
@@ -106,8 +100,6 @@ impl Robot for Bot {
     }
 
     fn opcontrol(&mut self, ctx: Context) {
-        println!("opcontrol");
-        self.log("Opcontrol block run");
         // This loop construct makes sure the drive is updated every 100 milliseconds.
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u32 = 0;
@@ -144,9 +136,7 @@ impl Robot for Bot {
     }
 
     fn disabled(&mut self, _ctx: Context) {
-        println!("disabled");
         // This runs when the robot is in disabled mode.
-        self.log("Robot is disabled :I");
     }
 }
 
@@ -154,21 +144,9 @@ impl Bot {
     pub fn driver(&mut self, smooth: &mut Smooth) -> DriveArg{
         let packet = controller::Packet::new(&self.controller);
         if let controller::Packet::Disconnected = packet {
-            println!("Controller is not workin' :C");
-            self.log("ONO Controller is broken!:C");
             DriveArg::Forward(ButtonArg::Null, false)
         } else {
-            self.log("Robo workin' and driving :D");
             packet.gen_arg(smooth)
         }
-    }
-    
-    pub fn log_tick(&mut self, tick: &u128, msg: &str) {
-        // self.log(&format!("[t{tick}] {msg}"))
-    }
-
-    pub fn log(&mut self, msg: &str) {
-        // self.controller.screen.clear_line(0);
-        // self.controller.screen.print(0, 0, msg);
     }
 }
