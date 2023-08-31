@@ -64,8 +64,22 @@ use DriveArg::*;
 use ButtonArg::*;
 impl Algor {
     pub const GAME_AUTO: Algor = gen_algor! {
-        Forward for 30;
-        Left for 80;
+        Stop for 28;
+        (precise) Forward for 60;
+        Right for 9;
+        (precise) Forward for 28;
+        Backward for 12;
+        Left for 10;
+        Backward for 26;
+
+        Stop for 56;
+        (precise) Forward for 60;
+        Right for 9;
+        (precise) Forward for 28;
+        Backward for 12;
+        Left for 10;
+        Backward for 26;
+        Stop for 1;
     };
 
     pub const FULL_AUTO: Algor = gen_algor! {

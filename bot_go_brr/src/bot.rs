@@ -4,6 +4,7 @@ use crate::drive::Drive;
 use core::time::Duration;
 use vex_rt::{prelude::*, select};
 use alloc::string::*;
+use alloc::fmt::format;
 use crate::{
     controller,
     drive::DriveArg,
@@ -14,6 +15,12 @@ use crate::{
     record::Record,
     smooth::Smooth,
 };
+
+macro_rules! format {
+    ($stuff:tt) => {
+        format(format_args!($stuff))
+    };
+}
 
 pub struct Bot {
     drive: Mutex<Drive>,
@@ -58,30 +65,34 @@ impl Robot for Bot {
         // Do any extra initialization here.
 
         // Init controller screen data
-        let screen: &mut vex_rt::controller::Screen = &mut self.controller.screen;
-        screen.print(0, 0, "tick: null");
+        self.log("Program not startin' yet :I...");
     }
 
     fn autonomous(&mut self, _ctx: Context) {
         println!("autonomous");
+        self.log("Autonomous block run");
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u32 = 0;
         let algor =
             if let crate::config::RunMode::Autonomous = Config::RUN_MODE { &Algor::FULL_AUTO }
             else { &Algor::GAME_AUTO };
         loop {
-            self.update_screen(&tick);
-
+            self.log_tick(&(tick as u128), "Autonomous looping...");
             // Autonomous Movement
             let arg: Option<DriveArg> = algor.get(&tick); // Update drive according to Autonomous algorithm
-            if arg.is_none() { break }
+            if arg.is_none() {
+                self.log_tick(&(tick as u128), "End of autonomous");
+                break;
+            }
             let arg: DriveArg = arg.unwrap();
             
-            // Logging
             self.drive.lock().drive(arg);
 
             select! {
-                _ = _ctx.done() => break,
+                _ = _ctx.done() => {
+                    self.log_tick(&(tick as u128), "End of autonomous");
+                    break;
+                },
 
                 // Otherwise, when it's time for the next loop cycle, continue.
                 _ = l.select() => {
@@ -94,14 +105,13 @@ impl Robot for Bot {
 
     fn opcontrol(&mut self, ctx: Context) {
         println!("opcontrol");
+        self.log("Opcontrol block run");
         // This loop construct makes sure the drive is updated every 100 milliseconds.
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u32 = 0;
         let mut smooth = Smooth::new();
         let mut record = Record::new(DriveArg::Stall(ButtonArg::Null, false));
         loop {
-            self.update_screen(&tick);
-
             // Movement
             let arg: DriveArg = match Config::RUN_MODE {
                 RunMode::Practice => self.driver(&mut smooth), // Update drive according to controller packet
@@ -134,21 +144,29 @@ impl Robot for Bot {
     fn disabled(&mut self, _ctx: Context) {
         println!("disabled");
         // This runs when the robot is in disabled mode.
+        self.log("Robot is disabled :I");
     }
 }
 
 impl Bot {
-    pub fn update_screen(&mut self, tick: &u32) {
-        let screen = &mut self.controller.screen;
-        screen.clear_line(0);
-        screen.print(0, 0, &(String::from("tick: ") + &tick.to_string()));
+    pub fn driver(&mut self, smooth: &mut Smooth) -> DriveArg{
+        let packet = controller::Packet::new(&self.controller);
+        if let controller::Packet::Disconnected = packet {
+            println!("Controller is not workin' :C");
+            self.log("ONO Controller is broken!:C");
+            DriveArg::Forward(ButtonArg::Null, false)
+        } else {
+            self.log("Robo workin' and driving :D");
+            packet.gen_arg(smooth)
+        }
+    }
+    
+    pub fn log_tick(&mut self, tick: &u128, msg: &str) {
+        // self.log(&format!("[t{tick}] {msg}"))
     }
 
-    pub fn driver(&mut self, smooth: &mut Smooth) -> DriveArg{
-        let controller = controller::Packet::new(&self.controller);
-        if let controller::Packet::Disconnected = controller {
-            self.controller.screen.print(1, 0, "CONTROLLER DISCONNECTED :C");
-        };
-        controller.gen_arg(smooth)
+    pub fn log(&mut self, msg: &str) {
+        // self.controller.screen.clear_line(0);
+        // self.controller.screen.print(0, 0, msg);
     }
 }
