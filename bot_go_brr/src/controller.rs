@@ -70,6 +70,8 @@ pub struct PacketRaw {
     left_stick: Stick,
     right_stick: Stick,
     button_a: bool,
+    button_up: bool,
+    button_down: bool,
 }
 
 pub enum Packet {
@@ -100,6 +102,8 @@ impl Packet {
             ),
             
             button_a: safe_unwrap!(controller.a.is_pressed()),
+            button_up: safe_unwrap!(controller.up.is_pressed()),
+            button_down: safe_unwrap!(controller.down.is_pressed()),
         })
     }
 
@@ -115,6 +119,8 @@ impl Packet {
         let this = if let Packet::Connected(this) = self { this }
             else { return ButtonArg::Null };
         if this.button_a { ButtonArg::A }
+        else if this.button_up { ButtonArg::Up }
+        else if this.button_down { ButtonArg::Down }
         else { ButtonArg::Null }
     }
 }

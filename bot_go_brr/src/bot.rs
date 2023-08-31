@@ -3,8 +3,6 @@ extern crate alloc;
 use crate::{drive::Drive, button::ButtonMan};
 use core::time::Duration;
 use vex_rt::{prelude::*, select};
-use alloc::string::*;
-use alloc::fmt::format;
 use crate::{
     controller,
     drive::DriveArg,
@@ -15,12 +13,6 @@ use crate::{
     record::Record,
     smooth::Smooth,
 };
-
-macro_rules! format {
-    ($stuff:tt) => {
-        format(format_args!($stuff))
-    };
-}
 
 pub struct Bot {
     drive: Mutex<Drive>,

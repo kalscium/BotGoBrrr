@@ -50,11 +50,6 @@ impl<'a> Log<'a> {
     fn pink(log: &str) -> String { Self::colour(log, "\x1b[35;1m") }
 }
 
-pub fn log(tick: &u32, title: &str, body: &str) {
-    use Log::*;
-    Base(tick, title, &Str(body)).log();
-}
-
 pub fn list_ports(ports: Iter<&SmartPort>) {
     use Log::*;
     Wrap("===(", &Title("Port Mapping"), ")===").log();
@@ -68,11 +63,6 @@ pub fn list_ports(ports: Iter<&SmartPort>) {
             &String(format(format_args!("{:?}", port.plugged_type()))),
         ).log();
     }
-}
-
-pub fn quit<T>(tick: &u32, msg: &str) -> T {
-    log(tick, "Quiting...", msg);
-    panic!("Imma bout to end this whole fuckin program.")
 }
 
 #[macro_export]

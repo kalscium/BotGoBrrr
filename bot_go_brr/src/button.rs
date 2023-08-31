@@ -1,5 +1,4 @@
 use vex_rt::prelude::{Motor, Gearset};
-
 use crate::{config::Config, drive::Drive};
 
 pub struct ButtonMan {
