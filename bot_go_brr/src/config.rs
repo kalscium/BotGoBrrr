@@ -50,6 +50,12 @@ impl Config {
 
     pub const _BROKEN_PORTS: [u8; 6] = [2, 6, 7, 8, 10, 11]; // Ports that don't work
 
+    // Arm
+    pub const ARM_PORT: u8 = 16;
+    pub const ARM_SPEED: i8 = 69; // 69 / 100
+    pub const ARM_RATIO: Gearset = Gearset::EighteenToOne;
+    pub const ARM_REVERSE: bool = false;
+
     // Robot Smooth Turning
     // Ticks it takes to turn 45 degrees
     pub const TICKS_FOR_45: u8 = 4;

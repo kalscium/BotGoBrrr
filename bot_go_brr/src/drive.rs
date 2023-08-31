@@ -3,7 +3,7 @@ extern crate alloc;
 use crate::niceif;
 use vex_rt::motor::Motor;
 use crate::config::Config;
-use crate::button::ButtonArg;
+use crate::button::{ButtonArg, ButtonMan};
 use alloc::string::ToString;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -105,9 +105,9 @@ impl Drive {
         }
     }
 
-    pub fn drive(&mut self, arg: DriveArg) {
+    pub fn run(&mut self, arg: DriveArg, butt_man: &mut ButtonMan) {
         arg.execute(self);
-        arg.get_button().execute();
+        arg.get_button().execute(butt_man);
     }
 
     pub fn forwards(&mut self, precise: bool) {
@@ -154,7 +154,8 @@ impl Drive {
         f(&mut self.motor4, 4);
     }
 
-    fn cal_volt(speed: i8) -> i8 { (127i16 * speed as i16 / 100i16) as i8 } // Normalised speed from 1 to 100
+    #[inline]
+    pub fn cal_volt(speed: i8) -> i8 { (127i16 * speed as i16 / 100i16) as i8 } // Normalised speed from 1 to 100
 
     fn build_motor(id: u8) -> Motor {
         unsafe {

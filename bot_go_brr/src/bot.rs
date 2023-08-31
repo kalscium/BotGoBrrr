@@ -1,6 +1,6 @@
 extern crate alloc;
 
-use crate::drive::Drive;
+use crate::{drive::Drive, button::ButtonMan};
 use core::time::Duration;
 use vex_rt::{prelude::*, select};
 use alloc::string::*;
@@ -24,6 +24,7 @@ macro_rules! format {
 
 pub struct Bot {
     drive: Mutex<Drive>,
+    butt_man: Mutex<ButtonMan>,
     controller: Controller,
 }
 
@@ -57,6 +58,7 @@ impl Robot for Bot {
         // Robot init
         Self {
             drive: Mutex::new(Drive::new()),
+            butt_man: Mutex::new(ButtonMan::new()),
             controller: peripherals.master_controller,
         }
     }
@@ -86,7 +88,7 @@ impl Robot for Bot {
             }
             let arg: DriveArg = arg.unwrap();
             
-            self.drive.lock().drive(arg);
+            self.drive.lock().run(arg, &mut self.butt_man.lock());
 
             select! {
                 _ = _ctx.done() => {
@@ -126,7 +128,7 @@ impl Robot for Bot {
             if let RunMode::Record = Config::RUN_MODE {} // Log Drive Arg if not record mode and if wanted in config
             else if Config::LOG_DRIVE_ARG { arg.log(&tick) }
 
-            self.drive.lock().drive(arg);
+            self.drive.lock().run(arg, &mut self.butt_man.lock());
 
             select! {
                 // If the driver control period is done, break out of the loop.
