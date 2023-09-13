@@ -107,7 +107,7 @@ impl Drive {
 
     pub fn run(&mut self, arg: DriveArg, butt_man: &mut ButtonMan) {
         arg.execute(self);
-        arg.get_button().execute(butt_man);
+        butt_man.execute(*arg.get_button())
     }
 
     pub fn forwards(&mut self, precise: bool) {

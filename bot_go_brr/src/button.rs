@@ -3,6 +3,8 @@ use crate::{config::Config, drive::Drive};
 
 pub struct ButtonMan {
     arm: Motor,
+    held: u16,
+    last: ButtonArg,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -25,34 +27,12 @@ impl ButtonArg {
     }
 
     pub const fn duplicate(&self) -> Self {
-        use ButtonArg::*;
+        use ButtonArg as B;
         match self {
-            A => A,
-            Up => Up,
-            Down => Down,
-            Null => Null,
-        }
-    }
-
-    pub fn stop(man: &mut ButtonMan) { // Stops all button activities
-        man.arm.move_voltage(0).unwrap();
-    }
-
-    pub fn execute(&self, man: &mut ButtonMan) {
-        use ButtonArg::*;
-        match self {
-            Up => Self::move_arm(man, true),
-            Down => Self::move_arm(man, false),
-            A => (),
-            Null => Self::stop(man),
-        }
-    }
-
-    fn move_arm(man: &mut ButtonMan, up: bool) {
-        if up {
-            man.arm.move_voltage(Drive::cal_volt(Config::ARM_SPEED)).unwrap();
-        } else {
-            man.arm.move_voltage(-Drive::cal_volt(Config::ARM_SPEED)).unwrap();
+            B::A => B::A,
+            B::Up => B::Up,
+            B::Down => B::Down,
+            B::Null => B::Null,
         }
     }
 }
@@ -61,6 +41,8 @@ impl ButtonMan {
     pub fn new() -> Self {
         Self {
             arm: Self::build_motor(Config::ARM_PORT, Config::ARM_RATIO, Config::ARM_REVERSE),
+            held: 0,
+            last: ButtonArg::Null,
         }
     }
 
@@ -75,5 +57,30 @@ impl ButtonMan {
         }.unwrap_or_else(|_| {
             panic!("Error: Could not configure / generate motor at port '{port}'!")
         })
+    }
+
+    pub fn stop(&mut self) { // Stops all button activities
+        self.arm.move_voltage(0).unwrap(); // Stop the arm
+    }
+
+    pub fn move_arm(&mut self, up: bool) {
+        if up {
+            self.arm.move_voltage(Drive::cal_volt(Config::ARM_SPEED)).unwrap();
+        } else {
+            self.arm.move_voltage(-Drive::cal_volt(Config::ARM_SPEED)).unwrap();
+        }
+    }
+
+    pub fn execute(&mut self, arg: ButtonArg) {
+        use ButtonArg as B;
+        match arg {
+            B::Null => self.stop(),
+            B::Up => self.move_arm(true),
+            B::Down => self.move_arm(false),
+            B::A => (),
+        }
+
+        if arg == self.last { self.held += 1 }
+        else { self.held = 0 }
     }
 }

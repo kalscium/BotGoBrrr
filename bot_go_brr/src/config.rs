@@ -20,7 +20,7 @@ impl Config {
     /// ? / 127
     /// default( 30 )
     /// ```
-    pub const CONTROLLER_STICK_THRESHOLD: u8 = 30; // Controller sensitivity ?/127
+    pub const CONTROLLER_STICK_THRESHOLD: u8 = 18; // Controller sensitivity ?/127
     
     // Logging stuff
     /// Log drive args?
@@ -52,9 +52,10 @@ impl Config {
 
     // Arm
     pub const ARM_PORT: u8 = 16;
-    pub const ARM_SPEED: i8 = 69; // 69 / 100
+    pub const ARM_SPEED: i8 = 100; // 100 / 100
     pub const ARM_RATIO: Gearset = Gearset::EighteenToOne;
-    pub const ARM_REVERSE: bool = false;
+    pub const ARM_REVERSE: bool = true;
+    // pub const ARM_HOLD_LIMIT: u16 = 1;
 
     // Robot Smooth Turning
     // Ticks it takes to turn 45 degrees
