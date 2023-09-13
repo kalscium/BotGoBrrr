@@ -36,47 +36,29 @@ impl Smooth {
             None => DriveArg::Stop,
             East => DriveArg::Right,
             West => DriveArg::Left,
-            North => match self.modifier {
-                NorthEast(_) if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Left,
-                NorthWest(_) if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Right,
-                _ => DriveArg::Forward,
-            },
-            South => match self.modifier {
-                SouthEast(_) if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Right,
-                SouthWest(_) if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Left,
-                _ => DriveArg::Backward,
-            },
+            North => DriveArg::Forward,
+            South => DriveArg::Backward,
             NorthEast(n) => match self.modifier {
-                North if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Right,
-                North => DriveArg::Forward,
-                NorthWest(_) if self.ticks < (Config::TICKS_FOR_45 as u16 * 2) => DriveArg::Right,
-                NorthWest(_) => DriveArg::Forward,
-                // so it only does the 45 degree thing when changing from north or north diagonals
+                North => DriveArg::Right,
+                NorthWest(_) => DriveArg::Right,
                 _ if n => DriveArg::Forward,
                 _ => DriveArg::Right,
             },
             NorthWest(n) => match self.modifier {
-                North if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Left,
-                North => DriveArg::Forward,
-                NorthEast(_) if self.ticks < (Config::TICKS_FOR_45 as u16 * 2) => DriveArg::Left,
-                NorthEast(_) => DriveArg::Forward,
-                // so it only does the 45 degree thing when changing from north or north diagonals
+                North => DriveArg::Left,
+                NorthEast(_) => DriveArg::Left,
                 _ if n => DriveArg::Forward,
                 _ => DriveArg::Left,
             },
             SouthEast(n) => match self.modifier {
-                South if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Left,
-                SouthWest(_) if self.ticks < (Config::TICKS_FOR_45 as u16 * 2) => DriveArg::Left,
-                SouthWest(_) => DriveArg::Backward,
-                // so it only does the 45 degree thing when changing from south or south diagonals
+                South => DriveArg::Left,
+                SouthWest(_) => DriveArg::Left,
                 _ if n => DriveArg::Backward,
                 _ => DriveArg::Right,
             },
             SouthWest(n) => match self.modifier {
-                South if self.ticks < Config::TICKS_FOR_45 as u16 => DriveArg::Right,
-                SouthEast(_) if self.ticks < (Config::TICKS_FOR_45 as u16 * 2) => DriveArg::Right,
-                SouthEast(_) => DriveArg::Backward,
-                // so it only does the 45 degree thing when changing from south or south diagonals
+                South => DriveArg::Right,
+                SouthEast(_) => DriveArg::Right,
                 _ if n => DriveArg::Backward,
                 _ => DriveArg::Left,
             },
