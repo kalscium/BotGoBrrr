@@ -53,9 +53,9 @@ impl Config {
     // Arm
     pub const ARM_PORT: u8 = 16;
     pub const ARM_SPEED: i8 = 100; // 100 / 100
-    pub const ARM_RATIO: Gearset = Gearset::EighteenToOne;
+    pub const ARM_RATIO: Gearset = Gearset::SixToOne;
     pub const ARM_REVERSE: bool = true;
-    // pub const ARM_HOLD_LIMIT: u16 = 1;
+    pub const ARM_HOLD_LIMIT: u16 = 2;
 
     // Robot Smooth Turning
     // Ticks it takes to turn 45 degrees

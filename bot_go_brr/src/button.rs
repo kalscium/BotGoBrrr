@@ -64,6 +64,7 @@ impl ButtonMan {
     }
 
     pub fn move_arm(&mut self, up: bool) {
+        if self.held >= Config::ARM_HOLD_LIMIT { return; }
         if up {
             self.arm.move_voltage(Drive::cal_volt(Config::ARM_SPEED)).unwrap();
         } else {
