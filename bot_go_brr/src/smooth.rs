@@ -1,66 +1,66 @@
 use crate::controller::StickState;
 use crate::drive::DriveArg;
 use crate::button::ButtonArg;
-use crate::config::Config;
 
 pub struct Smooth {
-    modifier: StickState,
+    is_forward: bool,
     action: StickState,
-    ticks: u16,
 }
 
 impl Smooth {
     pub fn new() -> Self {
         Self {
             action: StickState::None,
-            modifier: StickState::None,
-            ticks: 0,
+            is_forward: true,
         }
     }
 
-    pub fn reset(&mut self, state: StickState) {
-        if self.ticks >= Config::MIN_TICK_SMOOTH as u16 { self.modifier = self.action; }
-        self.action = state;
-        self.ticks = 0;
-    }
-
+    #[inline]
     pub fn gen_arg(&mut self, state: StickState, button: ButtonArg) -> DriveArg {
-        if state == self.action { self.ticks += 1 }
-        else { self.reset(state) }
+        self.action = state;
         self.execute()(button, false)
     }
 
-    pub fn execute(&self) -> fn(ButtonArg, bool) -> DriveArg {
+    pub fn execute(&mut self) -> fn(ButtonArg, bool) -> DriveArg {
         use StickState::*;
+        use DriveArg::*;
         match self.action {
-            None => DriveArg::Stop,
-            East => DriveArg::Right,
-            West => DriveArg::Left,
-            North => DriveArg::Forward,
-            South => DriveArg::Backward,
-            NorthEast(n) => match self.modifier {
-                North => DriveArg::Right,
-                NorthWest(_) => DriveArg::Right,
-                _ if n => DriveArg::Forward,
-                _ => DriveArg::Right,
+            None => Stop,
+            East => match self.is_forward {
+                true => Right,
+                false => Left,
             },
-            NorthWest(n) => match self.modifier {
-                North => DriveArg::Left,
-                NorthEast(_) => DriveArg::Left,
-                _ if n => DriveArg::Forward,
-                _ => DriveArg::Left,
+            West => match self.is_forward {
+                true => Left,
+                false => Right,
             },
-            SouthEast(n) => match self.modifier {
-                South => DriveArg::Left,
-                SouthWest(_) => DriveArg::Left,
-                _ if n => DriveArg::Backward,
-                _ => DriveArg::Right,
+            North => {
+                self.is_forward = true;
+                Forward
             },
-            SouthWest(n) => match self.modifier {
-                South => DriveArg::Right,
-                SouthEast(_) => DriveArg::Right,
-                _ if n => DriveArg::Backward,
-                _ => DriveArg::Left,
+            South => {
+                self.is_forward = false;
+                Backward
+            },
+            NorthEast(n) => {
+                self.is_forward = true;
+                if n { Forward }
+                else { Right }
+            },
+            NorthWest(n) => {
+                self.is_forward = true;
+                if n { Forward }
+                else { Left }
+            },
+            SouthEast(n) => {
+                self.is_forward = false;
+                if n { Backward }
+                else { Left }
+            },
+            SouthWest(n) => {
+                self.is_forward = false;
+                if n { Backward }
+                else { Right }
             },
         }
     }

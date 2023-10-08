@@ -57,10 +57,6 @@ impl Config {
     pub const ARM_REVERSE: bool = true;
     pub const ARM_HOLD_LIMIT: u16 = 3;
 
-    // Robot Smooth Turning
-    // Minimum amount of ticks to be held for smooth to register
-    pub const MIN_TICK_SMOOTH: u8 = 2;
-
     // Robot speeds
     pub const FORWARD_SPEED: i8 = 80; // 100 / 100
     pub const BACKWARD_SPEED: i8 = 80; // 80 / 100
