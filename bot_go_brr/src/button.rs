@@ -16,23 +16,13 @@ pub enum ButtonArg {
 }
 
 impl ButtonArg {
-    pub fn to_string(&self) -> &str {
+    pub fn to_string(self) -> &'static str {
         use ButtonArg::*;
         match self {
             Up => "Up",
             Down => "Down",
             Null => "Null",
             A => "A",
-        }
-    }
-
-    pub const fn duplicate(&self) -> Self {
-        use ButtonArg as B;
-        match self {
-            B::A => B::A,
-            B::Up => B::Up,
-            B::Down => B::Down,
-            B::Null => B::Null,
         }
     }
 }

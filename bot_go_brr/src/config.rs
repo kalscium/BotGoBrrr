@@ -21,7 +21,7 @@ impl Config {
     /// default( 30 )
     /// ```
     pub const CONTROLLER_STICK_THRESHOLD: u8 = 26; // Controller sensitivity ?/127
-    
+
     // Logging stuff
     /// Log drive args?
     /// ```
@@ -65,7 +65,7 @@ impl Config {
     pub const FORWARD_SPEED: i8 = 80; // 100 / 100
     pub const BACKWARD_SPEED: i8 = 80; // 80 / 100
     pub const TURN_SPEED: i8 = 40; // 50 / 100
-    pub const GEAR_RATIO: Gearset = Gearset::ThirtySixToOne;
+    pub const GEAR_RATIO: Gearset = Gearset::SixToOne;
 
     // Robot precise speeds
     pub const PRECISE_FORWARD_SPEED: i8 = 40;

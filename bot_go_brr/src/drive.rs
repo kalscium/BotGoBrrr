@@ -37,12 +37,12 @@ impl DriveArg {
         }
     }
 
-    pub fn to_strings(&self) -> (&str, &str, bool) {
+    pub fn to_strings(self) -> (&'static str, &'static str, bool) {
         match self {
-            DriveArg::Forward(x, precise) => ("Forward", x.to_string(), *precise),
-            DriveArg::Backward(x, precise) => ("Backward", x.to_string(), *precise),
-            DriveArg::Left(x, precise) => ("Left", x.to_string(), *precise),
-            DriveArg::Right(x, precise) => ("Right", x.to_string(), *precise),
+            DriveArg::Forward(x, precise) => ("Forward", x.to_string(), precise),
+            DriveArg::Backward(x, precise) => ("Backward", x.to_string(), precise),
+            DriveArg::Left(x, precise) => ("Left", x.to_string(), precise),
+            DriveArg::Right(x, precise) => ("Right", x.to_string(), precise),
             DriveArg::Stop(x, _) => ("Stop", x.to_string(), false),
             DriveArg::Stall(x, _) => ("Stall", x.to_string(), false),
         }
@@ -77,12 +77,12 @@ impl DriveArg {
 
     pub const fn duplicate(&self) -> Self {
         match self {
-            DriveArg::Forward(x, precise) => DriveArg::Forward(x.duplicate(), *precise),
-            DriveArg::Backward(x, precise) => DriveArg::Backward(x.duplicate(), *precise),
-            DriveArg::Left(x, precise) => DriveArg::Left(x.duplicate(), *precise),
-            DriveArg::Right(x, precise) => DriveArg::Right(x.duplicate(), *precise),
-            DriveArg::Stop(x, _) => DriveArg::Stop(x.duplicate(), false),
-            DriveArg::Stall(x, _precise) => DriveArg::Stall(x.duplicate(), false),
+            DriveArg::Forward(x, precise) => DriveArg::Forward(*x, *precise),
+            DriveArg::Backward(x, precise) => DriveArg::Backward(*x, *precise),
+            DriveArg::Left(x, precise) => DriveArg::Left(*x, *precise),
+            DriveArg::Right(x, precise) => DriveArg::Right(*x, *precise),
+            DriveArg::Stop(x, _) => DriveArg::Stop(*x, false),
+            DriveArg::Stall(x, _precise) => DriveArg::Stall(*x, false),
         }
     }
 }
