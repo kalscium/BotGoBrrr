@@ -2,7 +2,6 @@ use vex_rt::prelude::*;
 use crate::drive::DriveArg;
 use crate::button::ButtonArg;
 use crate::config::Config;
-use crate::smooth::Smooth;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum StickState {
@@ -60,9 +59,9 @@ impl Stick {
     }
 
     #[inline]
-    pub fn smooth_arg(&self, smooth: &mut Smooth, button: ButtonArg) -> DriveArg {
+    pub fn smooth_arg(&self, button: ButtonArg) -> DriveArg {
         let state = self.gen_state();
-        smooth.gen_arg(state, button)
+        state.gen_arg(button)
     }
 }
 
@@ -107,10 +106,10 @@ impl Packet {
         })
     }
 
-    pub fn gen_arg(&self, smooth: &mut Smooth) -> DriveArg {
+    pub fn gen_arg(&self) -> DriveArg {
         let this = if let Packet::Connected(this) = self { this }
             else { return DriveArg::Stop(ButtonArg::Null, false) };
-        let left: DriveArg = this.left_stick.smooth_arg(smooth, self.gen_button());
+        let left: DriveArg = this.left_stick.smooth_arg(self.gen_button());
         let right: DriveArg = this.right_stick.abs_arg(self.gen_button());
         DriveArg::add(left, right)
     }

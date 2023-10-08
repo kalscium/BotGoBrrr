@@ -11,7 +11,6 @@ use crate::{
     utils::*,
     button::ButtonArg,
     record::Record,
-    smooth::Smooth,
 };
 
 pub struct Bot {
@@ -95,17 +94,16 @@ impl Robot for Bot {
         // This loop construct makes sure the drive is updated every 100 milliseconds.
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: u32 = 0;
-        let mut smooth = Smooth::new();
         let mut record = Record::new(DriveArg::Stall(ButtonArg::Null, false));
         loop {
             // Movement
             let arg: DriveArg = match Config::RUN_MODE {
-                RunMode::Practice => self.driver(&mut smooth), // Update drive according to controller packet
+                RunMode::Practice => self.driver(), // Update drive according to controller packet
                 RunMode::Autonomous => Algor::FULL_AUTO.get(&tick).unwrap(), // Update drive according to Autonomous algorithm
                 // (Similar to practice)
-                RunMode::Competition if Algor::GAME_AUTO.is_finished(&tick) => self.driver(&mut smooth), // If competition autonomous period finished use driver control
+                RunMode::Competition if Algor::GAME_AUTO.is_finished(&tick) => self.driver(), // If competition autonomous period finished use driver control
                 RunMode::Competition => Algor::GAME_AUTO.get(&tick).unwrap(), // If autonomous period isn't finished, use autonomous control
-                RunMode::Record => record.record(self.driver(&mut smooth)), // Records new packets and logs them
+                RunMode::Record => record.record(self.driver()), // Records new packets and logs them
             };
 
             // Logging
@@ -133,12 +131,12 @@ impl Robot for Bot {
 }
 
 impl Bot {
-    pub fn driver(&mut self, smooth: &mut Smooth) -> DriveArg{
+    pub fn driver(&mut self) -> DriveArg{
         let packet = controller::Packet::new(&self.controller);
         if let controller::Packet::Disconnected = packet {
             DriveArg::Forward(ButtonArg::Null, false)
         } else {
-            packet.gen_arg(smooth)
+            packet.gen_arg()
         }
     }
 }
