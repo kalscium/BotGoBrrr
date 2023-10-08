@@ -1,6 +1,6 @@
 [package]
 name = "bot_go_brr"
-version = "3.2.2"
+version = "3.2.3"
 authors = ["GreenChild04 <greenchild04@protonmail.com>"]
 edition = "2021"
 
@@ -11,8 +11,12 @@ edition = "2021"
 version = "0.15.1"
 # git = "https://gitlab.com/qvex/vex-rt.git"
 
-[profile]
-dev.incremental = true
-release.incremental = true
-dev.debug = false
-dev.package."*".opt-level = 3
+[profile.release]
+incremental = true
+
+[profile.dev]
+incremental = true
+debug = false
+
+[profile.dev.package."*"]
+opt-level = 3
