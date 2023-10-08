@@ -49,7 +49,7 @@ impl Algor {
     pub fn get(&self, tick: &u32) -> Option<DriveArg> {
         let tick = *tick as usize;
         if self.0.len() <= tick { None }
-        else { Some(self.0[tick].as_ref().unwrap().duplicate()) }
+        else { Some(*self.0[tick].as_ref().unwrap()) }
     }
 
     pub fn is_finished(&self, tick: &u32) -> bool {

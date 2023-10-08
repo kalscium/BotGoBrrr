@@ -26,7 +26,7 @@ impl Record {
         if self.arg == arg { self.ticks += 1 }
         else {
             self.log();
-            self.clear(arg.duplicate());
+            self.clear(arg);
         }; arg
     }
 

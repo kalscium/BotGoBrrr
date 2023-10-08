@@ -109,7 +109,7 @@ impl Packet {
 
     pub fn gen_arg(&self, smooth: &mut Smooth) -> DriveArg {
         let this = if let Packet::Connected(this) = self { this }
-            else { return DriveArg::Right(ButtonArg::Null, true) };
+            else { return DriveArg::Stop(ButtonArg::Null, false) };
         let left: DriveArg = this.left_stick.smooth_arg(smooth, self.gen_button());
         let right: DriveArg = this.right_stick.abs_arg(self.gen_button());
         DriveArg::add(left, right)

@@ -74,17 +74,6 @@ impl DriveArg {
             DriveArg::Stall(x, _) => x,
         }
     }
-
-    pub const fn duplicate(&self) -> Self {
-        match self {
-            DriveArg::Forward(x, precise) => DriveArg::Forward(*x, *precise),
-            DriveArg::Backward(x, precise) => DriveArg::Backward(*x, *precise),
-            DriveArg::Left(x, precise) => DriveArg::Left(*x, *precise),
-            DriveArg::Right(x, precise) => DriveArg::Right(*x, *precise),
-            DriveArg::Stop(x, _) => DriveArg::Stop(*x, false),
-            DriveArg::Stall(x, _precise) => DriveArg::Stall(*x, false),
-        }
-    }
 }
 
 pub struct Drive {
