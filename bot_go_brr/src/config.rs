@@ -67,7 +67,7 @@ impl Config {
     pub const FORWARD_SPEED: i8 = 80; // 100 / 100
     pub const BACKWARD_SPEED: i8 = 80; // 80 / 100
     pub const TURN_SPEED: i8 = 40; // 50 / 100
-    pub const GEAR_RATIO: Gearset = Gearset::ThirtySixToOne;
+    pub const GEAR_RATIO: Gearset = Gearset::SixToOne;
 
     // Robot precise speeds
     pub const PRECISE_FORWARD_SPEED: i8 = 40;

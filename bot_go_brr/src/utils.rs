@@ -6,7 +6,6 @@ use alloc::{fmt::{format, Display, self}, string::{ToString, String}};
 
 pub enum Log<'a> {
     String(String), // basic string
-    Str(&'a str), // basic str
     Base(&'a u32, &'a str, &'a Log<'a>), // Base of every log ( tick, title, body )
     Wrap(&'a str, &'a Log<'a>, &'a str), // wrapping eg. '['value']'
     List(&'a Log<'a>, &'a str, &'a Log<'a>), // List with separator
@@ -23,7 +22,6 @@ impl<'a> Display for Log<'a> {
             match self {
                 // basic
                 String(x) => x.clone(),
-                Str(x) => x.to_string(),
                 Title(x) => Self::blue(x),
                 Void => alloc::string::String::new(),
 
