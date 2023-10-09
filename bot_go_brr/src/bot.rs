@@ -62,19 +62,19 @@ impl Robot for Bot {
 
     fn autonomous(&mut self, _ctx: Context) {
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
-        let mut tick: u32 = 0;
-        let algor =
-            if let crate::config::RunMode::Autonomous = Config::RUN_MODE { &Algor::FULL_AUTO }
-            else { &Algor::GAME_AUTO };
+        // let mut tick: u32 = 0;
+        // let algor =
+        //     if let crate::config::RunMode::Autonomous = Config::RUN_MODE { &Algor::FULL_AUTO }
+        //     else { &Algor::GAME_AUTO };
         loop {
             // Autonomous Movement
-            let arg: Option<DriveArg> = algor.get(&tick); // Update drive according to Autonomous algorithm
-            let arg = match arg {
-                Some(x) => x,
-                None => break,
-            };
-
-            self.drive.lock().run(arg, &mut self.butt_man.lock());
+            // let arg: Option<DriveArg> = algor.get(&tick); // Update drive according to Autonomous algorithm
+            // let arg = match arg {
+            //     Some(x) => x,
+            //     None => break,
+            // };
+            //
+            // self.drive.lock().run(arg, &mut self.butt_man.lock());
 
             select! {
                 _ = _ctx.done() => {
@@ -83,7 +83,7 @@ impl Robot for Bot {
 
                 // Otherwise, when it's time for the next loop cycle, continue.
                 _ = l.select() => {
-                    tick += 1; // update tick
+                    // tick += 1; // update tick
                     continue;
                 },
             }
