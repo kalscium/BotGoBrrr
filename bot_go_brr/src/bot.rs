@@ -69,11 +69,11 @@ impl Robot for Bot {
         loop {
             // Autonomous Movement
             let arg: Option<DriveArg> = algor.get(&tick); // Update drive according to Autonomous algorithm
-            if arg.is_none() {
-                break;
-            }
-            let arg: DriveArg = arg.unwrap();
-            
+            let arg = match arg {
+                Some(x) => x,
+                None => break,
+            };
+
             self.drive.lock().run(arg, &mut self.butt_man.lock());
 
             select! {

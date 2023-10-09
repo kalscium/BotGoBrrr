@@ -20,7 +20,7 @@ impl Config {
     /// ? / 127
     /// default( 30 )
     /// ```
-    pub const CONTROLLER_STICK_THRESHOLD: u8 = 26; // Controller sensitivity ?/127
+    pub const CONTROLLER_STICK_THRESHOLD: u8 = 12; // Controller sensitivity ?/127
 
     // Logging stuff
     /// Log drive args?

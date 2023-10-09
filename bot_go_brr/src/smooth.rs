@@ -27,11 +27,11 @@ impl StickState {
             },
             SouthEast(n) => {
                 if n { Backward }
-                else { Left }
+                else { Right }
             },
             SouthWest(n) => {
                 if n { Backward }
-                else { Right }
+                else { Left }
             },
         }
     }
