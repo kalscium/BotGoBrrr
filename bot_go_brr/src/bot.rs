@@ -62,13 +62,13 @@ impl Robot for Bot {
 
     fn autonomous(&mut self, _ctx: Context) {
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
-        let mut tick: u32 = 0;
+        let mut tick: usize = 0;
         let algor =
             if let crate::config::RunMode::Autonomous = Config::RUN_MODE { &Algor::FULL_AUTO }
             else { &Algor::GAME_AUTO };
         loop {
             // Autonomous Movement
-            let arg: Option<DriveArg> = algor.get(&tick); // Update drive according to Autonomous algorithm
+            let arg: Option<DriveArg> = algor.get(tick); // Update drive according to Autonomous algorithm
             let arg = match arg {
                 Some(x) => x,
                 None => break,
@@ -93,22 +93,22 @@ impl Robot for Bot {
     fn opcontrol(&mut self, ctx: Context) {
         // This loop construct makes sure the drive is updated every 100 milliseconds.
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
-        let mut tick: u32 = 0;
+        let mut tick: usize = 0;
         let mut record = Record::new(DriveArg::Stall(ButtonArg::Null, false));
         loop {
             // Movement
             let arg: DriveArg = match Config::RUN_MODE {
                 RunMode::Practice => self.driver(), // Update drive according to controller packet
-                RunMode::Autonomous => Algor::FULL_AUTO.get(&tick).unwrap(), // Update drive according to Autonomous algorithm
+                RunMode::Autonomous => Algor::FULL_AUTO.get(tick).unwrap(), // Update drive according to Autonomous algorithm
                 // (Similar to practice)
-                RunMode::Competition if Algor::GAME_AUTO.is_finished(&tick) => self.driver(), // If competition autonomous period finished use driver control
-                RunMode::Competition => Algor::GAME_AUTO.get(&tick).unwrap(), // If autonomous period isn't finished, use autonomous control
+                RunMode::Competition if Algor::GAME_AUTO.is_finished(tick) => self.driver(), // If competition autonomous period finished use driver control
+                RunMode::Competition => Algor::GAME_AUTO.get(tick).unwrap(), // If autonomous period isn't finished, use autonomous control
                 RunMode::Record => record.record(self.driver()), // Records new packets and logs them
             };
 
             // Logging
             if let RunMode::Record = Config::RUN_MODE {} // Log Drive Arg if not record mode and if wanted in config
-            else if Config::LOG_DRIVE_ARG { arg.log(&tick) }
+            else if Config::LOG_DRIVE_ARG { arg.log(tick) }
 
             self.drive.lock().run(arg, &mut self.butt_man.lock());
 

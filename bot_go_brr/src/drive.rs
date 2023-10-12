@@ -48,7 +48,7 @@ impl DriveArg {
         }
     }
 
-    pub fn log(&self, tick: &u32) {
+    pub fn log(&self, tick: usize) {
         use crate::utils::Log::*;
         let (name, button, precise) = self.to_strings();
         Base(
