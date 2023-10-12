@@ -52,11 +52,6 @@ impl Algor {
             _ => None,
         }
     }
-
-    pub fn is_finished(&self, tick: usize) -> bool {
-        let tick = tick;
-        self.0.len() <= tick
-    }
 }
 
 // Algorithms
@@ -65,20 +60,13 @@ use DriveArg::*;
 use ButtonArg::*;
 impl Algor {
     pub const GAME_AUTO: Algor = gen_algor! {
-        Stop for 2;
+        Stop for 5;
         (precise) Forward for 60;
         Right for 9;
         (precise) Forward for 28;
         Backward for 12;
         Left for 10;
         Backward for 26;
-        Stop for 1;
-    };
-
-    pub const FULL_AUTO: Algor = gen_algor! {
-        Stop for 60;
-        (precise) Forward for 30;
-        Backward for 20;
-        Forward for 40;
+        Stop for 5;
     };
 }

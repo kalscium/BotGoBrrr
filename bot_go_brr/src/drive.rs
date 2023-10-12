@@ -1,10 +1,8 @@
 extern crate alloc;
 
-use crate::niceif;
 use vex_rt::motor::Motor;
 use crate::config::Config;
 use crate::button::{ButtonArg, ButtonMan};
-use alloc::string::ToString;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DriveArg {
@@ -35,33 +33,6 @@ impl DriveArg {
             (_, x) => x, // Favours second arg
             // (_, _) => DriveArg::Stall(ButtonArg::Null, false), // does nothing when both are activated
         }
-    }
-
-    pub fn to_strings(self) -> (&'static str, &'static str, bool) {
-        match self {
-            DriveArg::Forward(x, precise) => ("Forward", x.to_string(), precise),
-            DriveArg::Backward(x, precise) => ("Backward", x.to_string(), precise),
-            DriveArg::Left(x, precise) => ("Left", x.to_string(), precise),
-            DriveArg::Right(x, precise) => ("Right", x.to_string(), precise),
-            DriveArg::Stop(x, _) => ("Stop", x.to_string(), false),
-            DriveArg::Stall(x, _) => ("Stall", x.to_string(), false),
-        }
-    }
-
-    pub fn log(&self, tick: usize) {
-        use crate::utils::Log::*;
-        let (name, button, precise) = self.to_strings();
-        Base(
-            tick,
-            "Drive Arg",
-            &List(
-                &Title(name), "",
-                &List(
-                    &Wrap("(", &Title(button), ")"), " Precise: ",
-                    &String(precise.to_string()),
-                ),
-            )
-        ).log();
     }
 
     pub fn get_button(&self) -> &ButtonArg {
@@ -100,7 +71,7 @@ impl Drive {
     }
 
     pub fn forwards(&mut self, precise: bool) {
-        self.map(|x, _| x.move_voltage(Drive::cal_volt(niceif!(if precise, Config::PRECISE_FORWARD_SPEED, else Config::FORWARD_SPEED))).unwrap());
+        self.map(|x, _| x.move_voltage(Drive::cal_volt(if precise { Config::PRECISE_FORWARD_SPEED } else { Config::FORWARD_SPEED })).unwrap());
     }
 
     pub fn stop(&mut self) {
@@ -108,11 +79,11 @@ impl Drive {
     }
 
     pub fn backwards(&mut self, precise: bool) {
-        self.map(|x, _| x.move_voltage(Drive::cal_volt(-niceif!(if precise, Config::PRECISE_BACKWARD_SPEED, else Config::BACKWARD_SPEED))).unwrap())
+        self.map(|x, _| x.move_voltage(Drive::cal_volt(-if precise { Config::PRECISE_BACKWARD_SPEED } else { Config::BACKWARD_SPEED })).unwrap())
     }
 
     pub fn left(&mut self, precise: bool) {
-        let turnspeed: i8 = niceif!(if precise, Config::PRECISE_TURN_SPEED, else Config::TURN_SPEED);
+        let turnspeed: i8 = if precise { Config::PRECISE_TURN_SPEED } else { Config::TURN_SPEED };
         self.map(|x, i| {
             if i & 1 == 0 { // Right Motors
                 x.move_voltage(Drive::cal_volt(turnspeed)).unwrap();
@@ -123,7 +94,7 @@ impl Drive {
     }
 
     pub fn right(&mut self, precise: bool) {
-        let turnspeed: i8 = niceif!(if precise, Config::PRECISE_TURN_SPEED, else Config::TURN_SPEED);
+        let turnspeed: i8 = if precise { Config::PRECISE_TURN_SPEED } else { Config::TURN_SPEED };
         self.map(|x, i| {
             if i & 1 == 0 { // Right Motors
                 x.move_voltage(Drive::cal_volt(-turnspeed)).unwrap();
