@@ -3,19 +3,6 @@ use crate::drive::DriveArg;
 use crate::button::ButtonArg;
 use crate::config::Config;
 
-#[derive(PartialEq, Clone, Copy)]
-pub enum StickState {
-    None,
-    North,
-    NorthEast(bool), // North Larger?
-    East,
-    SouthEast(bool), // South Larger?
-    South,
-    SouthWest(bool), // South Larger?
-    West,
-    NorthWest(bool), // North Larger?
-}
-
 pub struct Stick {
     abs_x: u8,
     abs_y: u8,
@@ -33,35 +20,18 @@ impl Stick {
         }
     }
 
-    pub fn gen_state(&self) -> StickState {
-        match (self.abs_y > Config::CONTROLLER_STICK_THRESHOLD, self.abs_x > Config::CONTROLLER_STICK_THRESHOLD) {
-            (false, false) => StickState::None,
-            (true, false) => if self.pos_y { StickState::North } else { StickState::South },
-            (false, true) => if self.pos_x { StickState::East } else { StickState::West },
-            (true, true) => (match (self.pos_y, self.pos_x) {
-               (true, true) => StickState::NorthEast,
-               (true, false) => StickState::NorthWest,
-               (false, true) => StickState::SouthEast,
-               (false, false) => StickState::SouthWest,
-            }(self.abs_y > self.abs_x))
-        }
-    }
-
-    pub fn abs_arg(&self, button: ButtonArg) -> DriveArg {
-        (match self.gen_state() {
-            StickState::None => DriveArg::Stop,
-            StickState::North => DriveArg::Forward,
-            StickState::East => DriveArg::Right,
-            StickState::South => DriveArg::Backward,
-            StickState::West => DriveArg::Left,
-            _ => DriveArg::Stall,
-        })(button, true)
-    }
-
-    #[inline]
-    pub fn smooth_arg(&self, button: ButtonArg) -> DriveArg {
-        let state = self.gen_state();
-        state.gen_arg(button)
+    pub fn gen_arg(&self, button: ButtonArg, precise: bool) -> DriveArg {
+        (match (self.abs_y > Config::CONTROLLER_STICK_THRESHOLD, self.abs_x > Config::CONTROLLER_STICK_THRESHOLD) {
+            (false, false) => DriveArg::Stop,
+            (true, false) => if self.pos_y { DriveArg::Forward } else { DriveArg::Backward },
+            (false, true) => if self.pos_x { DriveArg::Right } else { DriveArg::Left },
+            (true, true) => match (self.pos_y, self.pos_x, self.abs_y > self.abs_x) {
+                (true, _, true) => DriveArg::Forward,
+                (false, _, true) => DriveArg::Backward,
+                (_, false, false) => DriveArg::Left,
+                (_, true, false) => DriveArg::Right,
+            }
+        })(button, precise)
     }
 }
 
@@ -109,8 +79,8 @@ impl Packet {
     pub fn gen_arg(&self) -> DriveArg {
         let this = if let Packet::Connected(this) = self { this }
             else { return DriveArg::Stop(ButtonArg::Null, false) };
-        let left: DriveArg = this.left_stick.smooth_arg(self.gen_button());
-        let right: DriveArg = this.right_stick.abs_arg(self.gen_button());
+        let left: DriveArg = this.left_stick.gen_arg(self.gen_button(), false);
+        let right: DriveArg = this.right_stick.gen_arg(self.gen_button(), true);
         DriveArg::add(left, right)
     }
 

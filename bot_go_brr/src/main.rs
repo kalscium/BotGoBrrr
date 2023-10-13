@@ -11,5 +11,4 @@ mod utils;
 mod button;
 mod algor;
 mod record;
-mod smooth;
 entry!(bot::Bot);
