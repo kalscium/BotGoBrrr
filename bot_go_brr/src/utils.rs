@@ -62,14 +62,3 @@ pub fn list_ports(ports: Iter<&SmartPort>) {
         ).log();
     }
 }
-
-#[macro_export]
-macro_rules! niceif {
-    (if $cond:expr, $one:expr, else $two:expr) => {
-        if $cond {
-            $one
-        } else {
-            $two
-        }
-    }
-}
