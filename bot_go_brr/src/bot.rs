@@ -27,13 +27,11 @@ impl Robot for Bot {
         }
     }
 
-    fn initialize(&mut self, _ctx: Context) {
+    fn initialize(&'static mut self, _ctx: Context) {
         // Do any extra initialization here.
-
-        // Init controller screen data
     }
 
-    fn autonomous(&mut self, _ctx: Context) {
+    fn autonomous(&'static mut self, _ctx: Context) {
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         let mut tick: usize = 0;
         let algor = &Algor::GAME_AUTO;
@@ -61,7 +59,7 @@ impl Robot for Bot {
         }
     }
 
-    fn opcontrol(&mut self, ctx: Context) {
+    fn opcontrol(&'static mut self, ctx: Context) {
         // This loop construct makes sure the drive is updated every 100 milliseconds.
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
         loop {
@@ -82,13 +80,13 @@ impl Robot for Bot {
         }
     }
 
-    fn disabled(&mut self, _ctx: Context) {
+    fn disabled(&'static mut self, _ctx: Context) {
         // This runs when the robot is in disabled mode.
     }
 }
 
 impl Bot {
-    pub fn driver(&mut self) -> DriveArg{
+    pub fn driver(&'static mut self) -> DriveArg{
         let packet = controller::Packet::new(&self.controller);
         if let controller::Packet::Disconnected = packet {
             DriveArg::Forward(ButtonArg::Null, false)
