@@ -4,6 +4,7 @@ use vex_rt::motor::Motor;
 use crate::config::Config;
 use crate::button::{ButtonArg, ButtonMan};
 
+#[allow(unused)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DriveArg {
     Forward(ButtonArg, bool),
