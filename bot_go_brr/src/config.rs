@@ -12,27 +12,15 @@ impl Config {
     /// **Record:** like `Practice` but records driver movements consisely ( for writing autonomous )
     pub const RUN_MODE: RunMode = RunMode::Practice;
     /// Robot's fixed update speed in milliseconds
-    pub const TICK_SPEED: u64 = 50;
+    pub const TICK_SPEED: u64 = 10;
     /// ### Controller sensitivity
     /// Controller stick movement tolerance / threshold
     /// ( to combat stick drift )
-    /// ```
-    /// ? / 127
-    /// default( 30 )
-    /// ```
     pub const CONTROLLER_STICK_THRESHOLD: u8 = 12; // Controller sensitivity ?/127
 
     // Logging stuff
     /// Log drive args?
-    /// ```
-    /// default( true )
-    /// ```
     pub const LOG_DRIVE_ARG: bool = true;
-    /// Log drive args?
-    /// ```
-    /// default( true )
-    /// ```
-
     /// ### Motors
     pub const MOTORS: MotorConfig = MotorConfig {
         units: EncoderUnits::Rotations,
@@ -48,6 +36,7 @@ impl Config {
         reverse4: true,
     };
 
+    /// Port no work :C
     pub const _BROKEN_PORTS: [u8; 6] = [2, 6, 7, 8, 10, 11]; // Ports that don't work
 
     // Arm
@@ -55,7 +44,9 @@ impl Config {
     pub const ARM_SPEED: i8 = 100; // 100 / 100
     pub const ARM_RATIO: Gearset = Gearset::EighteenToOne;
     pub const ARM_REVERSE: bool = true;
-    pub const ARM_HOLD_LIMIT: u16 = 3;
+    /// The limit of how long you can hold the arm
+    /// (to prevent damage from the arm)
+    pub const ARM_HOLD_LIMIT: u16 = 5;
 
     // Robot speeds
     pub const FORWARD_SPEED: i8 = 80; // 100 / 100

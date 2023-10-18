@@ -5,6 +5,7 @@ use crate::config::Config;
 use crate::button::{ButtonArg, ButtonMan};
 use alloc::string::ToString;
 
+#[allow(unused)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DriveArg {
     Forward(ButtonArg, bool),
