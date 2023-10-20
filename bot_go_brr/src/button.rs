@@ -37,16 +37,16 @@ impl ButtonMan {
     }
 
     pub fn build_motor(port: u8, ratio: Gearset, reverse: bool) -> Motor {
-        unsafe {
-            Motor::new(
-                port,
-                ratio,
-                vex_rt::prelude::EncoderUnits::Rotations,
-                reverse,
-            )
-        }.unwrap_or_else(|_| {
-            panic!("Error: Could not configure / generate motor at port '{port}'!")
-        })
+        loop {
+            if let Ok(x) = unsafe {
+                Motor::new(
+                    port,
+                    ratio,
+                    vex_rt::prelude::EncoderUnits::Degrees,
+                    reverse,
+                )
+            } { return x }
+        }
     }
 
     pub fn stop(&mut self) { // Stops all button activities
