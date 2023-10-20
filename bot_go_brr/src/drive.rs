@@ -119,15 +119,15 @@ impl Drive {
     pub fn cal_volt(speed: i8) -> i32 { 12000 * (speed as i32) / 100 } // Normalised speed from 1 to 100
 
     fn build_motor(id: u8) -> Motor {
-        unsafe {
-            Motor::new(
-                Config::MOTORS.id_to_port(id),
-                Config::GEAR_RATIO,
-                Config::MOTORS.units,
-                Config::MOTORS.id_to_reverse(id),
-            )
-        }.unwrap_or_else(|_|
-            panic!("Error: Could not configure / generate motor id '{0}' at port '{1}'!", id, Config::MOTORS.id_to_port(id))
-        )
+        loop {
+            if let Ok(x) = unsafe {
+                Motor::new(
+                    Config::MOTORS.id_to_port(id),
+                    Config::GEAR_RATIO,
+                    Config::MOTORS.units,
+                    Config::MOTORS.id_to_reverse(id),
+                )
+            } { return x }
+        }
     }
 }
