@@ -41,7 +41,7 @@ impl ButtonMan {
             Motor::new(
                 port,
                 ratio,
-                vex_rt::prelude::EncoderUnits::Degrees,
+                vex_rt::prelude::EncoderUnits::Rotations,
                 reverse,
             )
         }.unwrap_or_else(|_| {
@@ -54,12 +54,11 @@ impl ButtonMan {
     }
 
     pub fn move_arm(&mut self, up: bool) {
-        if up && self.arm.get_position().unwrap_or(0f64) < Config::ARM_ROT_LIMIT {
+        if self.held >= Config::ARM_HOLD_LIMIT { self.stop(); return; }
+        if up {
             self.arm.move_voltage(Drive::cal_volt(Config::ARM_SPEED)).unwrap();
-        } else if self.arm.get_position().unwrap_or(64f64) > 0f64 {
-            self.arm.move_voltage(-Drive::cal_volt(Config::ARM_SPEED)).unwrap();
         } else {
-            self.stop();
+            self.arm.move_voltage(-Drive::cal_volt(Config::ARM_SPEED)).unwrap();
         }
     }
 
