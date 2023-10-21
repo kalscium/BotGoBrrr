@@ -100,24 +100,24 @@ impl Drive {
     }
 
     pub fn forwards(&mut self, precise: bool) {
-        self.map(|x, _| x.move_voltage(Drive::cal_volt(if precise { Config::PRECISE_FORWARD_SPEED } else { Config::FORWARD_SPEED })).unwrap());
+        self.map(|x, _| { let _ = x.move_voltage(Drive::cal_volt(if precise { Config::PRECISE_FORWARD_SPEED } else { Config::FORWARD_SPEED })); });
     }
 
     pub fn stop(&mut self) {
-        self.map(|x, _| x.move_voltage(0).unwrap());
+        self.map(|x, _| { let _ = x.move_voltage(0); } );
     }
 
     pub fn backwards(&mut self, precise: bool) {
-        self.map(|x, _| x.move_voltage(Drive::cal_volt(-if precise { Config::PRECISE_BACKWARD_SPEED } else { Config::BACKWARD_SPEED })).unwrap())
+        self.map(|x, _| { let _ = x.move_voltage(Drive::cal_volt(-if precise { Config::PRECISE_BACKWARD_SPEED } else { Config::BACKWARD_SPEED })); } )
     }
 
     pub fn left(&mut self, precise: bool) {
         let turnspeed: i8 = if precise { Config::PRECISE_TURN_SPEED } else { Config::TURN_SPEED };
         self.map(|x, i| {
             if i & 1 == 0 { // Right Motors
-                x.move_voltage(Drive::cal_volt(turnspeed)).unwrap();
+                { let _ = x.move_voltage(Drive::cal_volt(turnspeed)); } ;
             } else { // Left Motors
-                x.move_voltage(Drive::cal_volt(-turnspeed)).unwrap();
+                { let _ = x.move_voltage(Drive::cal_volt(-turnspeed)); } ;
             }
         });
     }
@@ -126,9 +126,9 @@ impl Drive {
         let turnspeed: i8 = if precise { Config::PRECISE_TURN_SPEED } else { Config::TURN_SPEED };
         self.map(|x, i| {
             if i & 1 == 0 { // Right Motors
-                x.move_voltage(Drive::cal_volt(-turnspeed)).unwrap();
+                { let _ = x.move_voltage(Drive::cal_volt(-turnspeed)); } ;
             } else { // Left Motors
-                x.move_voltage(Drive::cal_volt(turnspeed)).unwrap();
+                { let _ = x.move_voltage(Drive::cal_volt(turnspeed)); } ;
             }
         });
     }
