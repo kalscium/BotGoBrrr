@@ -27,17 +27,14 @@ impl Config {
     // Arm
     pub const ARM_PORT: u8 = 16;
     pub const ARM_SPEED: i8 = 100; // 100 / 100
-    pub const ARM_RATIO: Gearset = Gearset::EighteenToOne;
+    pub const ARM_RATIO: Gearset = Gearset::ThirtySixToOne;
     pub const ARM_REVERSE: bool = true;
-    /// The limit of how long you can hold the arm
-    /// (to prevent damage from the arm)
-    pub const ARM_HOLD_LIMIT: u16 = 5;
 
     // Robot speeds
     pub const FORWARD_SPEED: i8 = 80; // 100 / 100
     pub const BACKWARD_SPEED: i8 = 80; // 80 / 100
     pub const TURN_SPEED: i8 = 40; // 50 / 100
-    pub const GEAR_RATIO: Gearset = Gearset::SixToOne;
+    pub const GEAR_RATIO: Gearset = Gearset::ThirtySixToOne;
 
     // Robot precise speeds
     pub const PRECISE_FORWARD_SPEED: i8 = 40;
