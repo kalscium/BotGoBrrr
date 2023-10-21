@@ -2,11 +2,38 @@ use vex_rt::prelude::*;
 pub struct Config {}
 
 impl Config {
-    pub const TICK_SPEED: u64 = 10;
-    /// Controller sensitivity
+    /// ### Bot Drive / Run Mode
+    /// **Practice:** complete freedom and driver control
+    /// 
+    /// **Competition:** like `Practice` but has a set time limit of 2 min
+    /// 
+    /// **Autonomous:** runs the user defined autonomous algorithm
+    /// 
+    /// **Record:** like `Practice` but records driver movements consisely ( for writing autonomous )
+    pub const RUN_MODE: RunMode = RunMode::Practice;
+    /// Robot's fixed update speed in milliseconds
+    pub const TICK_SPEED: u64 = 50;
+    /// ### Controller sensitivity
+    /// Controller stick movement tolerance / threshold
+    /// ( to combat stick drift )
+    /// ```
+    /// ? / 127
+    /// default( 30 )
+    /// ```
     pub const CONTROLLER_STICK_THRESHOLD: u8 = 12; // Controller sensitivity ?/127
 
-    /// Motors
+    // Logging stuff
+    /// Log drive args?
+    /// ```
+    /// default( true )
+    /// ```
+    pub const LOG_DRIVE_ARG: bool = true;
+    /// Log drive args?
+    /// ```
+    /// default( true )
+    /// ```
+
+    /// ### Motors
     pub const MOTORS: MotorConfig = MotorConfig {
         units: EncoderUnits::Rotations,
 
@@ -40,6 +67,14 @@ impl Config {
     pub const PRECISE_FORWARD_SPEED: i8 = 40;
     pub const PRECISE_BACKWARD_SPEED: i8 = 40;
     pub const PRECISE_TURN_SPEED: i8 = 25;
+}
+
+#[allow(unused)]
+pub enum RunMode {
+    Autonomous,
+    Practice,
+    Competition,
+    Record,
 }
 
 /// ( Motor order goes from top to down, left to right )

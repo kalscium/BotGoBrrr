@@ -52,6 +52,11 @@ impl Algor {
             _ => None,
         }
     }
+
+    pub fn is_finished(&self, tick: usize) -> bool {
+        let tick = tick;
+        self.0.len() <= tick
+    }
 }
 
 // Algorithms
@@ -68,5 +73,12 @@ impl Algor {
         Left for 50;
         Backward for 112;
         Stop for 5;
+    };
+
+    pub const FULL_AUTO: Algor = gen_algor! {
+        Stop for 60;
+        (precise) Forward for 30;
+        Backward for 20;
+        Forward for 40;
     };
 }

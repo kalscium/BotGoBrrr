@@ -15,6 +15,18 @@ pub enum ButtonArg {
     A, // change later
 }
 
+impl ButtonArg {
+    pub fn to_string(self) -> &'static str {
+        use ButtonArg::*;
+        match self {
+            Up => "Up",
+            Down => "Down",
+            Null => "Null",
+            A => "A",
+        }
+    }
+}
+
 impl ButtonMan {
     pub fn new() -> Self {
         Self {
