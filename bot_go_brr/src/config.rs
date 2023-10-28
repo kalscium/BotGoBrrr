@@ -2,7 +2,7 @@ use vex_rt::prelude::*;
 pub struct Config {}
 
 impl Config {
-    pub const TICK_SPEED: u64 = 10;
+    pub const TICK_SPEED: u64 = 50;
     /// Controller sensitivity
     pub const CONTROLLER_STICK_THRESHOLD: u8 = 12; // Controller sensitivity ?/127
 
