@@ -1,3 +1,4 @@
+use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
 use hashbrown::HashMap;
@@ -63,6 +64,31 @@ impl Advlog {
     }
 
     pub fn export(&self) {
-        println!("{:#?}", self.0);
+        let mut last = 0usize;
+        loop {
+            let mut found = false;
+            for (i, x) in self.0.iter() {
+                for x in x.iter() {
+                    if x.0 == last {
+                        found = true;
+                        for tick in 0..(x.1 as usize +1) {
+                            let (drive, button, precise) = i.to_strings();
+                            last = x.0 + tick;
+                            println!("{}", colour_format![
+                                blue("[ "),
+                                yellow(&last.to_string()),
+                                blue(" ] "),
+                                cyan(drive),
+                                blue("("),
+                                yellow(button),
+                                blue(") "),
+                                cyan("precise: "),
+                                yellow(&precise.to_string()),
+                            ]);
+                        }
+                    }
+                }
+            } if !found { break };
+        }
     }
 }
