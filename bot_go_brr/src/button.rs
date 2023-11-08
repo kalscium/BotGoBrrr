@@ -1,5 +1,6 @@
 use vex_rt::prelude::{Motor, Gearset};
 use crate::{config::Config, drive::Drive};
+use crate::advlog::Advlog;
 
 pub struct ButtonMan {
     arm: Motor,
@@ -7,12 +8,12 @@ pub struct ButtonMan {
     last: ButtonArg,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ButtonArg {
     Null,
     Up,
     Down,
-    A, // change later
+    A, // for advlog export
 }
 
 impl ButtonArg {
@@ -61,13 +62,13 @@ impl ButtonMan {
         }
     }
 
-    pub fn execute(&mut self, arg: ButtonArg) {
+    pub fn execute(&mut self, arg: ButtonArg, advlog: &Advlog) {
         use ButtonArg as B;
         match arg {
             B::Null => self.stop(),
             B::Up => self.move_arm(true),
             B::Down => self.move_arm(false),
-            B::A => (),
+            B::A => advlog.export(),
         }
 
         if arg == self.last { self.held += 1 }

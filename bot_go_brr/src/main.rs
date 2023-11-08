@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+extern crate alloc;
+
 use vex_rt::prelude::*;
 
 mod drive;
@@ -10,5 +12,5 @@ mod controller;
 mod utils;
 mod button;
 mod algor;
-mod record;
+mod advlog;
 entry!(bot::Bot);

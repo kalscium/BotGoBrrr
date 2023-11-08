@@ -10,8 +10,8 @@ use crate::{
     algor::Algor,
     utils::*,
     button::ButtonArg,
-    record::Record,
 };
+use crate::advlog::Advlog;
 
 pub struct Bot {
     drive: Mutex<Drive>,
@@ -72,7 +72,7 @@ impl Robot for Bot {
                 None => break,
             };
 
-            self.drive.lock().run(arg, &mut self.butt_man.lock());
+            self.drive.lock().run(arg, &mut self.butt_man.lock(), &Advlog::new());
 
             select! {
                 _ = _ctx.done() => {
@@ -91,8 +91,8 @@ impl Robot for Bot {
     fn opcontrol(&mut self, ctx: Context) {
         // This loop construct makes sure the drive is updated every 100 milliseconds.
         let mut l = Loop::new(Duration::from_millis(Config::TICK_SPEED));
+        let mut advlog = Advlog::new();
         let mut tick: usize = 0;
-        let mut record = Record::new(DriveArg::Stall(ButtonArg::Null, false));
         loop {
             // Movement
             let arg: DriveArg = match Config::RUN_MODE {
@@ -101,14 +101,12 @@ impl Robot for Bot {
                 // (Similar to practice)
                 RunMode::Competition if Algor::GAME_AUTO.is_finished(tick) => self.driver(), // If competition autonomous period finished use driver control
                 RunMode::Competition => Algor::GAME_AUTO.get(tick).unwrap(), // If autonomous period isn't finished, use autonomous control
-                RunMode::Record => record.record(self.driver()), // Records new packets and logs them
             };
 
             // Logging
-            if let RunMode::Record = Config::RUN_MODE {} // Log Drive Arg if not record mode and if wanted in config
-            else if Config::LOG_DRIVE_ARG { arg.log(tick) }
+            advlog.parse(tick, arg);
 
-            self.drive.lock().run(arg, &mut self.butt_man.lock());
+            self.drive.lock().run(arg, &mut self.butt_man.lock(), &advlog);
 
             select! {
                 // If the driver control period is done, break out of the loop.

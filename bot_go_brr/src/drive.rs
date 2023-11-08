@@ -5,9 +5,10 @@ use vex_rt::motor::Motor;
 use crate::config::Config;
 use crate::button::{ButtonArg, ButtonMan};
 use alloc::string::ToString;
+use crate::advlog::Advlog;
 
 #[allow(unused)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DriveArg {
     Forward(ButtonArg, bool),
     Backward(ButtonArg, bool),
@@ -95,9 +96,9 @@ impl Drive {
         }
     }
 
-    pub fn run(&mut self, arg: DriveArg, butt_man: &mut ButtonMan) {
+    pub fn run(&mut self, arg: DriveArg, butt_man: &mut ButtonMan, advlog: &Advlog) {
         arg.execute(self);
-        butt_man.execute(*arg.get_button())
+        butt_man.execute(*arg.get_button(), advlog)
     }
 
     pub fn forwards(&mut self, precise: bool) {
