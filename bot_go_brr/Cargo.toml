@@ -1,6 +1,6 @@
 [package]
 name = "bot_go_brr"
-version = "3.4.8-stripped-1.0.0"
+version = "3.5.0-stripped-1.0.0"
 authors = ["GreenChild04 <greenchild04@protonmail.com>"]
 edition = "2021"
 
