@@ -63,6 +63,7 @@ impl Advlog {
         } else { self.0.insert(arg, vec![(tick, 1)]); }
     }
 
+    // todo: Fix the weird issue where it gets repeat printed multiple times
     pub fn export(&self) {
         let mut last = 0usize;
         loop {
@@ -73,16 +74,20 @@ impl Advlog {
                         found = true;
                         last += x.1 as usize;
                         let (drive, button, precise) = i.to_strings();
+                        let precise = if precise {
+                            colour_format![blue("("), yellow("precise"), blue(") ")]
+                        } else {
+                            String::new()
+                        };
+
                         println!("{}", colour_format![
-                            blue("[ "),
-                            yellow(&x.1.to_string()),
-                            blue(" ] "),
+                            none(&precise),
                             cyan(drive),
                             blue("("),
                             yellow(button),
-                            blue(") "),
-                            cyan("precise: "),
-                            yellow(&precise.to_string()),
+                            blue(")"),
+                            blue(" for "),
+                            yellow(&x.1.to_string()),
                         ]);
                     }
                 }
