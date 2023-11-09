@@ -71,21 +71,19 @@ impl Advlog {
                 for x in x.iter() {
                     if x.0 == last {
                         found = true;
-                        for tick in 0..(x.1 as usize +1) {
-                            let (drive, button, precise) = i.to_strings();
-                            last = x.0 + tick;
-                            println!("{}", colour_format![
-                                blue("[ "),
-                                yellow(&last.to_string()),
-                                blue(" ] "),
-                                cyan(drive),
-                                blue("("),
-                                yellow(button),
-                                blue(") "),
-                                cyan("precise: "),
-                                yellow(&precise.to_string()),
-                            ]);
-                        }
+                        last += x.1 as usize;
+                        let (drive, button, precise) = i.to_strings();
+                        println!("{}", colour_format![
+                            blue("[ "),
+                            yellow(&x.1.to_string()),
+                            blue(" ] "),
+                            cyan(drive),
+                            blue("("),
+                            yellow(button),
+                            blue(") "),
+                            cyan("precise: "),
+                            yellow(&precise.to_string()),
+                        ]);
                     }
                 }
             } if !found { break };
