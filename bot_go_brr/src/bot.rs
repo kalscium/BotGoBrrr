@@ -104,7 +104,7 @@ impl Robot for Bot {
             };
 
             // Logging
-            advlog.parse(tick, arg);
+            advlog.parse(arg);
 
             self.drive.lock().run(arg, &mut self.butt_man.lock(), &advlog);
 

@@ -1,10 +1,7 @@
-extern crate alloc;
-
 use crate::niceif;
 use vex_rt::motor::Motor;
 use crate::config::Config;
 use crate::button::{ButtonArg, ButtonMan};
-use alloc::string::ToString;
 use crate::advlog::Advlog;
 
 #[allow(unused)]
@@ -48,22 +45,6 @@ impl DriveArg {
             DriveArg::Stop(x, _) => ("Stop", x.to_string(), false),
             DriveArg::Stall(x, _) => ("Stall", x.to_string(), false),
         }
-    }
-
-    pub fn log(&self, tick: usize) {
-        use crate::utils::Log::*;
-        let (name, button, precise) = self.to_strings();
-        Base(
-            tick,
-            "Drive Arg",
-            &List(
-                &Title(name), "",
-                &List(
-                    &Wrap("(", &Title(button), ")"), " Precise: ",
-                    &String(precise.to_string()),
-                ),
-            )
-        ).log();
     }
 
     pub fn get_button(&self) -> &ButtonArg {

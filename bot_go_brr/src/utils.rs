@@ -6,7 +6,6 @@ use alloc::{fmt::{format, Display, self}, string::{ToString, String}};
 
 pub enum Log<'a> {
     String(String), // basic string
-    Base(usize, &'a str, &'a Log<'a>), // Base of every log ( tick, title, body )
     Wrap(&'a str, &'a Log<'a>, &'a str), // wrapping eg. '['value']'
     List(&'a Log<'a>, &'a str, &'a Log<'a>), // List with separator
     Title(&'a str), // Blue title
@@ -27,7 +26,6 @@ impl<'a> Display for Log<'a> {
 
                 // not basic
                 Wrap(a, log, b) => format(format_args!( "{0} {1} {2}", Self::pink(a), log, Self::pink(b) )),
-                Base(tick, title, body) => format(format_args!( "{0} {1} {2} {3}", Wrap("[", &String(tick.to_string()), "]"), Self::blue(title), Self::pink("=>"), body)),
                 List(x, sep, y) => format(format_args!( "{0}{1}{2}", x, Self::pink(sep), y)),
             }
         )

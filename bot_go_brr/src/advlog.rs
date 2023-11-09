@@ -1,7 +1,5 @@
 use alloc::string::{String, ToString};
-use alloc::vec;
 use alloc::vec::Vec;
-use hashbrown::HashMap;
 use vex_rt::io::println;
 use crate::drive::DriveArg;
 
@@ -43,55 +41,41 @@ macro_rules! colour_format { // Verbose ugly stuff I can't read
 }
 
 /// `(String) Log => (abs_tick, held_for)`
-pub struct Advlog(HashMap<DriveArg, Vec<(usize, u16)>>);
+pub struct Advlog(Vec<(DriveArg, u16)>);
 
 impl Advlog {
     #[inline]
     pub fn new() -> Self {
-        Self(HashMap::new())
+        Self(Vec::new())
     }
 
-    pub fn parse(&mut self, tick: usize, arg: DriveArg) {
-        if let Some(x) = self.0.get_mut(&arg) {
-            let x = x.last_mut().unwrap(); // vec cannot be empty
-            if tick - x.0 == x.1 as usize { x.1 += 1; }
-            else {
-                self.0.get_mut(&arg)
-                    .unwrap() // Has to exist
-                    .push((tick, 1));
+    pub fn parse(&mut self, arg: DriveArg) {
+        if let Some((x, i)) = self.0.last_mut() {
+            if *x == arg {
+                *i += 1;
+                return; // so it doesn't execute under
             }
-        } else { self.0.insert(arg, vec![(tick, 1)]); }
+        } self.0.push((arg, 1));
     }
 
-    // todo: Fix the weird issue where it gets repeat printed multiple times
     pub fn export(&self) {
-        let mut last = 0usize;
-        loop {
-            let mut found = false;
-            for (i, x) in self.0.iter() {
-                for x in x.iter() {
-                    if x.0 == last {
-                        found = true;
-                        last += x.1 as usize;
-                        let (drive, button, precise) = i.to_strings();
-                        let precise = if precise {
-                            colour_format![blue("("), yellow("precise"), blue(") ")]
-                        } else {
-                            String::new()
-                        };
+        for (x, i) in self.0.iter() {
+            let (drive, button, precise) = x.to_strings();
+            let precise = if precise {
+                colour_format![blue("("), yellow("precise"), blue(") ")]
+            } else {
+                String::new()
+            };
 
-                        println!("{}", colour_format![
-                            none(&precise),
-                            cyan(drive),
-                            blue("("),
-                            yellow(button),
-                            blue(")"),
-                            blue(" for "),
-                            yellow(&x.1.to_string()),
-                        ]);
-                    }
-                }
-            } if !found { break };
+            println!("{}", colour_format![
+                none(&precise),
+                cyan(drive),
+                blue("("),
+                yellow(button),
+                blue(")"),
+                blue(" for "),
+                yellow(&i.to_string()),
+            ]);
         }
     }
 }

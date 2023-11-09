@@ -20,17 +20,6 @@ impl Config {
     /// ```
     pub const CONTROLLER_STICK_THRESHOLD: u8 = 12; // Controller sensitivity ?/127
 
-    // Logging stuff
-    /// Log drive args?
-    /// ```
-    /// default( true )
-    /// ```
-    pub const LOG_DRIVE_ARG: bool = true;
-    /// Log drive args?
-    /// ```
-    /// default( true )
-    /// ```
-
     /// ### Motors
     pub const MOTORS: MotorConfig = MotorConfig {
         units: EncoderUnits::Rotations,

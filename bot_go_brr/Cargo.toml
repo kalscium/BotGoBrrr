@@ -1,6 +1,6 @@
 [package]
 name = "bot_go_brr"
-version = "3.5.3"
+version = "3.6.0"
 authors = ["GreenChild04 <greenchild04@protonmail.com>"]
 edition = "2021"
 
@@ -10,9 +10,6 @@ edition = "2021"
 # Comment out the version line and uncomment the git line to use pre-release versions.
 version = "0.15.1"
 # git = "https://gitlab.com/qvex/vex-rt.git"
-
-[dependencies]
-hashbrown = "0.14.1"
 
 [profile.release]
 incremental = true
