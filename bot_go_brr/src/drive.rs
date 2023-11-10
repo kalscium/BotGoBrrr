@@ -1,11 +1,9 @@
-extern crate alloc;
-
 use vex_rt::motor::Motor;
 use crate::config::Config;
 use crate::button::{ButtonArg, ButtonMan};
 
 #[allow(unused)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DriveArg {
     Forward(ButtonArg, bool),
     Backward(ButtonArg, bool),

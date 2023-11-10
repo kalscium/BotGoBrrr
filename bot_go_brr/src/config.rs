@@ -6,7 +6,7 @@ impl Config {
     /// Controller sensitivity
     pub const CONTROLLER_STICK_THRESHOLD: u8 = 12; // Controller sensitivity ?/127
 
-    /// Motors
+    /// ### Motors
     pub const MOTORS: MotorConfig = MotorConfig {
         units: EncoderUnits::Rotations,
 

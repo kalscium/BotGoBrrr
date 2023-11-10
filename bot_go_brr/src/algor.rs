@@ -62,11 +62,23 @@ impl Algor {
     pub const GAME_AUTO: Algor = gen_algor! {
         Stop for 2;
         (precise) Forward for 60;
-        Right for 9;
-        (precise) Forward for 28;
-        Backward for 12;
-        Left for 10;
-        Backward for 26;
-        Stop for 1;
+        Stop for 10;
+        (precise) Right for 18;
+        Stop for 4;
+        (precise) Forward for 12;
+        Stop for 2;
+        Forward for 4;
+        Stop for 4;
+        Backward for 6;
+        Stop for 4;
+        Forward for 16;
+        Stop for 4;
+        Backward for 14;
+        Left for 8;
+        Stop for 12;
+        Right for 10;
+        Stop for 2;
+        Backward for 4;
+        Stop for 2;
     };
 }
