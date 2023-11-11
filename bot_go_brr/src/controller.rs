@@ -41,6 +41,8 @@ pub struct PacketRaw {
     button_a: bool,
     button_up: bool,
     button_down: bool,
+    button_x: bool,
+    button_b: bool,
 }
 
 pub enum Packet {
@@ -73,6 +75,8 @@ impl Packet {
             button_a: safe_unwrap!(controller.a.is_pressed()),
             button_up: safe_unwrap!(controller.up.is_pressed()),
             button_down: safe_unwrap!(controller.down.is_pressed()),
+            button_x: safe_unwrap!(controller.x.is_pressed()),
+            button_b: safe_unwrap!(controller.b.is_pressed()),
         })
     }
 
@@ -90,6 +94,8 @@ impl Packet {
         if this.button_a { ButtonArg::A }
         else if this.button_up { ButtonArg::Up }
         else if this.button_down { ButtonArg::Down }
+        else if this.button_x { ButtonArg::Up }
+        else if this.button_b { ButtonArg::Down }
         else { ButtonArg::Null }
     }
 }
