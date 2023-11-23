@@ -1,22 +1,9 @@
 [package]
-name = "bot_go_brr"
-version = "3.7.0"
-authors = ["GreenChild04 <greenchild04@protonmail.com>"]
+name = "safe-vex-template"
+version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies.vex-rt]
-# Comment out the version line and uncomment the git line to use pre-release versions.
-version = "0.15.1"
-# git = "https://gitlab.com/qvex/vex-rt.git"
-
-[profile.release]
-incremental = true
-
-[profile.dev]
-incremental = true
-debug = false
-
-[profile.dev.package."*"]
-opt-level = 3
+[dependencies]
+safe-vex = "0.3.2"
