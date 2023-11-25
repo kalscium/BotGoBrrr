@@ -14,6 +14,9 @@ pub struct Drive<'a> {
     pub r1: Motor<'a>,
     /// Bottom-right motor of the robot
     pub r2: Motor<'a>,
+
+    /// The arm of the robot
+    pub arm: Motor<'a>,
 }
 
 impl<'a> Drive<'a> {
@@ -24,17 +27,19 @@ impl<'a> Drive<'a> {
             l2: build_motor(context, Config::DRIVE_L2),
             r1: build_motor(context, Config::DRIVE_R1),
             r2: build_motor(context, Config::DRIVE_R2),
+            arm: build_motor(context, Config::ARM),
         }
     }
 
     #[inline]
     pub fn run(&mut self, drive_state: DriveState) {
-        let DriveState { l1, l2, r1, r2 } = drive_state;
+        let DriveState { l1, l2, r1, r2, arm } = drive_state;
 
         self.l1.move_voltage(l1);
         self.l2.move_voltage(l2);
         self.r1.move_voltage(r1);
         self.r2.move_voltage(r2);
+        self.arm.move_voltage(arm);
     }
 }
 

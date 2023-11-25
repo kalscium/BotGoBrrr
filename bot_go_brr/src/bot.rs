@@ -16,15 +16,15 @@ impl<'a> Bot<'a> for Robot<'a> {
     #[inline]
     fn opcontrol(&'a mut self, context: &'a Mutex<Context>) {
         // Get the controls from the controller safely
-        let (left_stick, butt_l2, butt_r2, flush_logs) = {
+        let (left_stick, butt_l2, butt_r2, butt_up, butt_down, flush_logs) = {
             let mut context = context.lock();
             let mut controller = context.controller();
-            (controller.left_stick(), controller.l2(), controller.r2(), controller.x())
+            (controller.left_stick(), controller.l2(), controller.r2(), controller.up(), controller.down(), controller.x())
         };
 
         // Get the current drive-train state
         let drive_state = DriveState::new(
-            &DriveArg::new(left_stick, butt_l2, butt_r2)
+            &DriveArg::new(left_stick, butt_l2, butt_r2, butt_up, butt_down)
         );
 
         if flush_logs {

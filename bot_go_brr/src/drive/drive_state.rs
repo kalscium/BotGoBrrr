@@ -15,6 +15,8 @@ pub struct DriveState {
     pub r1: i32,
     /// Bottom-right motor of the robot
     pub r2: i32,
+    /// Arm of the robot
+    pub arm: i32,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -31,11 +33,13 @@ pub enum DriveArg {
     SLeft,
     /// Strafe right
     SRight,
+    /// Move arm (up or down)
+    Arm(bool),
 }
 
 impl DriveArg {
     #[inline]
-    pub fn new(left_stick: JoyStick, l2: bool, r2: bool) -> Box<[DriveArg]> {
+    pub fn new(left_stick: JoyStick, l2: bool, r2: bool, up: bool, down: bool) -> Box<[DriveArg]> {
         use DriveArg as D;
 
         let left_stick = left_stick.step(Config::CONTROLLER_STICK_MIN);
@@ -62,6 +66,12 @@ impl DriveArg {
             }
         }
 
+        if up {
+            args.push(D::Arm(true));
+        } else if down {
+            args.push(D::Arm(false));
+        }
+
         args.into_boxed_slice()
     }
 }
@@ -74,6 +84,7 @@ impl DriveState {
             l2: 0,
             r1: 0,
             r2: 0,
+            arm: 0,
         };
 
         use DriveArg as D;
@@ -125,6 +136,11 @@ impl DriveState {
                 state.r1 = voltage;
                 state.r2 = -voltage;
             },
+
+            D::Arm(up) => {
+                let voltage = calculate_voltage(i8::MAX as u8, Config::ARM_SPEED);
+                state.arm = voltage * *up as i32;
+            },
         }}
 
         state
@@ -136,6 +152,6 @@ impl DriveState {
 fn calculate_voltage(stick: u8, percent: u8) -> i32 {
     (i32::MAX as f64
         * (percent.clamp(0, 100) as f64 / 100f64) // to normalize the voltage to the percentage (and prevent overflow)
-        * (stick as f64 / i8::MAX as f64) // to normalize the voltage to the stick percentage
+        * ((stick - Config::CONTROLLER_STICK_MIN) as f64 / i8::MAX as f64) // to normalize the voltage to the stick percentage
     ).clamp(i32::MIN as f64, i32::MAX as f64) as i32
 }

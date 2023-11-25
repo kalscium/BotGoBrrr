@@ -35,13 +35,16 @@ impl Config {
 
     motor_config! {
         /// Top-left drive-train motor
-        DRIVE_L1: 1, false;
+        DRIVE_L1: 12, false;
         /// Bottom-left drive-train motor
-        DRIVE_L2: 3, false;
+        DRIVE_L2: 20, false;
         /// Top-right drive-train motor
-        DRIVE_R1: 2, false;
+        DRIVE_R1: 3, true;
         /// Bottom-right drive-train motor
-        DRIVE_R2: 4, false;
+        DRIVE_R2: 5, true;
+        
+        /// Arm motor
+        ARM: 16, true;
     }
 
     /// the robot's forward speed out of `100`
@@ -52,6 +55,8 @@ impl Config {
     pub const DRIVE_TURN_SPEED: u8 = 50;
     /// the robot's strafe speed out of `100`
     pub const DRIVE_STRAFE_SPEED: u8 = 60;
+    /// the robot's arm speed out of `100`
+    pub const ARM_SPEED: u8 = 100;
 }
 
 /// Misc Configs
