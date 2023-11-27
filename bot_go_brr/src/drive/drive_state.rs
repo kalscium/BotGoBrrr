@@ -152,6 +152,6 @@ impl DriveState {
 fn calculate_voltage(stick: u8, percent: u8) -> i32 {
     (i32::MAX as f64
         * (percent.clamp(0, 100) as f64 / 100f64) // to normalize the voltage to the percentage (and prevent overflow)
-        * ((stick - Config::CONTROLLER_STICK_MIN) as f64 / i8::MAX as f64) // to normalize the voltage to the stick percentage
+        * ((stick - Config::CONTROLLER_STICK_MIN) as f64 / (i8::MAX - Config::CONTROLLER_STICK_MIN as i8) as f64) // to normalize the voltage to the stick percentage
     ).clamp(i32::MIN as f64, i32::MAX as f64) as i32
 }
