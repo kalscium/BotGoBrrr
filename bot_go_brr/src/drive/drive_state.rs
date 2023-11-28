@@ -42,7 +42,7 @@ impl DriveArg {
     pub fn new(left_stick: JoyStick, l2: bool, r2: bool, up: bool, down: bool) -> Box<[DriveArg]> {
         use DriveArg as D;
 
-        let left_stick = left_stick.step(Config::CONTROLLER_STICK_MIN);
+        let left_stick = left_stick.clamp(Config::CONTROLLER_STICK_MIN);
         let mut args = Vec::new();
         let mut movement_arg = false;
 
