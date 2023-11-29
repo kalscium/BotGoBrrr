@@ -139,7 +139,7 @@ impl DriveState {
 
             D::Arm(up) => {
                 let voltage = calculate_voltage(i8::MAX as u8, Config::ARM_SPEED);
-                state.arm = voltage * *up as i32;
+                state.arm = if *up { voltage } else { -voltage };
             },
         }}
 
