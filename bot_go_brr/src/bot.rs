@@ -37,5 +37,3 @@ impl<'a> Bot<'a> for Robot {
         self.drive.run(context, drive_state);
     }
 }
-
-safe_vex::entry!(Robot);
