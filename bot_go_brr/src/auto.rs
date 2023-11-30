@@ -1,13 +1,11 @@
 use crate::drive::DriveState;
 
 pub struct Auto {
-    idx: u8,
-    i: u8,
-    l1: &'static [(i32, u8)],
-    l2: &'static [(i32, u8)],
-    r1: &'static [(i32, u8)],
-    r2: &'static [(i32, u8)],
-    arm: &'static [(i32, u8)],
+    l1: (&'static [(i32, u8)], u16, u8),
+    l2: (&'static [(i32, u8)], u16, u8),
+    r1: (&'static [(i32, u8)], u16, u8),
+    r2: (&'static [(i32, u8)], u16, u8),
+    arm: (&'static [(i32, u8)], u16, u8),
 }
 
 #[macro_export]
@@ -26,31 +24,27 @@ macro_rules! autonomous {
 }
 
 macro_rules! iter_item {
-    ($self:ident.$name:ident) => {
-        $self.$name.get($self.idx as usize).map(|x| x.0)?
-    }
+    ($self:ident.$name:ident) => {{
+        let this = $self.$name.0.get($self.$name.1 as usize)?;
+        if $self.$name.2 == this.1 {
+            $self.$name.2 = 0;
+            $self.$name.1 += 1;
+            return $self.next();
+        } else {
+            $self.$name.2 += 1;
+        } this.0
+    }}
 }
 
 impl Iterator for Auto {
     type Item = DriveState;
     fn next(&mut self) -> Option<DriveState> {
-        let drive_state = {
-            let l1 = if let Some(x) = self.l1.get(self.idx as usize) { x } else { return None };
-            if self.i == l1.1 {
-                self.i = 0;
-                self.idx += 1;
-                return self.next();
-            }
-
-            DriveState {
-                l1: iter_item!(self.l1),
-                l2: iter_item!(self.l2),
-                r1: iter_item!(self.r1),
-                r2: iter_item!(self.r2),
-                arm: iter_item!(self.arm),
-            }
-        };
-        self.i += 1;
-        Some(drive_state)
+        Some(DriveState {
+            l1: iter_item!(self.l1),
+            l2: iter_item!(self.l2),
+            r1: iter_item!(self.r1),
+            r2: iter_item!(self.r2),
+            arm: iter_item!(self.arm),
+        })
     }
 }
