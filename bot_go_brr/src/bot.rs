@@ -1,8 +1,12 @@
 use safe_vex::{bot::Bot, context::Context};
 use crate::drive::{Drive, DriveState, DriveArg};
+#[cfg(debug_assertions)]
+use crate::record::Record;
 
 pub struct Robot {
     drive: Drive,
+    #[cfg(debug_assertions)]
+    record: Record,
 }
 
 impl<'a> Bot<'a> for Robot {
@@ -10,6 +14,8 @@ impl<'a> Bot<'a> for Robot {
     fn new(ctx: &'a Context) -> Self {
         Self {
             drive: Drive::new(ctx),
+            #[cfg(debug_assertions)]
+            record: Record::new(),
         }
     }
 
@@ -33,6 +39,10 @@ impl<'a> Bot<'a> for Robot {
         if flush_logs {
             context.flush_logs();
         }
+
+        // Record the drive-state if not release
+        #[cfg(debug_assertions)]
+        self.record.record(drive_state);
 
         self.drive.run(context, drive_state);
     }

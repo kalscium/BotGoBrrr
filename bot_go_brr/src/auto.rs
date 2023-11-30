@@ -12,7 +12,7 @@ pub struct Auto {
 
 #[macro_export]
 macro_rules! autonomous {
-    ($({ l1: ($l1:literal, $l1r:literal), l2: ($l2:literal, $l2r:literal), r1: ($r1:literal, $r1r:literal), r2: ($r2:literal, $r2r:literal), arm: ($arm:literal, $armr:literal) }),* $(,)?) => {
+    ($({ l1: ($l1:literal, $l1r:literal), l2: ($l2:literal, $l2r:literal), r1: ($r1:literal, $r1r:literal), r2: ($r2:literal, $r2r:literal), arm: ($arm:literal, $armr:literal) })*) => {
         $crate::auto::Auto {
             idx: 0,
             i: 0,
@@ -27,7 +27,7 @@ macro_rules! autonomous {
 
 macro_rules! iter_item {
     ($self:ident.$name:ident) => {
-        if let Some(x) = $self.$name.get($self.idx as usize).map(|x| x.0) { x } else { return None }
+        $self.$name.get($self.idx as usize).map(|x| x.0)?
     }
 }
 
