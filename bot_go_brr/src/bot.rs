@@ -26,6 +26,12 @@ impl<'a> Bot<'a> for Robot {
             // Get the controls from the controller safely
             let mut controller = context.controller();
 
+            // flush the recorded autonomous if required
+            #[cfg(debug_assertions)]
+            if controller.a() {
+                self.record.flush();
+            }
+
             (DriveState::new(&DriveArg::new(
                 controller.left_stick(),
                 controller.l2(),

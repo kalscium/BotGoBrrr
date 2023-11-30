@@ -1,6 +1,6 @@
 extern crate alloc;
 
-use safe_vex::{pile::Pile, vex_rt::io::println};
+use safe_vex::{pile::Pile, vex_rt::io::println, colour_format};
 use crate::drive::DriveState;
 
 pub struct Record {
@@ -36,6 +36,8 @@ impl Record {
         let r1 = self.r1.flush_owned();
         let r2 = self.r2.flush_owned();
         let arm = self.arm.flush_owned();
+
+        println!("{}", colour_format![blue("\n==="), cyan(" Recorded Autonomous "), blue("===")]);
 
         println!("l1: {l1:?}");
         println!("l2: {l2:?}");
