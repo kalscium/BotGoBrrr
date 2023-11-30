@@ -8,19 +8,22 @@ pub struct Auto {
     arm: (&'static [(i32, u8)], u16, u8),
 }
 
-#[macro_export]
-macro_rules! autonomous {
-    ($({ l1: ($l1:literal, $l1r:literal), l2: ($l2:literal, $l2r:literal), r1: ($r1:literal, $r1r:literal), r2: ($r2:literal, $r2r:literal), arm: ($arm:literal, $armr:literal) })*) => {
-        $crate::auto::Auto {
-            idx: 0,
-            i: 0,
-            l1: &[$(($l1, $l1r)),*],
-            l2: &[$(($l2, $l2r)),*],
-            r1: &[$(($r1, $r1r)),*],
-            r2: &[$(($r2, $r2r)),*],
-            arm: &[$(($arm, $armr)),*],
+impl Auto {
+    pub const fn new(
+        l1: &'static [(i32, u8)],
+        l2: &'static [(i32, u8)],
+        r1: &'static [(i32, u8)],
+        r2: &'static [(i32, u8)],
+        arm: &'static [(i32, u8)],
+    ) -> Self {
+        Self {
+            l1: (l1, 0, 0),
+            l2: (l2, 0, 0),
+            r1: (r1, 0, 0),
+            r2: (r2, 0, 0),
+            arm: (arm, 0, 0),
         }
-    };
+    }
 }
 
 macro_rules! iter_item {

@@ -1,4 +1,5 @@
 use safe_vex::vex_rt::motor::{EncoderUnits, Gearset};
+use crate::auto::Auto;
 
 macro_rules! motor_config {
     ($(#[$meta:meta])* $motor:ident: $port:expr, $reverse:expr;) => {
@@ -63,4 +64,10 @@ impl Config {
 impl Config {
     /// The minimum amount of activation the controller has to have to be activated
     pub const CONTROLLER_STICK_MIN: u8 = 8;
+}
+
+/// Autonomous Algorithms
+impl Config {
+    // /// Competition Autonomous (before driver control)
+    // pub const AUTO_COMPETITION: Auto;
 }

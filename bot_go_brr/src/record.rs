@@ -1,7 +1,6 @@
 extern crate alloc;
 
-use alloc::string::ToString;
-use safe_vex::{pile::Pile, vex_rt::io::println, colour_format};
+use safe_vex::{pile::Pile, vex_rt::io::println};
 use crate::drive::DriveState;
 
 pub struct Record {
@@ -38,16 +37,10 @@ impl Record {
         let r2 = self.r2.flush_owned();
         let arm = self.arm.flush_owned();
 
-        for i in 0..l1.len() {
-            println!("{}", colour_format![
-                blue("{ "),
-                red("l1"), blue(": ("), yellow(&l1[i].0.to_string()), blue(", "), yellow(&l1[i].1.to_string()), blue("), "),
-                red("l2"), blue(": ("), yellow(&l2[i].0.to_string()), blue(", "), yellow(&l2[i].1.to_string()), blue("), "),
-                red("r1"), blue(": ("), yellow(&r1[i].0.to_string()), blue(", "), yellow(&r1[i].1.to_string()), blue("), "),
-                red("r2"), blue(": ("), yellow(&r2[i].0.to_string()), blue(", "), yellow(&r2[i].1.to_string()), blue("), "),
-                red("arm"), blue(": ("), yellow(&arm[i].0.to_string()), blue(", "), yellow(&arm[i].1.to_string()), blue(")"),
-                blue(" }"),
-            ]);
-        }
+        println!("l1: {l1:?}");
+        println!("l2: {l2:?}");
+        println!("r1: {r1:?}");
+        println!("r2: {r2:?}");
+        println!("arm: {arm:?}");
     }
 }
