@@ -63,7 +63,7 @@ impl Config {
 /// Misc Configs
 impl Config {
     /// The minimum amount of activation the controller has to have to be activated
-    pub const CONTROLLER_STICK_MIN: u8 = 8;
+    pub const CONTROLLER_STICK_MIN: u8 = 0;
 }
 
 /// Autonomous Algorithms
