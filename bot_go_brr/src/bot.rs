@@ -1,10 +1,11 @@
 use safe_vex::{bot::Bot, context::Context};
-use crate::drive::{Drive, DriveState, DriveArg};
+use crate::{drive::{Drive, DriveState, DriveArg}, auto::Auto, config::Config};
 #[cfg(debug_assertions)]
 use crate::record::Record;
 
 pub struct Robot {
     drive: Drive,
+    autonomous: Auto,
     #[cfg(debug_assertions)]
     record: Record,
 }
@@ -14,9 +15,20 @@ impl<'a> Bot<'a> for Robot {
     fn new(ctx: &'a Context) -> Self {
         Self {
             drive: Drive::new(ctx),
+            autonomous: Config::AUTO_COMPETITION,
             #[cfg(debug_assertions)]
             record: Record::new(),
         }
+    }
+
+    #[inline]
+    fn autonomous(&'a mut self, _: &'a mut Context) {
+        // Get the autonomous argument
+        // if let Some(x) = self.autonomous.next() {
+        //     self.drive.run(context, x);
+        // } else {
+        //     self.drive.run(context, DriveState::new(&[]));
+        // }
     }
 
     #[inline]
