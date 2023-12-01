@@ -151,13 +151,23 @@ impl DriveState {
 #[inline]
 fn calculate_voltage(stick: u8, percent: u8) -> i32 {
     // Daniel's magic number
-    ((powi(1.177f64, stick) * 1.873f64) as f64 // to calculate the exponential increase
+    const OFFSET_POWER: (f64, u16) = {
+        let mut offset = 2147483648f64;
+        let mut power = 0;
+        while offset > 1f64 {
+            offset /= Config::EXPO_MULTIPLIER;
+            power += 1;
+        } (offset, power)
+    };
+    const SEGMENT: f32 = OFFSET_POWER.1 as f32 / 128f32;
+
+    ((powi(Config::EXPO_MULTIPLIER, (stick as f32 * SEGMENT) as u16) * OFFSET_POWER.0) // to calculate the exponential increase
         * (percent.clamp(0, 100) as f64 / 100f64) // to normalize the voltage to the percentage (and prevent overflow)
     ).clamp(i32::MIN as f64, i32::MAX as f64) as i32
 }
 
 #[inline]
-fn powi(x: f64, i: u8) -> f64 {
+fn powi(x: f64, i: u16) -> f64 {
     let mut out = 1f64;
     for _ in 0..i {
         out *= x;

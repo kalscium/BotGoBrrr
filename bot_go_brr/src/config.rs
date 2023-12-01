@@ -64,6 +64,8 @@ impl Config {
 impl Config {
     /// The minimum amount of activation the controller has to have to be activated
     pub const CONTROLLER_STICK_MIN: u8 = 0;
+    /// The exponential multiplier for the joysticks
+    pub const EXPO_MULTIPLIER: f64 = 1.08f64;
 }
 
 /// Autonomous Algorithms
