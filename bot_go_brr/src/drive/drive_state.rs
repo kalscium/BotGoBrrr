@@ -149,7 +149,7 @@ impl DriveState {
 
 /// Calculates the voltage to use for each motor
 #[inline]
-fn calculate_voltage(stick: u8, percent: u8) -> i32 {
+pub fn calculate_voltage(stick: u8, percent: u8) -> i32 {
     // Daniel's magic number
     const OFFSET_POWER: (f64, u16) = {
         let mut offset = 2147483648f64;
