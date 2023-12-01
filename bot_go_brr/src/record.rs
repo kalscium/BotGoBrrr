@@ -1,6 +1,6 @@
 extern crate alloc;
 
-use safe_vex::{pile::Pile, vex_rt::io::println, colour_format};
+use safe_vex::{pile::Pile, vex_rt::io::{println, print}, colour_format};
 use crate::drive::DriveState;
 
 pub struct Record {
@@ -12,6 +12,7 @@ pub struct Record {
 }
 
 impl Record {
+    #[inline]
     pub fn new() -> Self {
         Self {
             l1: Pile::new(),
@@ -22,6 +23,7 @@ impl Record {
         }
     }
 
+    #[inline]
     pub fn record(&mut self, drive_state: DriveState) {
         self.l1.push(drive_state.l1);
         self.l2.push(drive_state.l2);
@@ -30,19 +32,21 @@ impl Record {
         self.arm.push(drive_state.arm);
     }
 
+    #[inline]
     pub fn flush(&mut self) {
-        let l1 = self.l1.flush_owned();
-        let l2 = self.l2.flush_owned();
-        let r1 = self.r1.flush_owned();
-        let r2 = self.r2.flush_owned();
-        let arm = self.arm.flush_owned();
-
         println!("{}", colour_format![blue("\n==="), cyan(" Recorded Autonomous "), blue("===")]);
 
-        println!("l1: {l1:?}");
-        println!("l2: {l2:?}");
-        println!("r1: {r1:?}");
-        println!("r2: {r2:?}");
-        println!("arm: {arm:?}");
+        #[inline]
+        fn flush(name: &str, value: &mut Pile<i32>) {
+            println!("{name}: [");
+            value.flush(|x, i| print!("({x}, {i}), "));
+            println!("], ");
+        }
+
+        flush("l1", &mut self.l1);
+        flush("l2", &mut self.l2);
+        flush("r1", &mut self.r1);
+        flush("r2", &mut self.r2);
+        flush("arm", &mut self.arm);
     }
 }
