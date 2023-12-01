@@ -36,16 +36,16 @@ impl Config {
 
     motor_config! {
         /// Top-left drive-train motor
-        DRIVE_L1: 12, false;
+        DRIVE_L1: 5, false;
         /// Bottom-left drive-train motor
-        DRIVE_L2: 20, false;
+        DRIVE_L2: 3, false;
         /// Top-right drive-train motor
-        DRIVE_R1: 3, true;
+        DRIVE_R1: 20, true;
         /// Bottom-right drive-train motor
-        DRIVE_R2: 5, true;
+        DRIVE_R2: 16, true;
         
         /// Arm motor
-        ARM: 16, true;
+        ARM: 15, true;
     }
 
     /// the robot's forward speed out of `100`
