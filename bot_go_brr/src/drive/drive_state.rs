@@ -150,17 +150,16 @@ impl DriveState {
 /// Calculates the voltage to use for each motor
 #[inline]
 fn calculate_voltage(stick: u8, percent: u8) -> i32 {
-    const SEGMENTS: u8 = i8::MAX as u8 / 32;
-
-    ((powi(2, stick / SEGMENTS-1) - 1) as f64 // to calculate the exponential increase
+    // Daniel's magic number
+    ((powi(1.177f64, stick) * 1.873f64) as f64 // to calculate the exponential increase
         * (percent.clamp(0, 100) as f64 / 100f64) // to normalize the voltage to the percentage (and prevent overflow)
     ).clamp(i32::MIN as f64, i32::MAX as f64) as i32
 }
 
 #[inline]
-fn powi(x: i32, i: u8) -> u32 {
-    let mut out: u32 = 1;
+fn powi(x: f64, i: u8) -> f64 {
+    let mut out = 1f64;
     for _ in 0..i {
-        out *= x as u32;
+        out *= x;
     } out
 }
