@@ -58,6 +58,9 @@ impl Config {
     pub const DRIVE_STRAFE_SPEED: u8 = 60;
     /// the robot's arm speed out of `100`
     pub const ARM_SPEED: u8 = 100;
+
+    /// The multiplier applied to the voltage in precise mode
+    pub const PRECISE_MULTIPLIER: f64 = 0.4f64;
 }
 
 /// Misc Configs

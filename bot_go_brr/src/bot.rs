@@ -48,6 +48,7 @@ impl<'a> Bot<'a> for Robot {
 
             (DriveState::new(&DriveArg::new(
                 controller.left_stick(),
+                controller.right_stick(),
                 controller.l2(),
                 controller.r2(),
                 controller.up(),

@@ -22,13 +22,13 @@ pub struct DriveState {
 #[derive(Debug, Clone, Copy)]
 pub enum DriveArg {
     /// Forwards by a multiplier
-    Forward(u8),
+    Forward(u8, bool),
     /// Forwards by a multiplier
-    Backward(u8),
+    Backward(u8, bool),
     /// Turn left
-    TLeft(u8),
+    TLeft(u8, bool),
     /// Turn right
-    TRight(u8),
+    TRight(u8, bool),
     /// Strafe left
     SLeft,
     /// Strafe right
@@ -39,22 +39,26 @@ pub enum DriveArg {
 
 impl DriveArg {
     #[inline]
-    pub fn new(left_stick: JoyStick, l2: bool, r2: bool, up: bool, down: bool) -> Box<[DriveArg]> {
+    pub fn new(left_stick: JoyStick, right_stick: JoyStick, l2: bool, r2: bool, up: bool, down: bool) -> Box<[DriveArg]> {
         use DriveArg as D;
 
         let left_stick = left_stick.clamp(Config::CONTROLLER_STICK_MIN);
+        let right_stick = right_stick.clamp(Config::CONTROLLER_STICK_MIN);
         let mut args = Vec::new();
         let mut movement_arg = false;
 
-        let stick = if left_stick.x_larger() { left_stick.x } else { left_stick.y };
+        let precise = if right_stick.x_larger() { right_stick.x != 0 } else { right_stick.y != 0 };
+
+        let joy_stick = if precise { right_stick } else { left_stick };
+        let stick = if joy_stick.x_larger() { joy_stick.x } else { joy_stick.y };
         if stick != 0 {args.push({
             movement_arg = true; // you can't do two different movements at the same time
 
-            match (left_stick.x_larger(), stick.is_positive()) {
-                (true, true) => D::TRight(stick as u8), // Turn right
-                (true, false) => D::TLeft(stick.unsigned_abs()), // Turn left
-                (false, true) => D::Forward(stick as u8), // Move forwards
-                (false, false) => D::Backward(stick.unsigned_abs()), // Move backwards
+            match (joy_stick.x_larger(), stick.is_positive()) {
+                (true, true) => D::TRight(stick as u8, precise), // Turn right
+                (true, false) => D::TLeft(stick.unsigned_abs(), precise), // Turn left
+                (false, true) => D::Forward(stick as u8, precise), // Move forwards
+                (false, false) => D::Backward(stick.unsigned_abs(), precise), // Move backwards
             }
         })};
 
@@ -89,32 +93,32 @@ impl DriveState {
 
         use DriveArg as D;
         for arg in args {match arg {
-            D::Forward(x) => {
-                let voltage = calculate_voltage(*x, Config::DRIVE_FORWARD_SPEED);
+            D::Forward(x, precise) => {
+                let voltage = calc_joy_voltage(*x, Config::DRIVE_FORWARD_SPEED, *precise);
                 state.l1 = voltage;
                 state.l2 = voltage;
                 state.r1 = voltage;
                 state.r2 = voltage;
             },
 
-            D::Backward(x) => {
-                let voltage = calculate_voltage(*x, Config::DRIVE_BACKWARD_SPEED);
+            D::Backward(x, precise) => {
+                let voltage = calc_joy_voltage(*x, Config::DRIVE_BACKWARD_SPEED, *precise);
                 state.l1 = -voltage;
                 state.l2 = -voltage;
                 state.r1 = -voltage;
                 state.r2 = -voltage;
             },
 
-            D::TLeft(x) => {
-                let voltage = calculate_voltage(*x, Config::DRIVE_TURN_SPEED);
+            D::TLeft(x, precise) => {
+                let voltage = calc_joy_voltage(*x, Config::DRIVE_TURN_SPEED, *precise);
                 state.l1 = -voltage;
                 state.l2 = -voltage;
                 state.r1 = voltage;
                 state.r2 = voltage;
             },
 
-            D::TRight(x) => {
-                let voltage = calculate_voltage(*x, Config::DRIVE_TURN_SPEED);
+            D::TRight(x, precise) => {
+                let voltage = calc_joy_voltage(*x, Config::DRIVE_TURN_SPEED, *precise);
                 state.l1 = voltage;
                 state.l2 = voltage;
                 state.r1 = -voltage;
@@ -122,7 +126,7 @@ impl DriveState {
             },
 
             D::SLeft => {
-                let voltage = calculate_voltage(i8::MAX as u8, Config::DRIVE_STRAFE_SPEED);
+                let voltage = (i32::MAX as f64 * (100 as f64 / Config::DRIVE_STRAFE_SPEED.clamp(0, 100) as f64)) as i32;
                 state.l1 = voltage;
                 state.l2 = -voltage;
                 state.r1 = -voltage;
@@ -130,7 +134,7 @@ impl DriveState {
             },
 
             D::SRight => {
-                let voltage = calculate_voltage(i8::MAX as u8, Config::DRIVE_STRAFE_SPEED);
+                let voltage = (i32::MAX as f64 * (100 as f64 / Config::DRIVE_STRAFE_SPEED.clamp(0, 100) as f64)) as i32;
                 state.l1 = -voltage;
                 state.l2 = voltage;
                 state.r1 = voltage;
@@ -138,7 +142,7 @@ impl DriveState {
             },
 
             D::Arm(up) => {
-                let voltage = calculate_voltage(i8::MAX as u8, Config::ARM_SPEED);
+                let voltage = (i32::MAX as f64 * (100 as f64 / Config::ARM_SPEED.clamp(0, 100) as f64)) as i32;
                 state.arm = if *up { voltage } else { -voltage };
             },
         }}
@@ -147,9 +151,9 @@ impl DriveState {
     }
 }
 
-/// Calculates the voltage to use for each motor
+/// Calculates the voltage to use for the motors connected to the joysticks
 #[inline]
-pub fn calculate_voltage(stick: u8, percent: u8) -> i32 {
+pub fn calc_joy_voltage(stick: u8, percent: u8, precise: bool) -> i32 {
     // Daniel's magic number
     const OFFSET_POWER: (f64, u16) = {
         let mut offset = 2147483648f64;
@@ -163,6 +167,7 @@ pub fn calculate_voltage(stick: u8, percent: u8) -> i32 {
 
     ((powi(Config::EXPO_MULTIPLIER, (stick as f32 * SEGMENT) as u16) * OFFSET_POWER.0) // to calculate the exponential increase
         * (percent.clamp(0, 100) as f64 / 100f64) // to normalize the voltage to the percentage (and prevent overflow)
+        * if precise { Config::PRECISE_MULTIPLIER } else { 1f64 }
     ).clamp(i32::MIN as f64, i32::MAX as f64) as i32
 }
 
