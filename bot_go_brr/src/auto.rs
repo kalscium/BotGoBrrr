@@ -1,20 +1,20 @@
 use crate::drive::DriveState;
 
 pub struct Auto {
-    l1: (&'static [(i32, u8)], u16, u8),
-    l2: (&'static [(i32, u8)], u16, u8),
-    r1: (&'static [(i32, u8)], u16, u8),
-    r2: (&'static [(i32, u8)], u16, u8),
-    arm: (&'static [(i32, u8)], u16, u8),
+    l1: (&'static [(i32, u16)], u16, u16),
+    l2: (&'static [(i32, u16)], u16, u16),
+    r1: (&'static [(i32, u16)], u16, u16),
+    r2: (&'static [(i32, u16)], u16, u16),
+    arm: (&'static [(i32, u16)], u16, u16),
 }
 
 impl Auto {
     pub const fn new(
-        l1: &'static [(i32, u8)],
-        l2: &'static [(i32, u8)],
-        r1: &'static [(i32, u8)],
-        r2: &'static [(i32, u8)],
-        arm: &'static [(i32, u8)],
+        l1: &'static [(i32, u16)],
+        l2: &'static [(i32, u16)],
+        r1: &'static [(i32, u16)],
+        r2: &'static [(i32, u16)],
+        arm: &'static [(i32, u16)],
     ) -> Self {
         Self {
             l1: (l1, 0, 0),
@@ -28,7 +28,7 @@ impl Auto {
 
 macro_rules! iter_item {
     ($self:ident.$name:ident) => {{
-        let this = $self.$name.0.get($self.$name.1 as usize)?;
+        let this = $self.$name.0.get($self.$name.1 as usize).unwrap_or(&(0, 1));
         if $self.$name.2 == this.1 {
             $self.$name.2 = 0;
             $self.$name.1 += 1;

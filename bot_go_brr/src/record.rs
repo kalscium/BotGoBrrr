@@ -35,18 +35,21 @@ impl Record {
     #[inline]
     pub fn flush(&mut self) {
         println!("{}", colour_format![blue("\n==="), cyan(" Recorded Autonomous "), blue("===")]);
+        println!("Auto::new(");
 
         #[inline]
-        fn flush(name: &str, value: &mut Pile<i32>) {
-            println!("{name}: [");
+        fn flush(value: &mut Pile<i32>) {
+            print!("    &[");
             value.flush(|x, i| print!("({x}, {i}), "));
             println!("], ");
         }
 
-        flush("l1", &mut self.l1);
-        flush("l2", &mut self.l2);
-        flush("r1", &mut self.r1);
-        flush("r2", &mut self.r2);
-        flush("arm", &mut self.arm);
+        flush(&mut self.l1);
+        flush(&mut self.l2);
+        flush(&mut self.r1);
+        flush(&mut self.r2);
+        flush(&mut self.arm);
+
+        println!(");")
     }
 }

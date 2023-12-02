@@ -22,13 +22,11 @@ impl<'a> Bot<'a> for Robot {
     }
 
     #[inline]
-    fn autonomous(&'a mut self, _: &'a mut Context) {
+    fn autonomous(&'a mut self, context: &'a mut Context) {
         // Get the autonomous argument
-        // if let Some(x) = self.autonomous.next() {
-        //     self.drive.run(context, x);
-        // } else {
-        //     self.drive.run(context, DriveState::new(&[]));
-        // }
+        if let Some(x) = self.autonomous.next() {
+            self.drive.run(context, x);
+        }
     }
 
     #[inline]
