@@ -53,9 +53,9 @@ impl Config {
     /// the robot's backward speed out of `100`
     pub const DRIVE_BACKWARD_SPEED: u8 = 90;
     /// the robot's turning speed out of `100`
-    pub const DRIVE_TURN_SPEED: u8 = 50;
-    /// the robot's strafe speed out of `100`
-    pub const DRIVE_STRAFE_SPEED: u8 = 60;
+    pub const DRIVE_TURN_SPEED: u8 = 90;
+    /// the robot's strafe speed out of `100
+    pub const DRIVE_STRAFE_SPEED: u8 = 90;
     /// the robot's arm speed out of `100`
     pub const ARM_SPEED: u8 = 100;
 

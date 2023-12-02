@@ -25,7 +25,7 @@ impl<'a> Bot<'a> for Robot {
     }
 
     #[inline]
-    fn autonomous(&'a self, context: &'a mut Context) {
+    fn autonomous(&'a self, context: &'a Mutex<Context>) {
         // Get the autonomous argument
         if let Some(x) = self.autonomous.lock().next() {
             self.drive.lock().run(context, x);
@@ -33,7 +33,7 @@ impl<'a> Bot<'a> for Robot {
     }
 
     #[inline]
-    fn opcontrol(&'a self, context: &'a mut Context) {
+    fn opcontrol(&'a self, context: &'a Mutex<Context>) {
         // Get the current drive-train state
         let (drive_state, flush_logs) = {
             // Get the controls from the controller safely

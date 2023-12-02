@@ -1,9 +1,9 @@
 [package]
 name = "bot_go_brr"
-version = "4.7.2"
+version = "4.7.3"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-safe-vex = "1.2.0"
+safe-vex = "2.0.0"
