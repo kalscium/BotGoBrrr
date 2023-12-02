@@ -1,7 +1,7 @@
 extern crate alloc;
 
 use alloc::{boxed::Box, vec::Vec};
-use safe_vex::controller::joystick::JoyStick;
+use safe_vex::{controller::joystick::JoyStick, vex_rt::io::println};
 use crate::config::Config;
 
 /// The current state of the voltage for each of the drive-train's motors
@@ -167,7 +167,7 @@ pub fn calc_joy_voltage(stick: u8, percent: u8, precise: bool) -> i32 {
 
     ((powi(Config::EXPO_MULTIPLIER, (stick as f32 * SEGMENT) as u16) * OFFSET_POWER.0) // to calculate the exponential increase
         * (percent.clamp(0, 100) as f64 / 100f64) // to normalize the voltage to the percentage (and prevent overflow)
-        * if precise { Config::PRECISE_MULTIPLIER } else { 1f64 }
+        * if precise { Config::PRECISE_DIVISOR } else { 1f64 } // for precise
     ).clamp(i32::MIN as f64, i32::MAX as f64) as i32
 }
 
