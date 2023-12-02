@@ -6,6 +6,8 @@ use crate::record::Record;
 pub struct Robot {
     drive: Drive,
     autonomous: Auto,
+    /// **Used buttons:** `a` & `x`
+    button_before: (bool, bool),
     #[cfg(debug_assertions)]
     record: Record,
 }
@@ -16,6 +18,7 @@ impl<'a> Bot<'a> for Robot {
         Self {
             drive: Drive::new(ctx),
             autonomous: Config::AUTO_COMPETITION,
+            button_before: (false, false),
             #[cfg(debug_assertions)]
             record: Record::new(),
         }
@@ -38,9 +41,10 @@ impl<'a> Bot<'a> for Robot {
 
             // flush the recorded autonomous if required
             #[cfg(debug_assertions)]
-            if controller.a() {
+            if controller.a() && !self.button_before.0 {
+                self.button_before.0 = true;
                 self.record.flush();
-            }
+            } else { self.button_before.1 = false };
 
             (DriveState::new(&DriveArg::new(
                 controller.left_stick(),
@@ -52,9 +56,10 @@ impl<'a> Bot<'a> for Robot {
         };
 
         // flush logs if required
-        if flush_logs {
+        if flush_logs && !self.button_before.1 {
+            self.button_before.1 = true;
             context.flush_logs();
-        }
+        } else { self.button_before.1 = false };
 
         // Record the drive-state if not release
         #[cfg(debug_assertions)]
