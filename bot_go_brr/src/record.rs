@@ -53,3 +53,10 @@ impl Record {
         println!(");")
     }
 }
+
+impl Default for Record {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}

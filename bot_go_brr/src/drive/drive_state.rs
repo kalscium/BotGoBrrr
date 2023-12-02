@@ -1,7 +1,7 @@
 extern crate alloc;
 
 use alloc::{boxed::Box, vec::Vec};
-use safe_vex::{controller::joystick::JoyStick, vex_rt::io::println};
+use safe_vex::controller::joystick::JoyStick;
 use crate::config::Config;
 
 /// The current state of the voltage for each of the drive-train's motors
@@ -126,7 +126,7 @@ impl DriveState {
             },
 
             D::SLeft => {
-                let voltage = (i32::MAX as f64 * (100 as f64 / Config::DRIVE_STRAFE_SPEED.clamp(0, 100) as f64)) as i32;
+                let voltage = (i32::MAX as f64 * (100f64 / Config::DRIVE_STRAFE_SPEED.clamp(0, 100) as f64)) as i32;
                 state.l1 = voltage;
                 state.l2 = -voltage;
                 state.r1 = -voltage;
@@ -134,7 +134,7 @@ impl DriveState {
             },
 
             D::SRight => {
-                let voltage = (i32::MAX as f64 * (100 as f64 / Config::DRIVE_STRAFE_SPEED.clamp(0, 100) as f64)) as i32;
+                let voltage = (i32::MAX as f64 * (100f64 / Config::DRIVE_STRAFE_SPEED.clamp(0, 100) as f64)) as i32;
                 state.l1 = -voltage;
                 state.l2 = voltage;
                 state.r1 = voltage;
@@ -142,7 +142,7 @@ impl DriveState {
             },
 
             D::Arm(up) => {
-                let voltage = (i32::MAX as f64 * (100 as f64 / Config::ARM_SPEED.clamp(0, 100) as f64)) as i32;
+                let voltage = (i32::MAX as f64 * (100f64 / Config::ARM_SPEED.clamp(0, 100) as f64)) as i32;
                 state.arm = if *up { voltage } else { -voltage };
             },
         }}
@@ -154,6 +154,12 @@ impl DriveState {
 /// Calculates the voltage to use for the motors connected to the joysticks
 #[inline]
 pub fn calc_joy_voltage(stick: u8, percent: u8, precise: bool) -> i32 {
+    if precise {
+        return (i32::MAX as f64
+            * (percent.clamp(0, 100) as f64 / 100f64)
+        ) as i32;
+    }
+
     // Daniel's magic number
     const OFFSET_POWER: (f64, u16) = {
         let mut offset = 2147483648f64;
@@ -167,7 +173,6 @@ pub fn calc_joy_voltage(stick: u8, percent: u8, precise: bool) -> i32 {
 
     ((powi(Config::EXPO_MULTIPLIER, (stick as f32 * SEGMENT) as u16) * OFFSET_POWER.0) // to calculate the exponential increase
         * (percent.clamp(0, 100) as f64 / 100f64) // to normalize the voltage to the percentage (and prevent overflow)
-        * if precise { Config::PRECISE_DIVISOR } else { 1f64 } // for precise
     ).clamp(i32::MIN as f64, i32::MAX as f64) as i32
 }
 
