@@ -1,35 +1,46 @@
 extern crate alloc;
 
-use safe_vex::{pile::Pile, vex_rt::io::{println, print}, colour_format};
+use alloc::vec::Vec;
+use safe_vex::{Vec::Vec, vex_rt::io::{println, print}, colour_format};
 use crate::drive::DriveState;
 
 pub struct Record {
-    l1: Pile<i32>,
-    l2: Pile<i32>,
-    r1: Pile<i32>,
-    r2: Pile<i32>,
-    arm: Pile<i32>,
+    l1: Vec<(i32, u16)>,
+    l2: Vec<(i32, u16)>,
+    r1: Vec<(i32, u16)>,
+    r2: Vec<(i32, u16)>,
+    arm: Vec<(i32, u16)>,
 }
 
 impl Record {
     #[inline]
     pub fn new() -> Self {
         Self {
-            l1: Pile::new(),
-            l2: Pile::new(),
-            r1: Pile::new(),
-            r2: Pile::new(),
-            arm: Pile::new(),
+            l1: Vec::new(),
+            l2: Vec::new(),
+            r1: Vec::new(),
+            r2: Vec::new(),
+            arm: Vec::new(),
         }
     }
 
     #[inline]
     pub fn record(&mut self, drive_state: DriveState) {
-        self.l1.push(drive_state.l1);
-        self.l2.push(drive_state.l2);
-        self.r1.push(drive_state.r1);
-        self.r2.push(drive_state.r2);
-        self.arm.push(drive_state.arm);
+        #[inline]
+        fn push(vec: &mut Vec<(i32, u16)>, value: i32) {
+            if let Some(x) = vec.last_mut() {
+                if x.0 == value {
+                    x.1 += 1;
+                    return;
+                }
+            } vec.push((value, 1));
+        }
+
+        push(&mut self.l1, drive_state.l1);
+        push(&mut self.l2, drive_state.l2);
+        push(&mut self.r1, drive_state.r1);
+        push(&mut self.r2, drive_state.r2);
+        push(&mut self.arm, drive_state.arm);
     }
 
     #[inline]
@@ -38,7 +49,7 @@ impl Record {
         println!("Auto::new(");
 
         #[inline]
-        fn flush(value: &mut Pile<i32>) {
+        fn flush(value: &mut Vec<(i32, u16)>) {
             print!("    &[");
             value.flush(|x, i| print!("({x}, {i}), "));
             println!("], ");
