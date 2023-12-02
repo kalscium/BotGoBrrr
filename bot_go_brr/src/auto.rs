@@ -9,6 +9,7 @@ pub struct Auto {
 }
 
 impl Auto {
+    #[inline]
     pub const fn new(
         l1: &'static [(i32, u16)],
         l2: &'static [(i32, u16)],
@@ -41,6 +42,7 @@ macro_rules! iter_item {
 
 impl Iterator for Auto {
     type Item = DriveState;
+    #[inline]
     fn next(&mut self) -> Option<DriveState> {
         Some(DriveState {
             l1: iter_item!(self.l1),
