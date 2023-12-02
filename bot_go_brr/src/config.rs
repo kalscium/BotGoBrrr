@@ -75,10 +75,10 @@ impl Config {
 impl Config {
     // /// Competition Autonomous (before driver control)
     pub const AUTO_COMPETITION: Auto = Auto::new(
-        &[(i32::MAX, 40), (0, 5), (-i32::MAX, 18), (i32::MAX, 20), (-i32::MAX, 40)],
-        &[(i32::MAX, 40), (0, 5), (-i32::MAX, 18), (i32::MAX, 20), (-i32::MAX, 40)],
-        &[(i32::MAX, 40), (0, 5), (-i32::MAX, 18), (i32::MAX, 20), (-i32::MAX, 40)],
-        &[(i32::MAX, 40), (0, 5), (-i32::MAX, 18), (i32::MAX, 20), (-i32::MAX, 40)],
+        &[(i32::MAX, 40), (0, 10), (-i32::MAX, 18), (0, 10), (i32::MAX, 20), (0, 10), (-i32::MAX, 40)],
+        &[(i32::MAX, 40), (0, 10), (-i32::MAX, 18), (0, 10), (i32::MAX, 20), (0, 10), (-i32::MAX, 40)],
+        &[(i32::MAX, 40), (0, 10), (-i32::MAX, 18), (0, 10), (i32::MAX, 20), (0, 10), (-i32::MAX, 40)],
+        &[(i32::MAX, 40), (0, 10), (-i32::MAX, 18), (0, 10), (i32::MAX, 20), (0, 10), (-i32::MAX, 40)],
         &[], 
     );
 }

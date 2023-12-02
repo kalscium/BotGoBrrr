@@ -28,7 +28,7 @@ impl<'a> Bot<'a> for Robot {
     fn autonomous(&'a self, context: &'a Mutex<Context>) {
         // Get the autonomous argument
         if let Some(x) = self.autonomous.lock().next() {
-            self.drive.lock().run(context, x);
+            self.drive.lock().run(&context.lock(), x);
         }
     }
 
@@ -37,6 +37,7 @@ impl<'a> Bot<'a> for Robot {
         // Get the current drive-train state
         let (drive_state, flush_logs) = {
             // Get the controls from the controller safely
+            let mut context = context.lock();
             let mut controller = context.controller();
 
             // flush the recorded autonomous if required
@@ -59,13 +60,13 @@ impl<'a> Bot<'a> for Robot {
         // flush logs if required
         if flush_logs && !self.button_before.lock().1 {
             self.button_before.lock().1 = true;
-            context.flush_logs();
+            context.lock().flush_logs();
         } else { self.button_before.lock().1 = false };
 
         // Record the drive-state if not release
         #[cfg(debug_assertions)]
         self.record.lock().record(drive_state);
 
-        self.drive.lock().run(context, drive_state);
+        self.drive.lock().run(&context.lock(), drive_state);
     }
 }
