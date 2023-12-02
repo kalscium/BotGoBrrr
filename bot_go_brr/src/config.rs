@@ -60,7 +60,7 @@ impl Config {
     pub const ARM_SPEED: u8 = 100;
 
     /// The voltage of the precise speed
-    pub const PRECISE_SPEED: i32 = 4096;
+    pub const PRECISE_SPEED: i32 = 8192;
 }
 
 /// Misc Configs

@@ -1,7 +1,7 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
-use safe_vex::{Vec::Vec, vex_rt::io::{println, print}, colour_format};
+use safe_vex::{vex_rt::io::{println, print}, colour_format};
 use crate::drive::DriveState;
 
 pub struct Record {
@@ -51,7 +51,7 @@ impl Record {
         #[inline]
         fn flush(value: &mut Vec<(i32, u16)>) {
             print!("    &[");
-            value.flush(|x, i| print!("({x}, {i}), "));
+            value.iter().for_each(|(x, i)| print!("({x}, {i}), "));
             println!("], ");
         }
 
