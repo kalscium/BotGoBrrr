@@ -59,8 +59,8 @@ impl Config {
     /// the robot's arm speed out of `100`
     pub const ARM_SPEED: u8 = 100;
 
-    /// The precise speed out of `100`
-    pub const PRECISE_SPEED: u8 = 20;
+    /// The voltage of the precise speed
+    pub const PRECISE_SPEED: i32 = 4096;
 }
 
 /// Misc Configs

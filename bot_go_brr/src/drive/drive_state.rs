@@ -155,9 +155,7 @@ impl DriveState {
 #[inline]
 pub fn calc_joy_voltage(stick: u8, percent: u8, precise: bool) -> i32 {
     if precise {
-        return (i32::MAX as f64
-            * (percent.clamp(0, 100) as f64 / 100f64)
-        ) as i32;
+        return Config::PRECISE_SPEED;
     }
 
     // Daniel's magic number
