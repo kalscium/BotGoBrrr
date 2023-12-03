@@ -49,7 +49,7 @@ impl Record {
         println!("Auto::new(");
 
         #[inline]
-        fn flush(value: &mut Vec<(i32, u16)>) {
+        fn flush(value: &mut [(i32, u16)]) {
             print!("    &[");
             value.iter().for_each(|(x, i)| print!("({x}, {i}), "));
             println!("], ");
