@@ -11,7 +11,12 @@ version = "2.2.2"
 features = [ "simulate" ]
 
 [profile.release]
-incremental = true
+incremental = false
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
 
 [profile.dev]
 incremental = true
