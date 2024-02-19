@@ -28,7 +28,7 @@ impl<'a> Bot<'a> for Robot {
     fn autonomous(&'a mut self, context: &'a Context) {
         // Get the autonomous argument
         if let Some(x) = self.autonomous.next() {
-            self.drive.run(&context, x);
+            self.drive.run(context, x);
         }
     }
 
@@ -38,8 +38,6 @@ impl<'a> Bot<'a> for Robot {
         let drive_state = DriveState::new(&DriveArg::new(
             context.controller().left_stick(),
             context.controller().right_stick(),
-            context.controller().l2(),
-            context.controller().r2(),
             context.controller().up() || context.controller().x(),
             context.controller().down() || context.controller().b(),
         ));
@@ -61,6 +59,6 @@ impl<'a> Bot<'a> for Robot {
         #[cfg(debug_assertions)]
         self.record.record(drive_state);
 
-        self.drive.run(&context, drive_state);
+        self.drive.run(context, drive_state);
     }
 }

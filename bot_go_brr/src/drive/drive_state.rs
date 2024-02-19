@@ -26,49 +26,35 @@ pub enum DriveArg {
     /// Forwards by a multiplier
     Backward(u8, bool),
     /// Turn left
-    TLeft(u8, bool),
+    Left(u8, bool),
     /// Turn right
-    TRight(u8, bool),
-    /// Strafe left
-    SLeft,
-    /// Strafe right
-    SRight,
+    Right(u8, bool),
     /// Move arm (up or down)
     Arm(bool),
 }
 
 impl DriveArg {
     #[inline]
-    pub fn new(left_stick: JoyStick, right_stick: JoyStick, l2: bool, r2: bool, up: bool, down: bool) -> Box<[DriveArg]> {
+    pub fn new(left_stick: JoyStick, right_stick: JoyStick, up: bool, down: bool) -> Box<[DriveArg]> {
         use DriveArg as D;
 
         let left_stick = left_stick.clamp(Config::CONTROLLER_STICK_MIN);
         let right_stick = right_stick.clamp(Config::CONTROLLER_STICK_MIN);
         let mut args = Vec::new();
-        let mut movement_arg = false;
 
         let precise = if right_stick.x_larger() { right_stick.x != 0 } else { right_stick.y != 0 };
 
         let joy_stick = if precise { right_stick } else { left_stick };
         let stick = if joy_stick.x_larger() { joy_stick.x } else { joy_stick.y };
         if stick != 0 {args.push({
-            movement_arg = true; // you can't do two different movements at the same time
 
             match (joy_stick.x_larger(), stick.is_positive()) {
-                (true, true) => D::TRight(stick as u8, precise), // Turn right
-                (true, false) => D::TLeft(stick.unsigned_abs(), precise), // Turn left
+                (true, true) => D::Right(stick as u8, precise), // Turn right
+                (true, false) => D::Left(stick.unsigned_abs(), precise), // Turn left
                 (false, true) => D::Forward(stick as u8, precise), // Move forwards
                 (false, false) => D::Backward(stick.unsigned_abs(), precise), // Move backwards
             }
         })};
-
-        if !movement_arg {
-            if l2 {
-                args.push(D::SLeft);
-            } else if r2 {
-                args.push(D::SRight);
-            }
-        }
 
         if up {
             args.push(D::Arm(true));
@@ -109,7 +95,7 @@ impl DriveState {
                 state.r2 = -voltage;
             },
 
-            D::TLeft(x, precise) => {
+            D::Left(x, precise) => {
                 let voltage = calc_joy_voltage(*x, Config::DRIVE_TURN_SPEED, *precise);
                 state.l1 = -voltage;
                 state.l2 = -voltage;
@@ -117,27 +103,11 @@ impl DriveState {
                 state.r2 = voltage;
             },
 
-            D::TRight(x, precise) => {
+            D::Right(x, precise) => {
                 let voltage = calc_joy_voltage(*x, Config::DRIVE_TURN_SPEED, *precise);
                 state.l1 = voltage;
                 state.l2 = voltage;
                 state.r1 = -voltage;
-                state.r2 = -voltage;
-            },
-
-            D::SLeft => {
-                let voltage = (i32::MAX as f64 * (100f64 / Config::DRIVE_STRAFE_SPEED.clamp(0, 100) as f64)) as i32;
-                state.l1 = voltage;
-                state.l2 = -voltage;
-                state.r1 = -voltage;
-                state.r2 = voltage;
-            },
-
-            D::SRight => {
-                let voltage = (i32::MAX as f64 * (100f64 / Config::DRIVE_STRAFE_SPEED.clamp(0, 100) as f64)) as i32;
-                state.l1 = -voltage;
-                state.l2 = voltage;
-                state.r1 = voltage;
                 state.r2 = -voltage;
             },
 
