@@ -1,6 +1,6 @@
 use safe_vex::{bot::Bot, context::Context};
 use crate::{drive::{Drive, DriveState, DriveArg}, auto::Auto, config::Config};
-#[cfg(debug_assertions)]
+#[cfg(feature="record")]
 use crate::record::Record;
 
 pub struct Robot {
@@ -8,7 +8,7 @@ pub struct Robot {
     autonomous: Auto,
     /// **Used buttons:** `a` & `x`
     button_before: (bool, bool),
-    #[cfg(debug_assertions)]
+    #[cfg(feature="record")]
     record: Record,
 }
 
@@ -19,7 +19,7 @@ impl<'a> Bot<'a> for Robot {
             drive: Drive::new(context),
             autonomous: Config::AUTO_COMPETITION,
             button_before: (false, false),
-            #[cfg(debug_assertions)]
+            #[cfg(feature="record")]
             record: Record::new(),
         }
     }
@@ -43,7 +43,7 @@ impl<'a> Bot<'a> for Robot {
         ));
 
         // flush the recorded autonomous if required
-        #[cfg(debug_assertions)]
+        #[cfg(feature="record")]
         if context.controller().a() && !self.button_before.0 {
             self.button_before.0 = true;
             self.record.flush();
@@ -56,7 +56,7 @@ impl<'a> Bot<'a> for Robot {
         } else { self.button_before.1 = false };
 
         // Record the drive-state if not release
-        #[cfg(debug_assertions)]
+        #[cfg(feature="record")]
         self.record.record(drive_state);
 
         self.drive.run(context, drive_state);
