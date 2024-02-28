@@ -124,10 +124,6 @@ impl DriveState {
 /// Calculates the voltage to use for the motors connected to the joysticks
 #[inline]
 pub fn calc_joy_voltage(stick: u8, percent: u8, precise: bool) -> i32 {
-    if precise {
-        return Config::PRECISE_SPEED;
-    }
-
     // Daniel's magic number
     const OFFSET_POWER: (f64, u16) = {
         let mut offset = 2147483648f64;
@@ -141,6 +137,7 @@ pub fn calc_joy_voltage(stick: u8, percent: u8, precise: bool) -> i32 {
 
     ((powi(Config::EXPO_MULTIPLIER, (stick as f32 * SEGMENT) as u16) * OFFSET_POWER.0) // to calculate the exponential increase
         * (percent.clamp(0, 100) as f64 / 100f64) // to normalize the voltage to the percentage (and prevent overflow)
+        * if precise { Config::PRECISE_SPEED.clamp(0, 100) as f64 / 100f64 } else { 1.0 } // calculate the precise turning for precise
     ).clamp(i32::MIN as f64, i32::MAX as f64) as i32
 }
 

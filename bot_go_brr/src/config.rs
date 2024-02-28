@@ -53,14 +53,12 @@ impl Config {
     /// the robot's backward speed out of `100`
     pub const DRIVE_BACKWARD_SPEED: u8 = 90;
     /// the robot's turning speed out of `100`
-    pub const DRIVE_TURN_SPEED: u8 = 90;
-    /// the robot's strafe speed out of `100
-    pub const DRIVE_STRAFE_SPEED: u8 = 90;
+    pub const DRIVE_TURN_SPEED: u8 = 60;
     /// the robot's arm speed out of `100`
-    pub const ARM_SPEED: u8 = 100;
+    pub const ARM_SPEED: u8 = 75;
 
-    /// The voltage of the precise speed
-    pub const PRECISE_SPEED: i32 = 8192;
+    /// The percentage of the normal drive speed for precise movement
+    pub const PRECISE_SPEED: u8 = 60;
 }
 
 /// Misc Configs
