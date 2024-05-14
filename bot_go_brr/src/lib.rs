@@ -1,7 +1,8 @@
 #![no_std]
 
-pub mod drive;
+extern crate alloc;
+
 pub mod bot;
+pub mod drive_train;
 pub mod config;
-pub mod auto;
-pub mod record;
+pub mod controls;

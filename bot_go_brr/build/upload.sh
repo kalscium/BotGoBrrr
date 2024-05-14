@@ -7,7 +7,7 @@ cat > project.pros << EOL
 {
     "py/object": "pros.conductor.project.Project",
     "py/state": {
-        "project_name": "${NAME} v4",
+        "project_name": "${NAME} v5",
         "target": "v5",
         "templates": {
             "kernel": {
