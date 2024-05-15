@@ -1,0 +1,22 @@
+# commands for robotics
+
+# sets the required permissions to allow for uploading of robot code
+perms:
+    -sudo chmod a+rw /dev/ttyACM0
+    -sudo chmod a+rw /dev/ttyACM1
+    chmod +x build/upload.sh
+
+# connects to the v5 brain's terminal
+terminal: perms
+    /Gata/Programs/pros-cli/pros terminal
+
+# uploads the debug version of the code to the robot and connects to the terminal
+debug: perms
+    -cargo run
+    /Gata/Programs/pros-cli/pros upload
+    just terminal
+
+# uploads the release (competition) version of the code to the robot
+release: perms
+    -cargo run --release
+    /Gata/Programs/pros-cli/pros upload

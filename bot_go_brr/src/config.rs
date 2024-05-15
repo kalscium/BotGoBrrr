@@ -37,7 +37,7 @@ pub mod drive {
         /// Bottom-left drive-train motor
         L2: 3, false;
         /// Top-right drive-train motor
-        R1: 20, true;
+        R1: 21, true;
         /// Bottom-right drive-train motor
         R2: 16, true;
 
