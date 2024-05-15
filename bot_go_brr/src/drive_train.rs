@@ -5,15 +5,11 @@ use crate::config;
 /// A drive-train movement instruction
 #[derive(Debug, Clone)]
 pub struct DriveInst {
-    // the top-left drive-motor of the robot
-    pub l1: i32,
-    // the bottom-left drive-motor of the robot
-    pub l2: i32,
+    // the left drive-motors of the robot
+    pub left: i32,
 
-    // the top-right drive-motor of the robot
-    pub r1: i32,
-    // the bottom-right drive-motor of the robot
-    pub r2: i32,
+    // the right drive-motors of the robot
+    pub right: i32,
 }
 
 /// Represents the four-wheel drive-train of the robot
@@ -50,10 +46,10 @@ impl DriveTrain {
     /// Sets the voltage for each of the motors of the drive-train based on a drive instruction
     #[inline]
     pub fn drive(&mut self, inst: DriveInst) {
-        self.l1.get().map(|x| x.move_voltage(inst.l1));
-        self.l2.get().map(|x| x.move_voltage(inst.l2));
-        self.r1.get().map(|x| x.move_voltage(inst.r1));
-        self.r2.get().map(|x| x.move_voltage(inst.r2));
+        self.l1.get().map(|x| x.move_voltage(inst.left));
+        self.l2.get().map(|x| x.move_voltage(inst.left));
+        self.r1.get().map(|x| x.move_voltage(inst.right));
+        self.r2.get().map(|x| x.move_voltage(inst.right));
     }
 }
 

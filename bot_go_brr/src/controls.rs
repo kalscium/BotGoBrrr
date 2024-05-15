@@ -19,11 +19,8 @@ pub fn gen_drive_inst(controller: &Controller) -> DriveInst {
     );
 
     DriveInst {
-        l1: calculate_voltage(j1, 100),
-        l2: calculate_voltage(j1, 100),
-
-        r1: calculate_voltage(j2, 100),
-        r2: calculate_voltage(j2, 100),
+        left:  calculate_voltage(j1, 100),
+        right: calculate_voltage(j2, 100),
     }
 }
 
