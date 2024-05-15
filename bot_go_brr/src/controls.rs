@@ -3,32 +3,36 @@ use crate::{config, drive_train::DriveInst};
 
 /// generates the drive instruction from the controller linearly
 #[inline]
-pub fn gen_drive_inst(controller: &Controller) -> DriveInst {
+pub fn gen_drive_inst(last_inst: DriveInst, last_joystick: (i8, i8), controller: &Controller) -> (DriveInst, (i8, i8)) {
     // percentage joystick values
     let (j1, j2) = (
         controller
             .left_stick
-            .clone()
-            .clamp(config::CONTROLLER_STICK_MIN)
-            .y as f32 * 100f32 / i8::MAX as f32,
+            .y,
         controller
             .right_stick
-            .clone()
-            .clamp(config::CONTROLLER_STICK_MIN)
-            .y as f32 * 100f32 / i8::MAX as f32,
+            .y,
     );
 
-    DriveInst {
-        left:  calculate_voltage(j1, 100),
-        right: calculate_voltage(j2, 100),
-    }
-}
+    // calculate the target voltages
+    let (target1, target2) = (
+        if j1.is_positive() { 12000f32 } else { -12000f32 },
+        if j1.is_positive() { 12000f32 } else { -12000f32 },
+    );
 
-#[inline]
-fn calculate_voltage(percent1: f32, percent2: u8) -> i32 {
-    (
-        12000f32
-        * percent1 / 100f32
-        * percent2 as f32 / 100f32
-    ).clamp(-12000.0, 12000.0) as i32
+    // calculate the joystick difference
+    let (d1, d2) = (
+        (j1.abs() as f32 - last_joystick.0.abs() as f32) / j1 as f32,
+        (j2.abs() as f32 - last_joystick.1.abs() as f32) / j2 as f32,
+    );
+
+    let (left, right) = (
+        last_inst.left + ((target1 - last_inst.left as f32) * (1.0 - (- config::EXPONENT_SPEED * d1))) as i32,
+        last_inst.right + ((target2 - last_inst.right as f32) * (1.0 - (- config::EXPONENT_SPEED * d2))) as i32,
+    );
+
+    (DriveInst {
+        left,
+        right,
+    }, (j1, j2))
 }

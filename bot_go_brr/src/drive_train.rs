@@ -45,7 +45,7 @@ impl DriveTrain {
 
     /// Sets the voltage for each of the motors of the drive-train based on a drive instruction
     #[inline]
-    pub fn drive(&mut self, inst: DriveInst) {
+    pub fn drive(&mut self, inst: &DriveInst) {
         self.l1.get().map(|x| x.move_voltage(inst.left));
         self.l2.get().map(|x| x.move_voltage(inst.left));
         self.r1.get().map(|x| x.move_voltage(inst.right));
