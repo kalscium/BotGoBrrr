@@ -2,16 +2,6 @@ use alloc::boxed::Box;
 use safe_vex::{maybe::Maybe, motor::Motor, port::PortManager};
 use crate::config;
 
-/// A drive-train movement instruction
-#[derive(Debug, Clone)]
-pub struct DriveInst {
-    // the left drive-motors of the robot
-    pub left: i32,
-
-    // the right drive-motors of the robot
-    pub right: i32,
-}
-
 /// Represents the four-wheel drive-train of the robot
 pub struct DriveTrain {
     // the top-left drive-motor of the robot
@@ -43,13 +33,18 @@ impl DriveTrain {
         }
     }
 
-    /// Sets the voltage for each of the motors of the drive-train based on a drive instruction
+    /// Sets the voltage left motors of the drive-train
     #[inline]
-    pub fn drive(&mut self, inst: &DriveInst) {
-        self.l1.get().map(|x| x.move_voltage(inst.left));
-        self.l2.get().map(|x| x.move_voltage(inst.left));
-        self.r1.get().map(|x| x.move_voltage(inst.right));
-        self.r2.get().map(|x| x.move_voltage(inst.right));
+    pub fn drive_left(&mut self, voltage: i32) {
+        self.l1.get().map(|x| x.move_voltage(voltage));
+        self.l2.get().map(|x| x.move_voltage(voltage));
+    }
+
+    /// Sets the voltage right motors of the drive-train
+    #[inline]
+    pub fn drive_right(&mut self, voltage: i32) {
+        self.r1.get().map(|x| x.move_voltage(voltage));
+        self.r2.get().map(|x| x.move_voltage(voltage));
     }
 }
 
