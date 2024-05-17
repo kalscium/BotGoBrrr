@@ -10,6 +10,7 @@ edition = "2021"
 path = "../../safe-vex"
 
 [features]
+record = []
 
 [profile.release]
 incremental = false

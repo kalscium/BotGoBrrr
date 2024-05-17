@@ -6,7 +6,7 @@ use safe_vex::{maybe::Maybe, motor::Motor};
 use crate::drive_train::DriveTrain;
 
 /// A single bytecode instruction for the robot
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ByteCode {
     /// Progresses a specified amount of tick-cycles
     Cycle(u32),

@@ -8,6 +8,8 @@ pub mod drive_train;
 pub mod config;
 pub mod controls;
 pub mod bytecode;
+#[cfg(record)]
+pub mod record;
 
 #[inline]
 fn append_slice<T: Clone>(vec: &mut alloc::vec::Vec<T>, slice: &[T]) {

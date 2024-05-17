@@ -1,9 +1,14 @@
 use alloc::{boxed::Box, vec::Vec};
 use safe_vex::{bot::Bot, context::Context, maybe::Maybe, motor::Motor, port::PortManager, vex_rt::peripherals::Peripherals};
 use crate::{append_slice, bytecode::{execute, ByteCode}, config, controls, drive_train::DriveTrain};
+#[cfg(record)]
+use crate::record::Record;
 
 /// The robot
 pub struct Robot {
+    #[cfg(record)]
+    record: Record,
+
     /// The drive-train of the robot
     drive_train: DriveTrain,
 
@@ -25,6 +30,9 @@ impl Bot for Robot {
         let drive_train = DriveTrain::new(port_manager);
 
         Self {
+            #[cfg(record)]
+            record: Record::new(),
+            
             drive_train,
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::ARM.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::ARM.reverse) }.ok())),
 
@@ -47,6 +55,10 @@ impl Bot for Robot {
 
         // execute inst on bytecode stack
         execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt);
+
+        // append to record
+        #[cfg(record)]
+        self.record.append(&drive_inst);
 
         // update internal state
         self.last_joystick = Some(joystick);
