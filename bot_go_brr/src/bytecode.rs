@@ -1,5 +1,6 @@
 //! functions for dealing with byte-code
 
+use core::fmt::Display;
 use alloc::vec::Vec;
 use safe_vex::{maybe::Maybe, motor::Motor};
 use crate::drive_train::DriveTrain;
@@ -27,6 +28,24 @@ pub enum ByteCode {
         /// The voltage to apply to the motor
         voltage: i32,
     },
+}
+
+impl Display for ByteCode {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        use ByteCode as B;
+        match self {
+            B::Cycle(x) => writeln!(f, "c +{x:?};"),
+
+            B::LeftDrive { voltage } if *voltage < 0 => writeln!(f, "ld {voltage:?};"),
+            B::LeftDrive { voltage } => writeln!(f, "ld +{voltage:?};"),
+
+            B::RightDrive { voltage } if *voltage < 0 => writeln!(f, "rd {voltage:?};"),
+            B::RightDrive { voltage } => writeln!(f, "rd +{voltage:?};"),
+
+            B::Belt { voltage } if *voltage < 0 => writeln!(f, "b {voltage:?};"),
+            B::Belt { voltage } => writeln!(f, "b +{voltage:?};"),
+        }
+    }
 }
 
 /// Executes bytecode and pops it off the bytecode vec for each tick-cycle
@@ -57,4 +76,34 @@ pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt:
         // update to next instruction
         current_inst = bytecode.pop();
     }
+}
+
+/// generates a vector of bytecode instructions from an ascii representation
+#[macro_export]
+macro_rules! ascii_bytecode {
+    // user-facing api for the macro
+    ($($inst:ident $prefix:tt $val:tt;)*) => {
+        [
+            $($crate::ascii_bytecode!(@internal $inst $prefix $val)),*
+        ]
+    };
+
+    // instructions
+
+    // Cycle
+    (@internal c $prefix:tt $x:literal) => {
+        $crate::bytecode::ByteCode::Cycle($x)
+    };
+    // LeftDrive
+    (@internal ld $prefix:tt $x:literal) => {
+        $crate::bytecode::ByteCode::LeftDrive { voltage: 0 $prefix $x }
+    };
+    // RightDrive
+    (@internal rd $prefix:tt $x:literal) => {
+        $crate::bytecode::ByteCode::RightDrive { voltage: 0 $prefix $x }
+    };
+    // Belt
+    (@internal b $prefix:tt $x:literal) => {
+        $crate::bytecode::ByteCode::Belt { voltage: 0 $prefix $x }
+    };
 }
