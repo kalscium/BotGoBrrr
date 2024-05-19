@@ -11,13 +11,14 @@ path = "../../safe-vex"
 
 [features]
 record = []
+full-autonomous = []
 
 [profile.release]
 incremental = false
 opt-level = "z"
 lto = true
 codegen-units = 1
-panic = "abort"
+panic = "unwind"
 strip = true
 debug = false
 

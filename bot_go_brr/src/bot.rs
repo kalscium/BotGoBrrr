@@ -37,7 +37,11 @@ impl Bot for Robot {
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::ARM.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::ARM.reverse) }.ok())),
 
             // load the autonomous bytecode
-            bytecode: config::COMP_AUTO.to_vec(),
+            #[cfg(full_autonomous)]
+            bytecode: config::autonomous::FULL_AUTO.to_vec(),
+            #[cfg(not(full_autonomous))]
+            bytecode: config::autonomous::COMP_AUTO.to_vec(),
+
             last_joystick: None,
         }
     }

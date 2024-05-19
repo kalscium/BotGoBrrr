@@ -1,5 +1,3 @@
-use crate::{ascii_bytecode, bytecode::ByteCode};
-
 macro_rules! motor_config {
     ($(#[$meta:meta])* $motor:ident: $port:expr, $reverse:expr;) => {
         /// **(motor configuration)**
@@ -66,8 +64,12 @@ pub const CONTROLLER_STICK_MIN: u8 = 0;
 /// The exponential multiplier for the joysticks
 pub const EXPONENT_SPEED: f32 = 16.0;
 
-/// The autonomous bytecode executed before a competition match
-pub const COMP_AUTO: [ByteCode; 0] = ascii_bytecode! {};
+pub mod autonomous {
+    use crate::{ascii_bytecode, bytecode::ByteCode};
 
-// /// The autonomous bytecode executed for skills
-// pub const FULL_AUTO: [ByteCode; 0] = ascii_bytecode! {};
+    /// The autonomous bytecode executed before a competition match
+    pub const COMP_AUTO: [ByteCode; 0] = ascii_bytecode! {};
+
+    // /// The autonomous bytecode executed for skills
+    pub const FULL_AUTO: [ByteCode; 0] = ascii_bytecode! {};
+}
