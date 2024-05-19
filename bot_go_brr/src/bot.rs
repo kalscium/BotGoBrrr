@@ -36,7 +36,8 @@ impl Bot for Robot {
             drive_train,
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::ARM.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::ARM.reverse) }.ok())),
 
-            bytecode: Vec::new(),
+            // load the autonomous bytecode
+            bytecode: config::COMP_AUTO.to_vec(),
             last_joystick: None,
         }
     }
@@ -46,9 +47,7 @@ impl Bot for Robot {
         // get drive-inst
         let (drive_inst, joystick) = controls::gen_drive_inst(
             &self.drive_train,
-            self.last_joystick.take().unwrap_or((0, 0)),
-            &context.controller
-        );
+            self.last_joystick.take().unwrap_or((0, 0)), &context.controller );
 
         // append to bytecode stack
         append_slice(&mut self.bytecode, &drive_inst);
@@ -62,6 +61,14 @@ impl Bot for Robot {
 
         // update internal state
         self.last_joystick = Some(joystick);
+        
+        false
+    }
+
+    #[inline]
+    fn autonomous(&mut self, _: Context) -> bool {
+        // execute the autonomous bytecode
+        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt);
         
         false
     }
