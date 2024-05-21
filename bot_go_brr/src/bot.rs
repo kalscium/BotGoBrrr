@@ -46,15 +46,16 @@ impl Bot for Robot {
         // get drive-inst
         let drive_inst = controls::gen_drive_inst(&context.controller);
 
-        // append drive-inst to bytecode stack
-        append_slice(&mut self.bytecode, &drive_inst);
-
         // get belt bytecode inst and push it to the bytecode
         let belt_inst = match (context.controller.x, context.controller.y) {
             (true, _) => ByteCode::Belt { voltage: config::drive::BELT_VOLTAGE },
             (_, true) => ByteCode::Belt { voltage: -config::drive::BELT_VOLTAGE },
             (_, _) => ByteCode::Belt { voltage: 0 },
-        }; self.bytecode.push(belt_inst);
+        };
+
+        // append instructions to bytecode stack
+        append_slice(&mut self.bytecode, &drive_inst);
+        self.bytecode.push(belt_inst);
 
         // execute bytecode inst on bytecode stack
         execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt);
@@ -71,6 +72,9 @@ impl Bot for Robot {
 
     #[inline]
     fn autonomous(&mut self, _: Context) -> bool {
+        // check if there is any instructions left
+        if self.bytecode.is_empty() { return true };
+        
         // execute the autonomous bytecode
         execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt);
         

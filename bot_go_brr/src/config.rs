@@ -42,7 +42,7 @@ pub mod drive {
         R2: 9, true;
 
         /// Belt motor
-        BELT: 21, true;
+        BELT: 21, false;
     }
 
     // /// the robot's forward speed out of `100`
@@ -59,7 +59,7 @@ pub mod drive {
 }
 
 /// The minimum amount of activation the controller has to have to be activated
-pub const CONTROLLER_STICK_MIN: u8 = 0;
+pub const CONTROLLER_STICK_MIN: u8 = 10;
 
 /// The exponential multiplier for the joysticks
 pub const EXPONENT_SPEED: f32 = 16.0;
