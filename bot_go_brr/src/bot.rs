@@ -34,7 +34,7 @@ impl Bot for Robot {
             record: Record::new(),
             
             drive_train,
-            belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::ARM.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::ARM.reverse) }.ok())),
+            belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::BELT.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::BELT.reverse) }.ok())),
 
             // load the autonomous bytecode
             #[cfg(full_autonomous)]
@@ -51,17 +51,28 @@ impl Bot for Robot {
         // get drive-inst
         let (drive_inst, joystick) = controls::gen_drive_inst(
             &self.drive_train,
-            self.last_joystick.take().unwrap_or((0, 0)), &context.controller );
+            self.last_joystick.take().unwrap_or((0, 0)), &context.controller
+        );
 
-        // append to bytecode stack
+        // append drive-inst to bytecode stack
         append_slice(&mut self.bytecode, &drive_inst);
 
-        // execute inst on bytecode stack
+        // get belt bytecode inst and push it to the bytecode
+        let belt_inst = match (context.controller.x, context.controller.y) {
+            (true, _) => ByteCode::Belt { voltage: config::drive::BELT_VOLTAGE },
+            (_, true) => ByteCode::Belt { voltage: -config::drive::BELT_VOLTAGE },
+            (_, _) => ByteCode::Belt { voltage: 0 },
+        }; self.bytecode.push(belt_inst);
+
+        // execute bytecode inst on bytecode stack
         execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt);
 
         // append to record
         #[cfg(record)]
-        self.record.append(&drive_inst);
+        {
+            self.record.append(&drive_inst);
+            self.record.append(&[belt_inst]);
+        }
 
         // update internal state
         self.last_joystick = Some(joystick);

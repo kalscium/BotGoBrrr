@@ -41,8 +41,8 @@ pub mod drive {
         /// Bottom-right drive-train motor
         R2: 16, true;
 
-        /// Arm motor
-        ARM: 15, true;
+        /// Belt motor
+        BELT: 15, true;
     }
 
     // /// the robot's forward speed out of `100`
@@ -51,8 +51,8 @@ pub mod drive {
     // pub const BACKWARD_SPEED: u8 = 90;
     // /// the robot's turning speed out of `100`
     // pub const TURN_SPEED: u8 = 60;
-    // /// the robot's arm speed out of `100`
-    // pub const ARM_SPEED: u8 = 75;
+    /// The robot's conveyor belt voltage out of `12000`
+    pub const BELT_VOLTAGE: i32 = 12000;
 
     // /// The percentage of the normal drive speed for precise movement
     // pub const PRECISE_SPEED: u8 = 60;
