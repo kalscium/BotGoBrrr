@@ -33,16 +33,16 @@ pub mod drive {
 
     motor_config! {
         /// Top-left drive-train motor
-        L1: 5, false;
+        L1: 12, false;
         /// Bottom-left drive-train motor
-        L2: 3, false;
+        L2: 20, false;
         /// Top-right drive-train motor
-        R1: 21, true;
+        R1: 1, true;
         /// Bottom-right drive-train motor
-        R2: 16, true;
+        R2: 9, true;
 
         /// Belt motor
-        BELT: 15, true;
+        BELT: 21, true;
     }
 
     // /// the robot's forward speed out of `100`
