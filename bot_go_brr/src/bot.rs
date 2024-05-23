@@ -37,7 +37,7 @@ impl Bot for Robot {
             #[cfg(feature = "full-autonomous")]
             bytecode: config::autonomous::FULL_AUTO.to_vec(),
             #[cfg(not(feature = "full-autonomous"))]
-            bytecode: config::autonomous::COMP_AUTO.to_vec(),
+            bytecode: config::autonomous::MATCH_AUTO.to_vec(),
         }
     }
 

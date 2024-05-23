@@ -65,11 +65,13 @@ pub const CONTROLLER_STICK_MIN: u8 = 10;
 pub const EXPONENT_SPEED: f32 = 16.0;
 
 pub mod autonomous {
+    use include_tt::include_tt;
+
     use crate::{ascii_bytecode, bytecode::ByteCode};
 
-    /// The autonomous bytecode executed before a competition match
-    pub const COMP_AUTO: [ByteCode; 0] = ascii_bytecode! {};
+    /// The autonomous bytecode executed before a vex vrc match
+    pub const MATCH_AUTO: [ByteCode; 0] = include_tt!(ascii_bytecode! { #include_tt!("src/autonomous/match_auto.brb") });
 
-    // /// The autonomous bytecode executed for skills
-    pub const FULL_AUTO: [ByteCode; 0] = ascii_bytecode! {};
+    /// The autonomous bytecode executed during a vex vrc skills round
+    pub const FULL_AUTO: [ByteCode; 0] = include_tt!(ascii_bytecode! { #include_tt!("src/autonomous/full_auto.brb") });
 }
