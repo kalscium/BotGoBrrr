@@ -34,4 +34,4 @@ cat > project.pros << EOL
 }
 EOL
 
-prosv5 ut
+~/Programs/pros-cli/pros ut

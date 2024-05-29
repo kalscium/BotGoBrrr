@@ -4,19 +4,20 @@
 perms:
     -sudo chmod a+rw /dev/ttyACM0
     -sudo chmod a+rw /dev/ttyACM1
-    chmod +x build/upload.sh
+    chmod +x bot_go_brr/build/upload.sh
 
 # connects to the v5 brain's terminal
 terminal: perms
-    /Gata/Programs/pros-cli/pros terminal
+    cd bot_go_brr && ~/Programs/pros-cli/pros terminal
 
 # uploads the debug version of the code to the robot and connects to the terminal
 debug: perms
-    -cargo run
-    /Gata/Programs/pros-cli/pros upload
-    just terminal
+    cd bot_go_brr && cargo run
 
 # uploads the release (competition) version of the code to the robot
 release: perms
-    -cargo run --release
-    /Gata/Programs/pros-cli/pros upload
+    cd bot_go_brr && cargo run --release
+
+# builds and opens the mdbook logbook of BotGoBrrr
+book:
+    cd logbook && mdbook build && mdbook serve & firefox --new-window http://localhost:3000
