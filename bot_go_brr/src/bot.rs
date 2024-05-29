@@ -65,6 +65,7 @@ impl Bot for Robot {
         {
             self.record.append(&drive_inst);
             self.record.append(&[belt_inst]);
+            self.record.cycle();
         }
 
         // check if record is flushed

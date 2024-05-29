@@ -59,11 +59,9 @@ impl Record {
 
         // push the changes onto the stack
         for inst in insts {
+            println!("\x1b[36;1mexecuted\x1b[0m {inst}");
             self.0.push(*inst);
         }
-
-        // starts a new cycle
-        self.cycle()
     }
 
     /// Flushes the record (removes all insts) and prints it to the `stdout`

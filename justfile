@@ -18,6 +18,10 @@ debug: perms
 release: perms
     cd bot_go_brr && cargo run --release
 
+# uploads the record (for autonomous recording) version of the code to the robot
+record: perms
+    cd bot_go_brr && cargo run --release --features record
+
 # builds and opens the mdbook logbook of BotGoBrrr
 book:
     cd logbook && mdbook build && mdbook serve & firefox --new-window http://localhost:3000
