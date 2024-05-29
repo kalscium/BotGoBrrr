@@ -34,16 +34,16 @@ impl Display for ByteCode {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         use ByteCode as B;
         match self {
-            B::Cycle(x) => writeln!(f, "c +{x:?};"),
+            B::Cycle(x) => write!(f, "c +{x:?};"),
 
-            B::LeftDrive { voltage } if *voltage < 0 => writeln!(f, "ld {voltage:?};"),
-            B::LeftDrive { voltage } => writeln!(f, "ld +{voltage:?};"),
+            B::LeftDrive { voltage } if *voltage < 0 => write!(f, "ld {voltage:?};"),
+            B::LeftDrive { voltage } => write!(f, "ld +{voltage:?};"),
 
-            B::RightDrive { voltage } if *voltage < 0 => writeln!(f, "rd {voltage:?};"),
-            B::RightDrive { voltage } => writeln!(f, "rd +{voltage:?};"),
+            B::RightDrive { voltage } if *voltage < 0 => write!(f, "rd {voltage:?};"),
+            B::RightDrive { voltage } => write!(f, "rd +{voltage:?};"),
 
-            B::Belt { voltage } if *voltage < 0 => writeln!(f, "b {voltage:?};"),
-            B::Belt { voltage } => writeln!(f, "b +{voltage:?};"),
+            B::Belt { voltage } if *voltage < 0 => write!(f, "b {voltage:?};"),
+            B::Belt { voltage } => write!(f, "b +{voltage:?};"),
         }
     }
 }

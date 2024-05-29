@@ -1,7 +1,7 @@
 //! For recording the bytecode instructions executed by the robot and prints them to the screen
 
 use alloc::vec::Vec;
-use safe_vex::vex_rt::io::{println, print};
+use safe_vex::vex_rt::io::println;
 use crate::bytecode::ByteCode;
 
 /// A struct that holds the recorded bytecode instructions
@@ -74,7 +74,7 @@ impl Record {
 
         // contents
         for inst in &self.0 {
-            print!("{inst}");
+            println!("{inst}");
         }
 
         // footer
