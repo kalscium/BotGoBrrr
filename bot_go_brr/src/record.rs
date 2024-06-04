@@ -1,11 +1,15 @@
 //! For recording the bytecode instructions executed by the robot and prints them to the screen
 
-use alloc::vec::Vec;
+use core::ops::Range;
+use alloc::{vec, vec::Vec};
 use safe_vex::vex_rt::io::println;
 use crate::bytecode::ByteCode;
 
 /// A struct that holds the recorded bytecode instructions
-pub struct Record(Vec<ByteCode>);
+pub struct Record {
+    cycle_bounds: Range<usize>,
+    bytecode: Vec<ByteCode>,
+}
 
 impl Default for Record {
     #[inline]
@@ -18,13 +22,16 @@ impl Record {
     /// Creates a new bytecode record
     #[inline]
     pub fn new() -> Self {
-        Self(Vec::new())
+        Self {
+            bytecode: vec![ByteCode::Cycle(0)], // to fix offset errors
+            cycle_bounds: 0..1,
+        }
     }
 
     /// Adds a tick cycle instruction to the record
     #[inline]
     pub fn cycle(&mut self) {
-        let last = self.0.last_mut();
+        let last = self.bytecode.last_mut();
 
         // if there is already a cycle instruction just increment it by one
         if let Some(ByteCode::Cycle(c)) = last {
@@ -32,26 +39,19 @@ impl Record {
             return;
         }
 
-        // if not, then just push a new one
-        self.0.push(ByteCode::Cycle(0));
+        // if not, then just push a new one and update cycle bounds
+        self.cycle_bounds.start = self.cycle_bounds.end+1;
+        self.cycle_bounds.end = self.bytecode.len();
+        self.bytecode.push(ByteCode::Cycle(0));
     }
 
     /// Appends new instructions to the record
     #[inline]
     pub fn append(&mut self, bytecode: &[ByteCode]) {
         // get the insts of the last cycle
-        let mut bounds = 0..0;
-        for (i, inst) in self.0.iter().enumerate().rev() {
-            if let ByteCode::Cycle(_) = inst {
-                if bounds.end == 0 {
-                    bounds.end = i;
-                } else {
-                    bounds.start = i+1;
-                } }
-        }
+        let slice = &self.bytecode[self.cycle_bounds.clone()];
         
         // if there is a change between cycles, then push the change onto the bytecode stack
-        let slice = &self.0[bounds];
         let insts: Vec<&ByteCode> = bytecode
             .iter()
             .filter(|x| !slice.contains(x))
@@ -60,7 +60,7 @@ impl Record {
         // push the changes onto the stack
         for inst in insts {
             println!("\x1b[36;1mexecuted\x1b[0m {inst}");
-            self.0.push(*inst);
+            self.bytecode.push(*inst);
         }
     }
 
@@ -71,7 +71,7 @@ impl Record {
         println!("\x1b[34;1m<<< \x1b[33mEXECUTED BYTECODE INSTRUCTIONS \x1b[34;1m>>>\x1b[0m");
 
         // contents
-        for inst in &self.0 {
+        for inst in &self.bytecode {
             println!("{inst}");
         }
 
