@@ -14,6 +14,8 @@ pub struct Robot {
 
     /// The conveyor-belt motor of the robot
     belt: Maybe<Motor>,
+    /// The intake motor of the robot
+    intake: Maybe<Motor>,
 
     /// The bytecode stack (placed in the struct to avoid reallocating)
     bytecode: Vec<ByteCode>,
@@ -29,9 +31,10 @@ impl Bot for Robot {
         Self {
             #[cfg(feature = "record")]
             record: Record::new(),
-            
             drive_train,
+
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::BELT.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::BELT.reverse) }.ok())),
+            intake: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::INTAKE.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INTAKE.reverse) }.ok())),
 
             // load the autonomous bytecode
             #[cfg(feature = "full-autonomous")]
@@ -47,24 +50,25 @@ impl Bot for Robot {
         let drive_inst = controls::gen_drive_inst(&context.controller);
 
         // get belt bytecode inst and push it to the bytecode
-        let belt_inst = match (context.controller.x, context.controller.b) {
-            (true, _) => ByteCode::Belt { voltage: config::drive::BELT_VOLTAGE },
-            (_, true) => ByteCode::Belt { voltage: -config::drive::BELT_VOLTAGE },
-            (_, _) => ByteCode::Belt { voltage: 0 },
+        let (belt_inst, intake_inst) = match (context.controller.x, context.controller.b) {
+            (true, _) => (ByteCode::Belt { voltage: config::drive::BELT_VOLTAGE }, ByteCode::Intake{ voltage: config::drive::INTAKE_VOLTAGE }),
+            (_, true) => (ByteCode::Belt { voltage: -config::drive::BELT_VOLTAGE }, ByteCode::Intake{ voltage: config::drive::INTAKE_VOLTAGE }),
+            (_, _) => (ByteCode::Belt { voltage: 0 }, ByteCode::Intake{ voltage: 0 }),
         };
 
         // append instructions to bytecode stack
         append_slice(&mut self.bytecode, &drive_inst);
         self.bytecode.push(belt_inst);
+        self.bytecode.push(intake_inst);
 
         // execute bytecode inst on bytecode stack
-        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt);
+        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.intake);
 
         // append to record
         #[cfg(feature = "record")]
         {
             self.record.append(&drive_inst);
-            self.record.append(&[belt_inst]);
+            self.record.append(&[belt_inst, intake_inst]);
             self.record.cycle();
         }
 
@@ -83,7 +87,7 @@ impl Bot for Robot {
         if self.bytecode.is_empty() { return true };
         
         // execute the autonomous bytecode
-        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt);
+        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.intake);
         
         false
     }

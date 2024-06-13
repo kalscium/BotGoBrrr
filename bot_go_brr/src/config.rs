@@ -43,6 +43,8 @@ pub mod drive {
 
         /// Belt motor
         BELT: 21, false;
+        /// Intake motor
+        INTAKE: 10, false;
     }
 
     // /// the robot's forward speed out of `100`
@@ -51,8 +53,11 @@ pub mod drive {
     // pub const BACKWARD_SPEED: u8 = 90;
     // /// the robot's turning speed out of `100`
     // pub const TURN_SPEED: u8 = 60;
+
     /// The robot's conveyor belt voltage out of `12000`
     pub const BELT_VOLTAGE: i32 = 12000;
+    /// The robot's intake motor's voltage out of `12000`
+    pub const INTAKE_VOLTAGE: i32 = BELT_VOLTAGE;
 
     // /// The percentage of the normal drive speed for precise movement
     // pub const PRECISE_SPEED: u8 = 60;

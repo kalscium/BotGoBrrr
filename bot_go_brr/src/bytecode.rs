@@ -1,7 +1,7 @@
 //! functions for dealing with byte-code
 
 use core::fmt::Display;
-use alloc::vec::Vec;
+use alloc::{format, string::String, vec::Vec};
 use safe_vex::{maybe::Maybe, motor::Motor};
 use crate::drive_train::DriveTrain;
 
@@ -28,29 +28,40 @@ pub enum ByteCode {
         /// The voltage to apply to the motor
         voltage: i32,
     },
+
+    /// Updates the voltage of the intake motor of the drive-train
+    Intake {
+        /// The voltage to apply to the motor
+        voltage: i32,
+    },
 }
 
 impl Display for ByteCode {
+    #[inline]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        #[inline]
+        fn display_voltage(voltage: i32) -> String {
+            if voltage.is_positive() {
+                format!("+{voltage:?}")
+            } else {
+                format!("{voltage:?}")
+            }
+        }
+        
         use ByteCode as B;
         match self {
             B::Cycle(x) => write!(f, "c +{x:?};"),
-
-            B::LeftDrive { voltage } if *voltage < 0 => write!(f, "ld {voltage:?};"),
-            B::LeftDrive { voltage } => write!(f, "ld +{voltage:?};"),
-
-            B::RightDrive { voltage } if *voltage < 0 => write!(f, "rd {voltage:?};"),
-            B::RightDrive { voltage } => write!(f, "rd +{voltage:?};"),
-
-            B::Belt { voltage } if *voltage < 0 => write!(f, "b {voltage:?};"),
-            B::Belt { voltage } => write!(f, "b +{voltage:?};"),
+            B::LeftDrive { voltage } => write!(f, "ld {};", display_voltage(*voltage)),
+            B::RightDrive { voltage } => write!(f, "rd {};", display_voltage(*voltage)),
+            B::Belt { voltage } => write!(f, "b {};", display_voltage(*voltage)),
+            B::Intake { voltage } => write!(f, "i {};", display_voltage(*voltage)),
         }
     }
 }
 
 /// Executes bytecode and pops it off the bytecode vec for each tick-cycle
 #[inline]
-pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt: &mut Maybe<Motor>) {
+pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt: &mut Maybe<Motor>, intake: &mut Maybe<Motor>) {
     let mut current_inst = bytecode.pop();
 
     while let Some(inst) = current_inst {
@@ -69,8 +80,9 @@ pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt:
             ByteCode::LeftDrive { voltage } => drive_train.drive_left(voltage),
             ByteCode::RightDrive { voltage } => drive_train.drive_right(voltage),
             
-            // update the conveyor-belt motor
+            // update the conveyor-belt & intake motors
             ByteCode::Belt { voltage } => { belt.get().map(|motor| motor.move_voltage(voltage)); },
+            ByteCode::Intake { voltage } => { intake.get().map(|motor| motor.move_voltage(voltage)); },
         }
         
         // update to next instruction
