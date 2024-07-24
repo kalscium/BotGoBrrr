@@ -66,8 +66,8 @@ pub mod drive {
 /// The minimum amount of activation the controller has to have to be activated
 pub const CONTROLLER_STICK_MIN: u8 = 10;
 
-/// The exponential multiplier for the joysticks
-pub const EXPONENT_SPEED: f32 = 16.0;
+/// Daniel's magic number for the joysticks
+pub const DMN: f64 = 1.07614027714168; // 12000 = x^{128} - 1
 
 pub mod autonomous {
     use include_tt::include_tt;

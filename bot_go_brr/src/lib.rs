@@ -1,5 +1,7 @@
 #![no_std]
 #![recursion_limit = "1024"]
+#![feature(core_intrinsics)]
+#![allow(internal_features)]
 
 extern crate alloc;
 
@@ -22,4 +24,9 @@ fn append_slice<T: Clone>(vec: &mut alloc::vec::Vec<T>, slice: &[T]) {
 fn reverse_in_place<T>(mut vec: alloc::vec::Vec<T>) -> alloc::vec::Vec<T> {
     vec.reverse();
     vec
+}
+
+#[inline]
+fn powf(x: f64, y: f64) -> f64 {
+    unsafe { core::intrinsics::powf64(x, y) }
 }
