@@ -75,7 +75,7 @@ pub mod autonomous {
     use crate::{ascii_bytecode, bytecode::ByteCode};
 
     /// The autonomous bytecode executed before a vex vrc match
-    pub const MATCH_AUTO: [ByteCode; 0] = include_tt!(ascii_bytecode! { #include_tt!("src/autonomous/match_auto.brb") });
+    pub const MATCH_AUTO: [ByteCode; 9] = include_tt!(ascii_bytecode! { #include_tt!("src/autonomous/match_auto.brb") });
 
     /// The autonomous bytecode executed during a vex vrc skills round
     pub const FULL_AUTO: [ByteCode; 0] = include_tt!(ascii_bytecode! { #include_tt!("src/autonomous/full_auto.brb") });

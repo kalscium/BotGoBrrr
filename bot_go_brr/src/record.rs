@@ -1,11 +1,15 @@
 //! For recording the bytecode instructions executed by the robot and prints them to the screen
 
-use alloc::{vec, vec::Vec};
+use alloc::vec::Vec;
 use safe_vex::vex_rt::io::println;
 use crate::bytecode::ByteCode;
 
 /// A struct that holds the recorded bytecode instructions
-pub struct Record(Vec<(Vec<ByteCode>, u32)>);
+pub struct Record {
+    recorded: Vec<(Vec<ByteCode>, u32)>,    
+    current: Vec<ByteCode>,
+    cycle: u32,
+}
 
 impl Default for Record {
     #[inline]
@@ -18,30 +22,35 @@ impl Record {
     /// Creates a new bytecode record
     #[inline]
     pub fn new() -> Self {
-        Self(vec![(Vec::new(), 0)])
+        Self {
+            recorded: Vec::new(),
+            current: Vec::new(),
+            cycle: 0,
+        }
     }
 
     /// Adds a tick cycle instruction to the record
     #[inline]
     pub fn cycle(&mut self) {
-        let last = self.0.last_mut();
-
-        // if there is already a cycle instruction just increment it by one
-        if let Some((_, c)) = last {
-            *c += 1;
+        // if no instructions are appended then just increase the cycle instead
+        if self.current.is_empty() {
+            self.cycle += 1;
             return;
         }
 
-        // if not, then just push a new one and update cycle bounds
-        self.0.push((Vec::new(), 0));
+        // start a new cycle
+        self.recorded.push((
+            core::mem::take(&mut self.current),
+            core::mem::replace(&mut self.cycle, 0),
+        ));
     }
 
     /// Appends new instructions to the record
     #[inline]
     pub fn append(&mut self, bytecode: &[ByteCode]) {
         // get the insts of the last cycle
-        let default = (Vec::new(), 0);
-        let (slice, _) = &self.0.get(self.0.len().saturating_sub(2)).unwrap_or(&default);
+        let default = Vec::new();
+        let slice = self.recorded.last().map(|x| &x.0).unwrap_or(&default);
         
         // if there is a change between cycles, then push the change onto the bytecode stack
         let insts: Vec<&ByteCode> = bytecode
@@ -51,8 +60,8 @@ impl Record {
 
         // push the changes onto the stack
         for inst in insts {
-            println!("\x1b[36;1mexecuted\x1b[0m {inst}");
-            self.0.last_mut().unwrap().0.push(*inst);
+            // println!("\x1b[36;1mexecuted\x1b[0m {inst}");
+            self.current.push(*inst);
         }
     }
 
@@ -63,10 +72,11 @@ impl Record {
         println!("\x1b[34;1m<<< \x1b[33mEXECUTED BYTECODE INSTRUCTIONS \x1b[34;1m>>>\x1b[0m");
 
         // contents
-        for cycle in self.0.iter() {
-            for inst in cycle.0.iter() {
-                println!("{inst}");
-            } println!("{}", ByteCode::Cycle(cycle.1));
+        for (insts, cycle) in self.recorded.iter() {
+            println!("{:?};", ByteCode::Cycle(*cycle));
+            for inst in insts {
+                println!("{inst:?};");
+            }
         }
 
         // footer

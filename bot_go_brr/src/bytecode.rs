@@ -1,12 +1,12 @@
 //! functions for dealing with byte-code
 
-use core::fmt::Display;
+use core::fmt::Debug;
 use alloc::{format, string::String, vec::Vec};
 use safe_vex::{maybe::Maybe, motor::Motor};
 use crate::drive_train::DriveTrain;
 
 /// A single bytecode instruction for the robot
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ByteCode {
     /// Progresses a specified amount of tick-cycles
     Cycle(u32),
@@ -36,7 +36,7 @@ pub enum ByteCode {
     },
 }
 
-impl Display for ByteCode {
+impl Debug for ByteCode { // change back to display if needed
     #[inline]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         #[inline]
@@ -50,11 +50,11 @@ impl Display for ByteCode {
         
         use ByteCode as B;
         match self {
-            B::Cycle(x) => write!(f, "c +{x:?};"),
-            B::LeftDrive { voltage } => write!(f, "ld {};", display_voltage(*voltage)),
-            B::RightDrive { voltage } => write!(f, "rd {};", display_voltage(*voltage)),
-            B::Belt { voltage } => write!(f, "b {};", display_voltage(*voltage)),
-            B::Intake { voltage } => write!(f, "i {};", display_voltage(*voltage)),
+            B::Cycle(x) => write!(f, "c +{x:?}"),
+            B::LeftDrive { voltage } => write!(f, "ld {}", display_voltage(*voltage)),
+            B::RightDrive { voltage } => write!(f, "rd {}", display_voltage(*voltage)),
+            B::Belt { voltage } => write!(f, "b {}", display_voltage(*voltage)),
+            B::Intake { voltage } => write!(f, "i {}", display_voltage(*voltage)),
         }
     }
 }
@@ -62,19 +62,17 @@ impl Display for ByteCode {
 /// Executes bytecode and pops it off the bytecode vec for each tick-cycle
 #[inline]
 pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt: &mut Maybe<Motor>, intake: &mut Maybe<Motor>) {
-    let mut current_inst = bytecode.pop();
-
-    while let Some(inst) = current_inst {
+    while let Some(inst) = bytecode.pop() {
         match inst {
+            // skip a cycle while consuming the cycle inst
+            // (must be zero)
+            ByteCode::Cycle(0) => return,
+
             // skip a cycle without consuming the cycle inst
-            ByteCode::Cycle(x) if x != 0 => {
+            ByteCode::Cycle(x) => {
                 bytecode.push(ByteCode::Cycle(x-1));
                 return
             },
-
-            // skip a cycle while consuming the cycle inst
-            // (must be zero)
-            ByteCode::Cycle(_) => return,
 
             // updates the drive-train motors
             ByteCode::LeftDrive { voltage } => drive_train.drive_left(voltage),
@@ -84,9 +82,6 @@ pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt:
             ByteCode::Belt { voltage } => { belt.get().map(|motor| motor.move_voltage(voltage)); },
             ByteCode::Intake { voltage } => { intake.get().map(|motor| motor.move_voltage(voltage)); },
         }
-        
-        // update to next instruction
-        current_inst = bytecode.pop();
     }
 }
 

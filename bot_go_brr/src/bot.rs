@@ -1,6 +1,6 @@
-use alloc::{boxed::Box, vec::Vec};
+use alloc::{boxed::Box, vec::Vec, vec};
 use safe_vex::{bot::Bot, context::Context, maybe::Maybe, motor::Motor, port::PortManager, vex_rt::peripherals::Peripherals};
-use crate::{append_slice, bytecode::{execute, ByteCode}, config, controls, drive_train::DriveTrain};
+use crate::{append_slice, bytecode::{execute, ByteCode}, config, controls, drive_train::DriveTrain, reverse_in_place};
 #[cfg(feature = "record")]
 use crate::record::Record;
 
@@ -23,6 +23,7 @@ pub struct Robot {
 
 impl Bot for Robot {
     const TICK_SPEED: u64 = 50;
+    // const TICK_SPEED: u64 = 1000; // for testing purposes only
 
     #[inline]
     fn new(_: &Peripherals, port_manager: &mut PortManager) -> Self {
@@ -38,14 +39,23 @@ impl Bot for Robot {
 
             // load the autonomous bytecode
             #[cfg(feature = "full-autonomous")]
-            bytecode: config::autonomous::FULL_AUTO.to_vec(),
+            bytecode: reverse_in_place(config::autonomous::FULL_AUTO.to_vec()),
             #[cfg(not(feature = "full-autonomous"))]
-            bytecode: config::autonomous::MATCH_AUTO.to_vec(),
+            bytecode: reverse_in_place(config::autonomous::MATCH_AUTO.to_vec()),
         }
     }
 
     #[inline]
     fn opcontrol(&mut self, context: Context) -> bool {      
+        // clear old instructions
+        self.bytecode.clear();
+        execute(&mut vec![
+            ByteCode::LeftDrive { voltage: 0 },
+            ByteCode::RightDrive { voltage: 0 },
+            ByteCode::Belt { voltage: 0 },
+            ByteCode::Intake { voltage: 0 },
+        ], &mut self.drive_train, &mut self.belt, &mut self.intake);
+        
         // get drive-inst
         let drive_inst = controls::gen_drive_inst(&context.controller);
 
