@@ -5,22 +5,27 @@ use crate::{bytecode::ByteCode, config, powf};
 #[inline]
 pub fn gen_drive_inst(controller: &Controller) -> [ByteCode; 2]  {
     // percentage joystick values
-    let (j1, j2) = (
-        controller
-            .left_stick
-            .y,
-        controller
-            .right_stick
-            .y,
-    );
+    let j1 = &controller.left_stick;
 
-    let (left, right) = (
-        (powf(config::DMN, j1 as f64)) as i32,
-        (powf(config::DMN, j2 as f64)) as i32,
-    );
+    // get the calculated voltages from the absolute x & y of the joystick
+    let j1xv = powf(config::DMN, j1.x.abs() as f64);
+    let j1yv = powf(config::DMN, j1.y.abs() as f64);
+
+    // left drive & right drive
+    let (ldr, rdr) = match (j1.x_larger(), j1.x.is_positive(), j1.y.is_positive()) {
+        // move forward
+        (false, _, true) => (j1yv, j1yv),
+        // move backwards
+        (false, _, false) => (-j1yv, -j1yv),
+
+        // turn right
+        (true, true, _) => (j1xv, -j1xv),
+        // turn left
+        (true, false, _) => (-j1xv, j1xv),
+    };
 
     [
-        ByteCode::LeftDrive { voltage: left },
-        ByteCode::RightDrive { voltage: right },
+        ByteCode::LeftDrive { voltage: ldr as i32 },
+        ByteCode::RightDrive { voltage: rdr as i32 },
     ]
 }
