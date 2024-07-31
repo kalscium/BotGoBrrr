@@ -7,6 +7,7 @@ use crate::bytecode::ByteCode;
 /// A struct that holds the recorded bytecode instructions
 pub struct Record {
     recorded: Vec<(Vec<ByteCode>, u32)>,    
+    last: Vec<ByteCode>,
     current: Vec<ByteCode>,
     cycle: u32,
 }
@@ -24,6 +25,7 @@ impl Record {
     pub fn new() -> Self {
         Self {
             recorded: Vec::new(),
+            last: Vec::new(),
             current: Vec::new(),
             cycle: 0,
         }
@@ -32,37 +34,31 @@ impl Record {
     /// Adds a tick cycle instruction to the record
     #[inline]
     pub fn cycle(&mut self) {
+        // find unique instructions
+        let diff = self.current
+            .iter()
+            .filter(|x| self.last.contains(x))
+            .map(|x| *x)
+            .collect::<Vec<_>>();
+        
         // if no instructions are appended then just increase the cycle instead
-        if self.current.is_empty() {
+        if diff.is_empty() {
             self.cycle += 1;
             return;
         }
 
         // start a new cycle
+        self.last = core::mem::take(&mut self.current);
         self.recorded.push((
-            core::mem::take(&mut self.current),
-            core::mem::replace(&mut self.cycle, 0),
+            diff,
+            self.cycle,
         ));
     }
 
-    /// Appends new instructions to the record
+    /// Appends new instructions to the current record
     #[inline]
     pub fn append(&mut self, bytecode: &[ByteCode]) {
-        // get the insts of the last cycle
-        let default = Vec::new();
-        let slice = self.recorded.last().map(|x| &x.0).unwrap_or(&default);
-        
-        // if there is a change between cycles, then push the change onto the bytecode stack
-        let insts: Vec<&ByteCode> = bytecode
-            .iter()
-            .filter(|x| !slice.contains(x))
-            .collect();
-
-        // push the changes onto the stack
-        for inst in insts {
-            // println!("\x1b[36;1mexecuted\x1b[0m {inst}");
-            self.current.push(*inst);
-        }
+        self.current.extend_from_slice(&bytecode);
     }
 
     /// Flushes the record (removes all insts) and prints it to the `stdout`
