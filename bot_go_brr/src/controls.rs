@@ -8,8 +8,10 @@ pub fn gen_drive_inst(controller: &Controller) -> [ByteCode; 2]  {
     let j1 = &controller.left_stick;
 
     // get the calculated voltages from the absolute x & y of the joystick
-    let j1xv = powf(config::DMN, j1.x.abs() as f64);
-    let j1yv = powf(config::DMN, j1.y.abs() as f64);
+    let j1xv = powf(config::DMN, j1.x.abs() as f64)
+        * if controller.l2 { config::drive::PRECISE_MULTIPLIER as f64 } else { 1.0 }; // precise turning
+    let j1yv = powf(config::DMN, j1.y.abs() as f64)
+        * if controller.l2 { config::drive::PRECISE_MULTIPLIER as f64 } else { 1.0 }; // precise turning
 
     // left drive & right drive
     let (ldr, rdr) = match (j1.x_larger(), j1.x.is_positive(), j1.y.is_positive()) {
@@ -18,10 +20,15 @@ pub fn gen_drive_inst(controller: &Controller) -> [ByteCode; 2]  {
         // move backwards
         (false, _, false) => (-j1yv, -j1yv),
 
-        // turn right
-        (true, true, _) => (j1xv, -j1xv),
-        // turn left
-        (true, false, _) => (-j1xv, j1xv),
+        _ => {
+            let voltage = j1xv * config::drive::TURN_SPEED as f64;
+
+            if j1.x.is_positive() { // turn right
+                (voltage, -voltage)
+            } else { // turn left
+                (-voltage, voltage)
+            }
+        },
     };
 
     [

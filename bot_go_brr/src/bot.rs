@@ -22,8 +22,8 @@ pub struct Robot {
 }
 
 impl Bot for Robot {
-    // const TICK_SPEED: u64 = 50;
-    const TICK_SPEED: u64 = 1000; // for testing purposes only
+    const TICK_SPEED: u64 = 50;
+    // const TICK_SPEED: u64 = 1000; // for testing purposes only
 
     #[inline]
     fn new(_: &Peripherals, port_manager: &mut PortManager) -> Self {

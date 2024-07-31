@@ -47,27 +47,23 @@ pub mod drive {
         INTAKE: 10, false;
     }
 
-    // /// the robot's forward speed out of `100`
-    // pub const FORWARD_SPEED: u8 = 100;
-    // /// the robot's backward speed out of `100`
-    // pub const BACKWARD_SPEED: u8 = 90;
-    // /// the robot's turning speed out of `100`
-    // pub const TURN_SPEED: u8 = 60;
+    /// the robot's turning speed (as a multiplier)
+    pub const TURN_SPEED: f32 = 0.64;
 
     /// The robot's conveyor belt voltage out of `12000`
     pub const BELT_VOLTAGE: i32 = 12000;
     /// The robot's intake motor's voltage out of `12000`
     pub const INTAKE_VOLTAGE: i32 = BELT_VOLTAGE;
 
-    // /// The percentage of the normal drive speed for precise movement
-    // pub const PRECISE_SPEED: u8 = 60;
+    /// the multiplier for precise speed
+    pub const PRECISE_MULTIPLIER: f32 = 0.40;
 }
 
 /// The minimum amount of activation the controller has to have to be activated
 pub const CONTROLLER_STICK_MIN: u8 = 10;
 
 /// Daniel's magic number for the joysticks
-pub const DMN: f64 = 1.07614027714168; // 12000 = x^{128} - 1
+pub const DMN: f64 = 1.0767622525496933268015475672969236248247304432068304044336681012; // 12000 = x^{127} - 1
 
 pub mod autonomous {
     use include_tt::include_tt;
