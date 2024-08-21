@@ -37,8 +37,8 @@ impl Record {
         // find unique instructions
         let diff = self.current
             .iter()
-            .filter(|x| self.last.contains(x))
-            .map(|x| *x)
+            .filter(|x| !self.last.contains(x))
+            .copied()
             .collect::<Vec<_>>();
         
         // if no instructions are appended then just increase the cycle instead
@@ -53,12 +53,13 @@ impl Record {
             diff,
             self.cycle,
         ));
+        self.cycle = 0;
     }
 
     /// Appends new instructions to the current record
     #[inline]
     pub fn append(&mut self, bytecode: &[ByteCode]) {
-        self.current.extend_from_slice(&bytecode);
+        self.current.extend_from_slice(bytecode);
     }
 
     /// Flushes the record (removes all insts) and prints it to the `stdout`

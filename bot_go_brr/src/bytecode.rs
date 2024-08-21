@@ -41,10 +41,10 @@ impl Debug for ByteCode { // change back to display if needed
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         #[inline]
         fn display_voltage(voltage: i32) -> String {
-            if voltage.is_positive() {
-                format!("+{voltage:?}")
-            } else {
+            if voltage.is_negative() {
                 format!("{voltage:?}")
+            } else {
+                format!("+{voltage:?}")
             }
         }
         
@@ -111,6 +111,10 @@ macro_rules! ascii_bytecode {
     };
     // Belt
     (@internal b $prefix:tt $x:literal) => {
+        $crate::bytecode::ByteCode::Belt { voltage: 0 $prefix $x }
+    };
+    // Intake
+    (@internal i $prefix:tt $x:literal) => {
         $crate::bytecode::ByteCode::Belt { voltage: 0 $prefix $x }
     };
 }
