@@ -33,20 +33,20 @@ pub mod drive {
 
     motor_config! {
         /// Top-left drive-train motor
-        L1: 12, false;
+        L1: 20, false;
         /// Bottom-left drive-train motor
-        L2: 20, false;
+        L2: 18, false;
         /// Top-right drive-train motor
-        R1: 1, true;
+        R1: 10, true;
         /// Bottom-right drive-train motor
         R2: 9, true;
 
         /// Belt motor
-        BELT: 21, false;
+        BELT: 8, false;
         /// Inserter motor
         INSERTER: 10, false;
         /// Graber motor
-        GRABER: 11, false;
+        GRABER: 4, false;
     }
 
     /// the robot's turning speed (as a multiplier)
@@ -55,7 +55,7 @@ pub mod drive {
     /// The robot's conveyor belt voltage out of `12000`
     pub const BELT_VOLTAGE: i32 = 12000;
     /// The robot's graber motor's voltage out of `12000`
-    pub const GRABER_VOLTAGE: i32 = BELT_VOLTAGE;
+    pub const GRABER_VOLTAGE: i32 = 12000;
     /// the multiplier for precise speed
     pub const PRECISE_MULTIPLIER: f32 = 0.40;
 }
