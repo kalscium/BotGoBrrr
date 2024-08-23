@@ -29,8 +29,14 @@ pub enum ByteCode {
         voltage: i32,
     },
 
-    /// Updates the voltage of the intake motor of the drive-train
-    Intake {
+    /// Updates the voltage of the inserter motor of the drive-train
+    Inserter {
+        /// The voltage to apply to the motor
+        voltage: i32,
+    },
+
+    /// Updates the voltage of the transporter motor of the drive-train
+    Transporter {
         /// The voltage to apply to the motor
         voltage: i32,
     },
@@ -54,14 +60,15 @@ impl Debug for ByteCode { // change back to display if needed
             B::LeftDrive { voltage } => write!(f, "ld {}", display_voltage(*voltage)),
             B::RightDrive { voltage } => write!(f, "rd {}", display_voltage(*voltage)),
             B::Belt { voltage } => write!(f, "b {}", display_voltage(*voltage)),
-            B::Intake { voltage } => write!(f, "i {}", display_voltage(*voltage)),
+            B::Inserter { voltage } => write!(f, "i {}", display_voltage(*voltage)),
+            B::Transporter { voltage } => write!(f, "t {}", display_voltage(*voltage)),
         }
     }
 }
 
 /// Executes bytecode and pops it off the bytecode vec for each tick-cycle
 #[inline]
-pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt: &mut Maybe<Motor>, intake: &mut Maybe<Motor>) {
+pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt: &mut Maybe<Motor>, inserter: &mut Maybe<Motor>, transporter: &mut Maybe<Motor>) {
     while let Some(inst) = bytecode.pop() {
         match inst {
             // skip a cycle while consuming the cycle inst
@@ -78,9 +85,10 @@ pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt:
             ByteCode::LeftDrive { voltage } => drive_train.drive_left(voltage),
             ByteCode::RightDrive { voltage } => drive_train.drive_right(voltage),
             
-            // update the conveyor-belt & intake motors
+            // update the conveyor-belt, inserter and transporter motors
             ByteCode::Belt { voltage } => { belt.get().map(|motor| motor.move_voltage(voltage)); },
-            ByteCode::Intake { voltage } => { intake.get().map(|motor| motor.move_voltage(voltage)); },
+            ByteCode::Inserter { voltage } => { inserter.get().map(|motor| motor.move_voltage(voltage)); },
+            ByteCode::Transporter { voltage } => { transporter.get().map(|motor| motor.move_voltage(voltage)); },
         }
     }
 }
