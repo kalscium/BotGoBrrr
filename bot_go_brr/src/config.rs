@@ -45,8 +45,8 @@ pub mod drive {
         BELT: 21, false;
         /// Inserter motor
         INSERTER: 10, false;
-        /// Transporter motor
-        TRANSPORTER: 11, false;
+        /// Graber motor
+        GRABER: 11, false;
     }
 
     /// the robot's turning speed (as a multiplier)
@@ -54,10 +54,8 @@ pub mod drive {
 
     /// The robot's conveyor belt voltage out of `12000`
     pub const BELT_VOLTAGE: i32 = 12000;
-    /// The robot's inserter motor's voltage out of `12000`
-    pub const INSERTER_VOLTAGE: i32 = BELT_VOLTAGE;
-    /// The robot's transporter motor's voltage out of `12000`
-    pub const TRANSPORTER_VOLTAGE: i32 = BELT_VOLTAGE;
+    /// The robot's graber motor's voltage out of `12000`
+    pub const GRABER_VOLTAGE: i32 = BELT_VOLTAGE;
     /// the multiplier for precise speed
     pub const PRECISE_MULTIPLIER: f32 = 0.40;
 }

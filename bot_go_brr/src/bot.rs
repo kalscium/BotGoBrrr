@@ -16,8 +16,8 @@ pub struct Robot {
     belt: Maybe<Motor>,
     /// The motor of the robot's goal scorer (for once the conveyor places the donut on the goal)
     inserter: Maybe<Motor>,
-    /// The motor on the robot that transports the goal
-    transporter: Maybe<Motor>,
+    /// The motor on the robot that grabs the goal
+    graber: Maybe<Motor>,
 
     /// The bytecode stack (placed in the struct to avoid reallocating)
     bytecode: Vec<ByteCode>,
@@ -38,7 +38,7 @@ impl Bot for Robot {
 
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::BELT.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::BELT.reverse) }.ok())),
             inserter: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::INSERTER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INSERTER.reverse) }.ok())),
-            transporter: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::TRANSPORTER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INSERTER.reverse) }.ok())),
+            graber: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::GRABER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INSERTER.reverse) }.ok())),
 
             // load the autonomous bytecode
             #[cfg(feature = "full-autonomous")]
@@ -57,8 +57,8 @@ impl Bot for Robot {
             ByteCode::RightDrive { voltage: 0 },
             ByteCode::Belt { voltage: 0 },
             ByteCode::Inserter { voltage: 0 },
-            ByteCode::Transporter { voltage: 0 }
-        ], &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.transporter);
+            ByteCode::Graber { voltage: 0 }
+        ], &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.graber);
         
         // get drive-inst
         let drive_inst = controls::gen_drive_inst(&context.controller);
@@ -70,11 +70,11 @@ impl Bot for Robot {
             (_, _) => ByteCode::Belt { voltage: 0 },
         };
 
-        // get the transporter instruction
-        let transporter_inst = match (context.controller.r1, context.controller.r2) {
-            (true, false) => ByteCode::Belt { voltage: config::drive::BELT_VOLTAGE },
-            (false, true) => ByteCode::Belt { voltage: -config::drive::BELT_VOLTAGE },
-            (_, _) => ByteCode::Transporter { voltage: 0 },
+        // get the graber instruction
+        let graber_inst = match (context.controller.r1, context.controller.r2) {
+            (true, false) => ByteCode::Belt { voltage: config::drive::GRABER_VOLTAGE },
+            (false, true) => ByteCode::Belt { voltage: -config::drive::GRABER_VOLTAGE },
+            (_, _) => ByteCode::Graber { voltage: 0 },
         };
 
         // get the inserter instruction
@@ -86,16 +86,16 @@ impl Bot for Robot {
         append_slice(&mut self.bytecode, &drive_inst);
         self.bytecode.push(belt_inst);
         self.bytecode.push(inserter_inst);
-        self.bytecode.push(transporter_inst);
+        self.bytecode.push(graber_inst);
 
         // execute bytecode inst on bytecode stack
-        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.transporter);
+        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.graber);
 
         // append to record
         #[cfg(feature = "record")]
         {
             self.record.append(&drive_inst);
-            self.record.append(&[belt_inst, inserter_inst, transporter_inst]);
+            self.record.append(&[belt_inst, inserter_inst, graber_inst]);
             self.record.cycle();
         }
 
@@ -114,7 +114,7 @@ impl Bot for Robot {
         if self.bytecode.is_empty() { return true };
         
         // execute the autonomous bytecode
-        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.transporter);
+        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.graber);
         
         false
     }
