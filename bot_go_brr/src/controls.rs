@@ -13,6 +13,14 @@ pub fn gen_drive_inst(controller: &Controller) -> [ByteCode; 2]  {
     let j1yv = powf(config::DMN, j1.y.abs() as f64)
         * if controller.l2 { config::drive::PRECISE_MULTIPLIER as f64 } else { 1.0 }; // precise turning
 
+    // reverse the drive motors if L1 is held down (for driving backwards)
+    let reverse = controller.l1;
+    let (j1xv, j1yv) = if reverse {
+        (-j1xv, -j1yv)
+    } else {
+        (j1xv, j1yv)
+    };
+
     // left drive & right drive
     let (ldr, rdr) = match (j1.x_larger(), j1.x.is_positive(), j1.y.is_positive()) {
         // move forward
@@ -23,10 +31,14 @@ pub fn gen_drive_inst(controller: &Controller) -> [ByteCode; 2]  {
         _ => {
             let voltage = j1xv * config::drive::TURN_SPEED as f64;
 
-            if j1.x.is_positive() { // turn right
-                (voltage, -voltage)
-            } else { // turn left
-                (-voltage, voltage)
+            match (j1.x.is_positive(), reverse) {
+                // turn right
+                (true, false) => (voltage, -voltage),
+                (true, true) => (-voltage, voltage), // reversed
+
+                // turn left
+                (false, false) => (-voltage, voltage),
+                (false, true) => (voltage, -voltage), // reversed
             }
         },
     };
