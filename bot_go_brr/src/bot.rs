@@ -10,9 +10,7 @@ pub struct Robot {
     record: Record,
 
     /// The drive-train of the robot
-    drive_train: DriveTrain,
-
-    /// The conveyor-belt motor of the robot
+    drive_train: DriveTrain, /// The conveyor-belt motor of the robot
     belt: Maybe<Motor>,
     /// The motor of the robot's goal scorer (for once the conveyor places the donut on the goal)
     inserter: Maybe<Motor>,
@@ -22,9 +20,7 @@ pub struct Robot {
     /// The bytecode stack (placed in the struct to avoid reallocating)
     bytecode: Vec<ByteCode>,
 }
-
-impl Bot for Robot {
-    const TICK_SPEED: u64 = 50;
+ impl Bot for Robot { const TICK_SPEED: u64 = 50;
     // const TICK_SPEED: u64 = 1000; // for testing purposes only
 
     #[inline]
@@ -38,7 +34,7 @@ impl Bot for Robot {
 
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::BELT.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::BELT.reverse) }.ok())),
             inserter: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::INSERTER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INSERTER.reverse) }.ok())),
-            graber: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::GRABER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INSERTER.reverse) }.ok())),
+            graber: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::GRABER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::GRABER.reverse) }.ok())),
 
             // load the autonomous bytecode
             #[cfg(feature = "full-autonomous")]
@@ -72,8 +68,8 @@ impl Bot for Robot {
 
         // get the graber instruction
         let graber_inst = match (context.controller.r1, context.controller.r2) {
-            (true, false) => ByteCode::Belt { voltage: config::drive::GRABER_VOLTAGE },
-            (false, true) => ByteCode::Belt { voltage: -config::drive::GRABER_VOLTAGE },
+            (true, false) => ByteCode::Graber { voltage: config::drive::GRABER_VOLTAGE },
+            (false, true) => ByteCode::Graber { voltage: -config::drive::GRABER_VOLTAGE },
             (_, _) => ByteCode::Graber { voltage: 0 },
         };
 

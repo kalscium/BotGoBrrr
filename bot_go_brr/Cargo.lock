@@ -94,7 +94,7 @@ dependencies = [
 
 [[package]]
 name = "bot_go_brr"
-version = "5.3.0"
+version = "5.3.1"
 dependencies = [
  "include_tt",
  "safe-vex",
