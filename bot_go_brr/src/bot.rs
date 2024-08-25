@@ -68,8 +68,8 @@ pub struct Robot {
 
         // get the graber instruction
         let graber_inst = match (context.controller.r1, context.controller.r2) {
-            (true, false) => ByteCode::Graber { voltage: config::drive::GRABER_VOLTAGE },
-            (false, true) => ByteCode::Graber { voltage: -config::drive::GRABER_VOLTAGE },
+            (true, false) => ByteCode::Graber { voltage: config::drive::GRABER_VOLTAGE_UP },
+            (false, true) => ByteCode::Graber { voltage: -config::drive::GRABER_VOLTAGE_DOWN },
             (_, _) => ByteCode::Graber { voltage: 0 },
         };
 
