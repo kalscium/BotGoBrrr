@@ -4,41 +4,31 @@ use crate::{bytecode::ByteCode, config, powf};
 /// generates the drive instruction from the controller linearly
 #[inline]
 pub fn gen_drive_inst(controller: &Controller) -> [ByteCode; 2]  {
-    // percentage joystick values
+    // get joystick values and reverse values
     let j1 = &controller.left_stick;
+    let reversed = controller.l1;
 
     // get the calculated voltages from the absolute x & y of the joystick
     let j1xv = powf(j1.x.abs() as f64, 16.0) * config::DMN as f64
         * if controller.l2 { config::drive::PRECISE_MULTIPLIER as f64 } else { 1.0 }; // precise turning
     let j1yv = powf(j1.x.abs() as f64, 16.0) * config::DMN as f64
         * if controller.l2 { config::drive::PRECISE_MULTIPLIER as f64 } else { 1.0 }; // precise turning
-
-    // reverse the drive motors if L1 is held down (for driving backwards)
-    let reverse = controller.l1;
-    let (j1xv, j1yv) = if reverse {
-        (-j1xv, -j1yv)
-    } else {
-        (j1xv, j1yv)
-    };
-
     // left drive & right drive
-    let (ldr, rdr) = match (j1.x_larger(), j1.x.is_positive(), j1.y.is_positive()) {
+    let (ldr, rdr) = match (j1.x_larger(), j1.x.is_positive(), j1.y.is_positive(), reversed) {
         // move forward
-        (false, _, true) => (j1yv, j1yv),
+        (false, _, true, false) => (j1yv, j1yv), // normal
+        (false, _, true, true) => (j1yv, j1yv), // while reversed (driving backwards)
         // move backwards
-        (false, _, false) => (-j1yv, -j1yv),
+        (false, _, false, false) => (-j1yv, -j1yv), // normal
+        (false, _, false, true) => (j1yv, j1yv), // while reversed (driving backwards)
 
         _ => {
             let voltage = j1xv * config::drive::TURN_SPEED as f64;
 
-            match (j1.x.is_positive(), reverse) {
-                // turn right
-                (true, false) => (voltage, -voltage),
-                (true, true) => (-voltage, voltage), // reversed
-
-                // turn left
-                (false, false) => (-voltage, voltage),
-                (false, true) => (voltage, -voltage), // reversed
+            if j1.x.is_positive() {
+                (voltage, -voltage)
+            } else {
+                (-voltage, voltage)
             }
         },
     };
