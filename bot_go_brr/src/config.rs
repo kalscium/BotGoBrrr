@@ -66,8 +66,7 @@ pub mod drive {
 pub const CONTROLLER_STICK_MIN: u8 = 10;
 
 /// Daniel's magic number for the joysticks
-#[allow(clippy::excessive_precision)]
-pub const DMN: f64 = 1.0767622525496933268015475672969236248247304432068304044336681012; // 12000 = 127^{x} - 1
+pub const DMN: f32 = 0.00000000000000000000000000000262; // 12000 = x * 127^{16}
 
 pub mod autonomous {
     use include_tt::include_tt;
