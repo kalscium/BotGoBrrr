@@ -27,8 +27,8 @@ cat > project.pros << EOL
         },
         "upload_options": {
             "icon": "X",
-            "slot": 1,
-            "description": "v4 of robot code"
+            "slot": 2,
+            "description": "v5 of robot code"
         }
     }
 }

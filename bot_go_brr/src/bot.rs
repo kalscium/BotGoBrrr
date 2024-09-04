@@ -1,5 +1,5 @@
 use alloc::{boxed::Box, vec::Vec, vec};
-use safe_vex::{bot::Bot, context::Context, maybe::Maybe, motor::Motor, port::PortManager, vex_rt::peripherals::Peripherals};
+use safe_vex::{bot::Bot, context::Context, maybe::Maybe, motor::Motor, port::PortManager, vex_rt::{adi::AdiDigitalOutput, peripherals::Peripherals}};
 use crate::{append_slice, bytecode::{execute, ByteCode}, config, controls, drive_train::DriveTrain, reverse_in_place};
 #[cfg(feature = "record")]
 use crate::record::Record;
@@ -16,6 +16,11 @@ pub struct Robot {
     inserter: Maybe<Motor>,
     /// The motor on the robot that grabs the goal
     graber: Maybe<Motor>,
+    /// The pneumatics solanoid for the goal grabber
+    solanoid: Maybe<AdiDigitalOutput>,
+
+    /// If the solanoid is active or not
+    solanoid_active: bool,
 
     /// The bytecode stack (placed in the struct to avoid reallocating)
     bytecode: Vec<ByteCode>,
@@ -35,6 +40,9 @@ pub struct Robot {
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::BELT.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::BELT.reverse) }.ok())),
             inserter: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::INSERTER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INSERTER.reverse) }.ok())),
             graber: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::GRABER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::GRABER.reverse) }.ok())),
+            solanoid: Maybe::new(Box::new(|| unsafe { AdiDigitalOutput::new(config::SOLANOID_PORT, config::SOLANOID_EXPNDR_PORT) }.ok())),
+
+            solanoid_active: false,
 
             // load the autonomous bytecode
             #[cfg(feature = "full-autonomous")]
@@ -53,8 +61,9 @@ pub struct Robot {
             ByteCode::RightDrive { voltage: 0 },
             ByteCode::Belt { voltage: 0 },
             ByteCode::Inserter { voltage: 0 },
-            ByteCode::Graber { voltage: 0 }
-        ], &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.graber);
+            ByteCode::Graber { voltage: 0 },
+            ByteCode::Solanoid(false),
+        ], &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.graber, &mut self.solanoid);
         
         // get drive-inst
         let drive_inst = controls::gen_drive_inst(&context.controller);
@@ -78,14 +87,23 @@ pub struct Robot {
             voltage: (12000.0 * context.controller.right_stick.y as f64 / 127.0) as i32,
         };
 
+        // get the solanoid instruction
+        let solanoid_inst = ByteCode::Solanoid(
+            if context.controller.a {
+                self.solanoid_active = !self.solanoid_active;
+                self.solanoid_active
+            } else { self.solanoid_active }
+        );
+
         // append instructions to bytecode stack
         append_slice(&mut self.bytecode, &drive_inst);
         self.bytecode.push(belt_inst);
         self.bytecode.push(inserter_inst);
         self.bytecode.push(graber_inst);
+        self.bytecode.push(solanoid_inst);
 
         // execute bytecode inst on bytecode stack
-        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.graber);
+        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.graber, &mut self.solanoid);
 
         // append to record
         #[cfg(feature = "record")]
@@ -110,7 +128,7 @@ pub struct Robot {
         if self.bytecode.is_empty() { return true };
         
         // execute the autonomous bytecode
-        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.graber);
+        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.graber, &mut self.solanoid);
         
         false
     }

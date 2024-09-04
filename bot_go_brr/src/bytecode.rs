@@ -2,7 +2,7 @@
 
 use core::fmt::Debug;
 use alloc::{format, string::String, vec::Vec};
-use safe_vex::{maybe::Maybe, motor::Motor};
+use safe_vex::{maybe::Maybe, motor::Motor, vex_rt::adi::AdiDigitalOutput};
 use crate::drive_train::DriveTrain;
 
 /// A single bytecode instruction for the robot
@@ -36,10 +36,12 @@ pub enum ByteCode {
     },
 
     /// Updates the voltage of the goal-graber motor of the drive-train
-    Graber {
-        /// The voltage to apply to the motor
+    Graber { /// The voltage to apply to the motor
         voltage: i32,
     },
+
+    /// Sets the boolean value (if it's active) for the solanoid
+    Solanoid(bool),
 }
 
 impl Debug for ByteCode { // change back to display if needed
@@ -54,21 +56,21 @@ impl Debug for ByteCode { // change back to display if needed
             }
         }
         
-        use ByteCode as B;
         match self {
-            B::Cycle(x) => write!(f, "c +{x:?}"),
-            B::LeftDrive { voltage } => write!(f, "ld {}", display_voltage(*voltage)),
-            B::RightDrive { voltage } => write!(f, "rd {}", display_voltage(*voltage)),
-            B::Belt { voltage } => write!(f, "b {}", display_voltage(*voltage)),
-            B::Inserter { voltage } => write!(f, "i {}", display_voltage(*voltage)),
-            B::Graber { voltage } => write!(f, "g {}", display_voltage(*voltage)),
+            ByteCode::Cycle(x) => write!(f, "c +{x:?}"),
+            ByteCode::LeftDrive { voltage } => write!(f, "ld {}", display_voltage(*voltage)),
+            ByteCode::RightDrive { voltage } => write!(f, "rd {}", display_voltage(*voltage)),
+            ByteCode::Belt { voltage } => write!(f, "b {}", display_voltage(*voltage)),
+            ByteCode::Inserter { voltage } => write!(f, "i {}", display_voltage(*voltage)),
+            ByteCode::Graber { voltage } => write!(f, "g {}", display_voltage(*voltage)),
+            ByteCode::Solanoid(is_active) => write!(f, "s +{}", *is_active),
         }
     }
 }
 
 /// Executes bytecode and pops it off the bytecode vec for each tick-cycle
 #[inline]
-pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt: &mut Maybe<Motor>, inserter: &mut Maybe<Motor>, graber: &mut Maybe<Motor>) {
+pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt: &mut Maybe<Motor>, inserter: &mut Maybe<Motor>, graber: &mut Maybe<Motor>, solanoid: &mut Maybe<AdiDigitalOutput>) {
     while let Some(inst) = bytecode.pop() {
         match inst {
             // skip a cycle while consuming the cycle inst
@@ -89,6 +91,9 @@ pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt:
             ByteCode::Belt { voltage } => { belt.get().map(|motor| motor.move_voltage(voltage)); },
             ByteCode::Inserter { voltage } => { inserter.get().map(|motor| motor.move_voltage(voltage)); },
             ByteCode::Graber { voltage } => { graber.get().map(|motor| motor.move_voltage(voltage)); },
+
+            // update the pneumatics solanoid
+            ByteCode::Solanoid(is_active) => { solanoid.get().map(|solanoid| solanoid.write(is_active)); },
         }
     }
 }
@@ -128,5 +133,9 @@ macro_rules! ascii_bytecode {
     // Graber
     (@internal g $prefix:tt $x:literal) => {
         $crate::bytecode::ByteCode::Graber { voltage: 0 $prefix $x }
+    };
+    // Graber
+    (@internal s $prefix:tt $x:literal) => {
+        $crate::bytecode::ByteCode::Solanoid($x)
     };
 }

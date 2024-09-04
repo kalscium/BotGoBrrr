@@ -62,6 +62,11 @@ pub mod drive {
     pub const PRECISE_MULTIPLIER: f32 = 0.40;
 }
 
+/// The *port???* of the pneumatics solanoid
+pub const SOLANOID_PORT: u8 = 1;
+/// The *expander port???* of the pneumatics solanoid
+pub const SOLANOID_EXPNDR_PORT: u8 = 1;
+
 /// The minimum amount of activation the controller has to have to be activated
 pub const CONTROLLER_STICK_MIN: u8 = 10;
 
