@@ -71,7 +71,7 @@ pub const SOLANOID_EXPNDR_PORT: u8 = 1;
 pub const CONTROLLER_STICK_MIN: u8 = 10;
 
 /// Daniel's magic number for the joysticks
-pub const DMN: f32 = 0.00000000000000000000000000000262; // 12000 = x * 127^{16}
+pub const DMN: f32 = 1.0195691192404441; // 12000 = 1024a^{x} - 1024
 
 pub mod autonomous {
     use include_tt::include_tt;

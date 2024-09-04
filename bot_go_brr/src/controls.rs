@@ -9,9 +9,9 @@ pub fn gen_drive_inst(controller: &Controller) -> [ByteCode; 2]  {
     let reversed = controller.l1;
 
     // get the calculated voltages from the absolute x & y of the joystick
-    let j1xv = powf(j1.x.abs() as f64, 16.0) * config::DMN as f64
+    let j1xv = (1024.0 * powf(config::DMN as f64, j1.x.abs() as f64) - 1024.0)
         * if controller.l2 { config::drive::PRECISE_MULTIPLIER as f64 } else { 1.0 }; // precise turning
-    let j1yv = powf(j1.x.abs() as f64, 16.0) * config::DMN as f64
+    let j1yv = (1024.0 * powf(config::DMN as f64, j1.y.abs() as f64) - 1024.0)
         * if controller.l2 { config::drive::PRECISE_MULTIPLIER as f64 } else { 1.0 }; // precise turning
     // left drive & right drive
     let (ldr, rdr) = match (j1.x_larger(), j1.x.is_positive(), j1.y.is_positive(), reversed) {
