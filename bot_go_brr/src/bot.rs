@@ -14,8 +14,6 @@ pub struct Robot {
     belt: Maybe<Motor>,
     /// The motor of the robot's goal scorer (for once the conveyor places the donut on the goal)
     inserter: Maybe<Motor>,
-    /// The motor on the robot that grabs the goal
-    graber: Maybe<Motor>,
     /// The pneumatics solanoid for the goal grabber
     solanoid: Maybe<AdiDigitalOutput>,
 
@@ -39,7 +37,6 @@ pub struct Robot {
 
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::BELT.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::BELT.reverse) }.ok())),
             inserter: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::INSERTER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INSERTER.reverse) }.ok())),
-            graber: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::GRABER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::GRABER.reverse) }.ok())),
             solanoid: Maybe::new(Box::new(|| unsafe { AdiDigitalOutput::new(config::SOLANOID_PORT, config::SOLANOID_EXPNDR_PORT) }.ok())),
 
             solanoid_active: false,
@@ -61,25 +58,17 @@ pub struct Robot {
             ByteCode::RightDrive { voltage: 0 },
             ByteCode::Belt { voltage: 0 },
             ByteCode::Inserter { voltage: 0 },
-            ByteCode::Graber { voltage: 0 },
             ByteCode::Solanoid(false),
-        ], &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.graber, &mut self.solanoid);
+        ], &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.solanoid);
         
         // get drive-inst
         let drive_inst = controls::gen_drive_inst(&context.controller);
 
         // get the conveyor belt instruction
-        let belt_inst = match (context.controller.x, context.controller.b) {
+        let belt_inst = match (context.controller.r1, context.controller.r2) {
             (true, false) => ByteCode::Belt { voltage: config::drive::BELT_VOLTAGE },
             (false, true) => ByteCode::Belt { voltage: -config::drive::BELT_VOLTAGE },
             (_, _) => ByteCode::Belt { voltage: 0 },
-        };
-
-        // get the graber instruction
-        let graber_inst = match (context.controller.r1, context.controller.r2) {
-            (true, false) => ByteCode::Graber { voltage: config::drive::GRABER_VOLTAGE_UP },
-            (false, true) => ByteCode::Graber { voltage: -config::drive::GRABER_VOLTAGE_DOWN },
-            (_, _) => ByteCode::Graber { voltage: 0 },
         };
 
         // get the inserter instruction
@@ -99,11 +88,10 @@ pub struct Robot {
         append_slice(&mut self.bytecode, &drive_inst);
         self.bytecode.push(belt_inst);
         self.bytecode.push(inserter_inst);
-        self.bytecode.push(graber_inst);
         self.bytecode.push(solanoid_inst);
 
         // execute bytecode inst on bytecode stack
-        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.graber, &mut self.solanoid);
+        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.solanoid);
 
         // append to record
         #[cfg(feature = "record")]
@@ -128,7 +116,7 @@ pub struct Robot {
         if self.bytecode.is_empty() { return true };
         
         // execute the autonomous bytecode
-        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.graber, &mut self.solanoid);
+        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.solanoid);
         
         false
     }

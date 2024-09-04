@@ -59,7 +59,7 @@ pub mod drive {
     /// The robot's graber motor's voltage out of `12000` when moving up
     pub const GRABER_VOLTAGE_UP: i32 = 2880;
     /// the multiplier for precise speed
-    pub const PRECISE_MULTIPLIER: f32 = 0.40;
+    pub const PRECISE_MULTIPLIER: f32 = 0.60;
 }
 
 /// The *port???* of the pneumatics solanoid
