@@ -1,5 +1,5 @@
 use alloc::{boxed::Box, vec::Vec, vec};
-use safe_vex::{bot::Bot, context::Context, maybe::Maybe, motor::Motor, port::PortManager, vex_rt::{adi::AdiDigitalOutput, peripherals::Peripherals}};
+use safe_vex::{adi::new_adi_digital_output, bot::Bot, context::Context, maybe::Maybe, motor::Motor, port::PortManager, vex_rt::{adi::AdiDigitalOutput, peripherals::Peripherals}};
 use crate::{append_slice, bytecode::{execute, ByteCode}, config, controls, drive_train::DriveTrain, reverse_in_place};
 #[cfg(feature = "record")]
 use crate::record::Record;
@@ -37,7 +37,7 @@ pub struct Robot {
 
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::BELT.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::BELT.reverse) }.ok())),
             inserter: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::INSERTER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INSERTER.reverse) }.ok())),
-            solanoid: Maybe::new(Box::new(|| unsafe { AdiDigitalOutput::new(config::SOLANOID_PORT, config::SOLANOID_EXPNDR_PORT) }.ok())),
+            solanoid: Maybe::new(Box::new(|| unsafe { new_adi_digital_output(config::SOLANOID_PORT) }.ok())),
 
             solanoid_active: false,
 
@@ -78,7 +78,7 @@ pub struct Robot {
 
         // get the solanoid instruction
         let solanoid_inst = ByteCode::Solanoid(
-            if context.controller.a {
+            if context.controller.x && context.tick % 4 == 0 { // make sure the button is held down and only every 2 ticks
                 self.solanoid_active = !self.solanoid_active;
                 self.solanoid_active
             } else { self.solanoid_active }

@@ -1,3 +1,5 @@
+use safe_vex::adi::AdiPort;
+
 macro_rules! motor_config {
     ($(#[$meta:meta])* $motor:ident: $port:expr, $reverse:expr;) => {
         /// **(motor configuration)**
@@ -62,10 +64,8 @@ pub mod drive {
     pub const PRECISE_MULTIPLIER: f32 = 0.60;
 }
 
-/// The *port???* of the pneumatics solanoid
-pub const SOLANOID_PORT: u8 = 1;
-/// The *expander port???* of the pneumatics solanoid
-pub const SOLANOID_EXPNDR_PORT: u8 = 1;
+/// The adi port of the pneumatics solanoid
+pub const SOLANOID_PORT: AdiPort = AdiPort::A;
 
 /// The minimum amount of activation the controller has to have to be activated
 pub const CONTROLLER_STICK_MIN: u8 = 10;
