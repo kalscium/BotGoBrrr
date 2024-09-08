@@ -30,13 +30,13 @@ pub enum ByteCode {
     },
 
     /// Updates the voltage of the inserter motor of the drive-train
-    Inserter {
+    Intake {
         /// The voltage to apply to the motor
         voltage: i32,
     },
 
     /// Sets the boolean value (if it's active) for the solanoid
-    Solanoid(bool),
+    Solenoid(bool),
 }
 
 impl Debug for ByteCode { // change back to display if needed
@@ -56,8 +56,8 @@ impl Debug for ByteCode { // change back to display if needed
             ByteCode::LeftDrive { voltage } => write!(f, "ld {}", display_voltage(*voltage)),
             ByteCode::RightDrive { voltage } => write!(f, "rd {}", display_voltage(*voltage)),
             ByteCode::Belt { voltage } => write!(f, "b {}", display_voltage(*voltage)),
-            ByteCode::Inserter { voltage } => write!(f, "i {}", display_voltage(*voltage)),
-            ByteCode::Solanoid(is_active) => write!(f, "s +{}", *is_active),
+            ByteCode::Intake { voltage } => write!(f, "i {}", display_voltage(*voltage)),
+            ByteCode::Solenoid(is_active) => write!(f, "s +{}", *is_active),
         }
     }
 }
@@ -83,10 +83,10 @@ pub fn execute(bytecode: &mut Vec<ByteCode>, drive_train: &mut DriveTrain, belt:
             
             // update the conveyor-belt, inserter and transporter motors
             ByteCode::Belt { voltage } => { belt.get().map(|motor| motor.move_voltage(voltage)); },
-            ByteCode::Inserter { voltage } => { inserter.get().map(|motor| motor.move_voltage(voltage)); },
+            ByteCode::Intake { voltage } => { inserter.get().map(|motor| motor.move_voltage(voltage)); },
 
             // update the pneumatics solanoid
-            ByteCode::Solanoid(is_active) => { solanoid.get().map(|solanoid| solanoid.write(is_active)); },
+            ByteCode::Solenoid(is_active) => { solanoid.get().map(|solanoid| solanoid.write(is_active)); },
         }
     }
 }
@@ -121,7 +121,7 @@ macro_rules! ascii_bytecode {
     };
     // Inserter
     (@internal i $prefix:tt $x:literal) => {
-        $crate::bytecode::ByteCode::Inserter { voltage: 0 $prefix $x }
+        $crate::bytecode::ByteCode::Intake { voltage: 0 $prefix $x }
     };
     // Graber
     (@internal g $prefix:tt $x:literal) => {
@@ -129,6 +129,6 @@ macro_rules! ascii_bytecode {
     };
     // Graber
     (@internal s $prefix:tt $x:literal) => {
-        $crate::bytecode::ByteCode::Solanoid($x)
+        $crate::bytecode::ByteCode::Solenoid($x)
     };
 }

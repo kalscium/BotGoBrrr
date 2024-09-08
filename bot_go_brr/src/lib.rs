@@ -10,7 +10,7 @@ pub mod drive_train;
 pub mod config;
 pub mod controls;
 pub mod bytecode;
-// #[cfg(feature = "record")]
+#[cfg(feature = "record")]
 pub mod record;
 
 #[inline]

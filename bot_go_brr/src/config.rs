@@ -35,27 +35,25 @@ pub mod drive {
 
     motor_config! {
         /// Top-left drive-train motor
-        L1: 12, false;
+        L1: 15, false;
         /// Bottom-left drive-train motor
-        L2: 14, false;
+        L2: 18, false;
         /// Top-right drive-train motor
-        R1: 20, true;
+        R1: 9, true;
         /// Bottom-right drive-train motor
         R2: 4, true;
 
         /// Belt motor
-        BELT: 18, false;
-        /// Inserter motor
-        INSERTER: 10, false;
-        /// Graber motor
-        GRABER: 16, false;
+        BELT: 12, false;
+        /// Intake motor
+        INTAKE: 10, false;
     }
 
     /// the robot's turning speed (as a multiplier)
     pub const TURN_SPEED: f32 = 0.64;
 
     /// The robot's conveyor belt voltage out of `12000`
-    pub const BELT_VOLTAGE: i32 = 7200;
+    pub const BELT_VOLTAGE: i32 = 5400;
     /// The robot's graber motor's voltage out of `12000` when moving down
     pub const GRABER_VOLTAGE_DOWN: i32 = 12000;
     /// The robot's graber motor's voltage out of `12000` when moving up
@@ -65,9 +63,9 @@ pub mod drive {
 }
 
 /// The adi port of the pneumatics solanoid
-pub const SOLANOID_PORT: AdiPort = AdiPort::A;
+pub const SOLENOID_PORT: AdiPort = AdiPort::A;
 /// A tick delay of the solanoid
-pub const SOLANOID_DELAY: u16 = 8;
+pub const SOLENOID_DELAY: u16 = 8;
 
 /// The minimum amount of activation the controller has to have to be activated
 pub const CONTROLLER_STICK_MIN: u8 = 10;

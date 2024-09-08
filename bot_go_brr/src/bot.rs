@@ -12,14 +12,14 @@ pub struct Robot {
     drive_train: DriveTrain, /// The conveyor-belt motor of the robot
     belt: Maybe<Motor>,
     /// The motor of the robot's goal scorer (for once the conveyor places the donut on the goal)
-    inserter: Maybe<Motor>,
-    /// The pneumatics solanoid for the goal grabber
-    solanoid: Maybe<AdiDigitalOutput>,
+    intake: Maybe<Motor>,
+    /// The pneumatics solenoid for the goal grabber
+    solenoid: Maybe<AdiDigitalOutput>,
 
-    /// If the solanoid is active or not
-    solanoid_active: bool,
-    /// The last tick that the solanoid was active
-    solanoid_tick: u16,
+    /// If the solenoid is active or not
+    solenoid_active: bool,
+    /// The last tick that the solenoid was active
+    solenoid_tick: u16,
 
     /// The bytecode stack (placed in the struct to avoid reallocating)
     bytecode: Vec<ByteCode>,
@@ -37,12 +37,12 @@ pub struct Robot {
             drive_train,
 
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::BELT.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::BELT.reverse) }.ok())),
-            inserter: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::INSERTER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INSERTER.reverse) }.ok())),
-            solanoid: Maybe::new(Box::new(|| unsafe { new_adi_digital_output(config::SOLANOID_PORT) }.ok())),
+            intake: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::INTAKE.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INTAKE.reverse) }.ok())),
+            solenoid: Maybe::new(Box::new(|| unsafe { new_adi_digital_output(config::SOLENOID_PORT) }.ok())),
 
-            // solanoid fields
-            solanoid_active: false,
-            solanoid_tick: 0,
+            // solenoid fields
+            solenoid_active: false,
+            solenoid_tick: 0,
 
             // load the autonomous bytecode
             #[cfg(feature = "full-autonomous")]
@@ -60,9 +60,9 @@ pub struct Robot {
             ByteCode::LeftDrive { voltage: 0 },
             ByteCode::RightDrive { voltage: 0 },
             ByteCode::Belt { voltage: 0 },
-            ByteCode::Inserter { voltage: 0 },
-            ByteCode::Solanoid(false),
-        ], &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.solanoid);
+            ByteCode::Intake { voltage: 0 },
+            ByteCode::Solenoid(false),
+        ], &mut self.drive_train, &mut self.belt, &mut self.intake, &mut self.solenoid);
         
         // get drive-inst
         let drive_inst = controls::gen_drive_inst(&context.controller);
@@ -74,34 +74,34 @@ pub struct Robot {
             (_, _) => ByteCode::Belt { voltage: 0 },
         };
 
-        // get the inserter instruction
-        let inserter_inst = ByteCode::Inserter {
+        // get the intake instruction
+        let intake_inst = ByteCode::Intake {
             voltage: (12000.0 * context.controller.right_stick.y as f64 / 127.0) as i32,
         };
 
-        // get the solanoid instruction
-        let solanoid_inst = ByteCode::Solanoid(
-            if context.controller.x && context.tick - self.solanoid_tick >= config::SOLANOID_DELAY { // make sure the button is held down and only every 2 ticks
-                self.solanoid_tick = context.tick;
-                self.solanoid_active = !self.solanoid_active;
-                self.solanoid_active
-            } else { self.solanoid_active }
+        // get the solenoid instruction
+        let solenoid_inst = ByteCode::Solenoid(
+            if context.controller.x && context.tick - self.solenoid_tick >= config::SOLENOID_DELAY { // make sure the button is held down and only every 2 ticks
+                self.solenoid_tick = context.tick;
+                self.solenoid_active = !self.solenoid_active;
+                self.solenoid_active
+            } else { self.solenoid_active }
         );
 
         // append instructions to bytecode stack
         append_slice(&mut self.bytecode, &drive_inst);
         self.bytecode.push(belt_inst);
-        self.bytecode.push(inserter_inst);
-        self.bytecode.push(solanoid_inst);
+        self.bytecode.push(intake_inst);
+        self.bytecode.push(solenoid_inst);
 
         // execute bytecode inst on bytecode stack
-        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.solanoid);
+        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.intake, &mut self.solenoid);
 
         // append to record
         #[cfg(feature = "record")]
         {
             self.record.append(&drive_inst);
-            self.record.append(&[belt_inst, inserter_inst, graber_inst]);
+            self.record.append(&[belt_inst, intake_inst, solenoid_inst]);
             self.record.cycle();
         }
 
@@ -120,7 +120,7 @@ pub struct Robot {
         if self.bytecode.is_empty() { return true };
         
         // execute the autonomous bytecode
-        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.inserter, &mut self.solanoid);
+        execute(&mut self.bytecode, &mut self.drive_train, &mut self.belt, &mut self.intake, &mut self.solenoid);
         
         false
     }
