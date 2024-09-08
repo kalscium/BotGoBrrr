@@ -3,6 +3,7 @@ use safe_vex::{adi::new_adi_digital_output, bot::Bot, context::Context, maybe::M
 use crate::{append_slice, bytecode::{execute, ByteCode}, config, controls, drive_train::DriveTrain, reverse_in_place};
 #[cfg(feature = "record")]
 use crate::record::Record;
+
 /// The robot
 pub struct Robot {
     #[cfg(feature = "record")]
@@ -12,8 +13,7 @@ pub struct Robot {
     drive_train: DriveTrain, /// The conveyor-belt motor of the robot
     belt: Maybe<Motor>,
     /// The motor of the robot's goal scorer (for once the conveyor places the donut on the goal)
-    intake: Maybe<Motor>,
-    /// The pneumatics solenoid for the goal grabber
+    intake: Maybe<Motor>, /// The pneumatics solenoid for the goal grabber
     solenoid: Maybe<AdiDigitalOutput>,
 
     /// If the solenoid is active or not
@@ -24,17 +24,16 @@ pub struct Robot {
     /// The bytecode stack (placed in the struct to avoid reallocating)
     bytecode: Vec<ByteCode>,
 }
- impl Bot for Robot { const TICK_SPEED: u64 = 50;
+ impl Bot for Robot {
+    const TICK_SPEED: u64 = 50;
     // const TICK_SPEED: u64 = 1000; // for testing purposes only
 
     #[inline]
     fn new(_: &Peripherals, port_manager: &mut PortManager) -> Self {
-        let drive_train = DriveTrain::new(port_manager);
-
         Self {
             #[cfg(feature = "record")]
             record: Record::new(),
-            drive_train,
+            drive_train: DriveTrain::new(port_manager),
 
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::BELT.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::BELT.reverse) }.ok())),
             intake: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::INTAKE.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INTAKE.reverse) }.ok())),
@@ -49,10 +48,8 @@ pub struct Robot {
             bytecode: reverse_in_place(config::autonomous::FULL_AUTO.to_vec()),
             #[cfg(not(feature = "full-autonomous"))]
             bytecode: reverse_in_place(config::autonomous::MATCH_AUTO.to_vec()),
-        }
-    }
+        } }
 
-    #[inline]
     fn opcontrol(&mut self, context: Context) -> bool {      
         // clear old instructions
         self.bytecode.clear();
@@ -114,7 +111,6 @@ pub struct Robot {
         false
     }
 
-    #[inline]
     fn autonomous(&mut self, _: Context) -> bool {
         // check if there is any instructions left
         if self.bytecode.is_empty() { return true };

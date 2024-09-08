@@ -32,7 +32,6 @@ impl Record {
     }
 
     /// Adds a tick cycle instruction to the record
-    #[inline]
     pub fn cycle(&mut self) {
         // find unique instructions
         let diff = self.current
@@ -44,16 +43,17 @@ impl Record {
         // if no instructions are appended then just increase the cycle instead
         if diff.is_empty() {
             self.cycle += 1;
+            self.current.drain(..); // clear the current bytecode
             return;
         }
 
         // start a new cycle
-        self.last = core::mem::take(&mut self.current);
-        self.recorded.push((
+        self.last = core::mem::take(&mut self.current); // moves the current bytecode to the last
+        self.recorded.push(( // append the unique instructions
             diff,
             self.cycle,
         ));
-        self.cycle = 0;
+        self.cycle = 0; // reset the cycle when instructions are different
     }
 
     /// Appends new instructions to the current record
@@ -63,7 +63,6 @@ impl Record {
     }
 
     /// Flushes the record (removes all insts) and prints it to the `stdout`
-    #[inline]
     pub fn flush(&mut self) {
         // header
         println!("\x1b[34;1m<<< \x1b[33mEXECUTED BYTECODE INSTRUCTIONS \x1b[34;1m>>>\x1b[0m");
