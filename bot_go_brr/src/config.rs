@@ -66,6 +66,8 @@ pub mod drive {
 
 /// The adi port of the pneumatics solanoid
 pub const SOLANOID_PORT: AdiPort = AdiPort::A;
+/// A tick delay of the solanoid
+pub const SOLANOID_DELAY: u16 = 8;
 
 /// The minimum amount of activation the controller has to have to be activated
 pub const CONTROLLER_STICK_MIN: u8 = 10;

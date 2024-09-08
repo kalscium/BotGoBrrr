@@ -3,7 +3,6 @@ use safe_vex::{adi::new_adi_digital_output, bot::Bot, context::Context, maybe::M
 use crate::{append_slice, bytecode::{execute, ByteCode}, config, controls, drive_train::DriveTrain, reverse_in_place};
 #[cfg(feature = "record")]
 use crate::record::Record;
-
 /// The robot
 pub struct Robot {
     #[cfg(feature = "record")]
@@ -19,6 +18,8 @@ pub struct Robot {
 
     /// If the solanoid is active or not
     solanoid_active: bool,
+    /// The last tick that the solanoid was active
+    solanoid_tick: u16,
 
     /// The bytecode stack (placed in the struct to avoid reallocating)
     bytecode: Vec<ByteCode>,
@@ -39,7 +40,9 @@ pub struct Robot {
             inserter: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::INSERTER.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INSERTER.reverse) }.ok())),
             solanoid: Maybe::new(Box::new(|| unsafe { new_adi_digital_output(config::SOLANOID_PORT) }.ok())),
 
+            // solanoid fields
             solanoid_active: false,
+            solanoid_tick: 0,
 
             // load the autonomous bytecode
             #[cfg(feature = "full-autonomous")]
@@ -78,7 +81,8 @@ pub struct Robot {
 
         // get the solanoid instruction
         let solanoid_inst = ByteCode::Solanoid(
-            if context.controller.x && context.tick % 4 == 0 { // make sure the button is held down and only every 2 ticks
+            if context.controller.x && context.tick - self.solanoid_tick >= config::SOLANOID_DELAY { // make sure the button is held down and only every 2 ticks
+                self.solanoid_tick = context.tick;
                 self.solanoid_active = !self.solanoid_active;
                 self.solanoid_active
             } else { self.solanoid_active }
