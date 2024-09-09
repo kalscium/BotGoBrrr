@@ -78,9 +78,15 @@ pub mod autonomous {
 
     use crate::{ascii_bytecode, bytecode::ByteCode};
 
-    /// The autonomous bytecode executed before a vex vrc match
-    pub const MATCH_AUTO: &[ByteCode] = &include_tt!(ascii_bytecode! { #include_tt!("src/autonomous/match_auto.brb") });
+    /// The autonomous bytecode executed before a vex vrc match as the red alliance
+    #[cfg(feature = "red")]
+    pub const RED_AUTO: &[ByteCode] = &include_tt!(ascii_bytecode! { #include_tt!("src/autonomous/red_auto.brb") });
+
+    /// The autonomous bytecode executed before a vex vrc match as the blue alliance
+    #[cfg(feature = "blue")]
+    pub const BLUE_AUTO: &[ByteCode] = &include_tt!(ascii_bytecode! { #include_tt!("src/autonomous/blue_auto.brb") });
 
     /// The autonomous bytecode executed during a vex vrc skills round
+    #[cfg(feature = "full-autonomous")]
     pub const FULL_AUTO: &[ByteCode] = &include_tt!(ascii_bytecode! { #include_tt!("src/autonomous/full_auto.brb") });
 }

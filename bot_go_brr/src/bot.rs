@@ -44,10 +44,12 @@ pub struct Robot {
             solenoid_tick: 0,
 
             // load the autonomous bytecode
+            #[cfg(feature = "red")]
+            bytecode: reverse_in_place(config::autonomous::RED_AUTO.to_vec()), // default is red
             #[cfg(feature = "full-autonomous")]
             bytecode: reverse_in_place(config::autonomous::FULL_AUTO.to_vec()),
-            #[cfg(not(feature = "full-autonomous"))]
-            bytecode: reverse_in_place(config::autonomous::MATCH_AUTO.to_vec()),
+            #[cfg(feature = "blue")]
+            bytecode: reverse_in_place(config::autonomous::RED_AUTO.to_vec()),
         } }
 
     fn opcontrol(&mut self, context: Context) -> bool {      
