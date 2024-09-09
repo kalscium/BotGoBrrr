@@ -13,11 +13,8 @@ version = "3.2"
 # path = "../../safe-vex"
 
 [features]
-default = ["red"]
 record = []
 full-autonomous = []
-red = [] # competitions as the red alliance
-blue = [] # competitions as the blue alliance
 
 [profile.release]
 incremental = false
