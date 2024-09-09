@@ -60,6 +60,12 @@ pub struct Robot {
             ByteCode::Intake { voltage: 0 },
             ByteCode::Solenoid(false),
         ], &mut self.drive_train, &mut self.belt, &mut self.intake, &mut self.solenoid);
+
+        // update the controller screen and also haptics
+        let screen = &mut context.peripherals.master_controller.screen;
+        screen.clear();
+        screen.print(0, 0, &format!("tick: {};", context.tick));
+        screen.print(1, 0, &format!("solanoid: {};", self.solenoid_active));
         
         // get drive-inst
         let drive_inst = controls::gen_drive_inst(&context.controller);
@@ -82,10 +88,7 @@ pub struct Robot {
                 self.solenoid_tick = context.tick;
                 self.solenoid_active = !self.solenoid_active;
 
-                // update controller screen and also haptics
-                let screen = &mut context.peripherals.master_controller.screen;
-                screen.clear();
-                screen.print(0, 0, &format!("is_solanoid_active: {};", self.solenoid_active));
+                // update haptics
                 if self.solenoid_active {
                     screen.rumble(".");
                 }
