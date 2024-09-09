@@ -65,7 +65,7 @@ pub struct Robot {
         let drive_inst = controls::gen_drive_inst(&context.controller);
 
         // get the conveyor belt instruction
-        let belt_inst = match (context.controller.r1, context.controller.r2) {
+        let belt_inst = match (context.controller.r2, context.controller.r1) {
             (true, false) => ByteCode::Belt { voltage: config::drive::BELT_VOLTAGE },
             (false, true) => ByteCode::Belt { voltage: -config::drive::BELT_VOLTAGE },
             (_, _) => ByteCode::Belt { voltage: 0 },

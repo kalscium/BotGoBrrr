@@ -17,7 +17,7 @@ pub fn gen_drive_inst(controller: &Controller) -> [ByteCode; 2]  {
     let (ldr, rdr) = match (j1.x_larger(), j1.x.is_positive(), j1.y.is_positive(), reversed) {
         // move forward
         (false, _, true, false) => (j1yv, j1yv), // normal
-        (false, _, true, true) => (j1yv, j1yv), // while reversed (driving backwards)
+        (false, _, true, true) => (-j1yv, -j1yv), // while reversed (driving backwards)
         // move backwards
         (false, _, false, false) => (-j1yv, -j1yv), // normal
         (false, _, false, true) => (j1yv, j1yv), // while reversed (driving backwards)
