@@ -1,4 +1,4 @@
-use alloc::{boxed::Box, vec::Vec, vec};
+use alloc::{boxed::Box, format, {vec::Vec, vec}};
 use safe_vex::{adi::new_adi_digital_output, bot::Bot, context::Context, maybe::Maybe, motor::Motor, port::PortManager, vex_rt::{adi::AdiDigitalOutput, peripherals::Peripherals}};
 use crate::{append_slice, bytecode::{execute, ByteCode}, config, controls, drive_train::DriveTrain, reverse_in_place};
 #[cfg(feature = "record")]
@@ -81,6 +81,15 @@ pub struct Robot {
             if context.controller.x && context.tick - self.solenoid_tick >= config::SOLENOID_DELAY { // make sure the button is held down and only every 2 ticks
                 self.solenoid_tick = context.tick;
                 self.solenoid_active = !self.solenoid_active;
+
+                // update controller screen and also haptics
+                let screen = &mut context.peripherals.master_controller.screen;
+                screen.clear();
+                screen.print(0, 0, &format!("is_solanoid_active: {};", self.solenoid_active));
+                if self.solenoid_active {
+                    screen.rumble(".");
+                }
+                
                 self.solenoid_active
             } else { self.solenoid_active }
         );
