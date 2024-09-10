@@ -29,10 +29,10 @@ pub fn gen_drive_inst(j1: JoyStick, reversed: bool, precise: bool, driving_state
     if let DrivingState::Neutral = *driving_state {
         if j1.y == 0 { // do nothing
             *driving_state = DrivingState::Neutral;
-        } else if j1.y.is_positive() { // driving forwards now
-            *driving_state = DrivingState::Forwards;
-        } else if j1.y.is_negative() { // driving backwards now
+        } else if j1.y <= -(config::STICK_RESET_THRESHOLD as i8 / 2) { // driving backwards now
             *driving_state = DrivingState::Backwards;
+        } else { // driving forwards now
+            *driving_state = DrivingState::Forwards;
         }
     }
 
