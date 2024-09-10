@@ -3,16 +3,10 @@ use crate::{bytecode::ByteCode, config, powf};
 
 /// generates the drive instruction from the controller smoothly
 #[inline]
-pub fn gen_drive_inst(controller: &Controller, forwards: &mut bool) -> [ByteCode; 2]  {
+pub fn gen_drive_inst(controller: &Controller) -> [ByteCode; 2]  {
     // get joystick values and reverse values
     let j1 = &controller.left_stick;
-    let reverse = controller.l1;
-
-    if j1.x.abs() as u8 <= config::STICK_RESET_THRESHOLD {
-        *forwards = false;
-    } else if j1.y.is_positive() {
-        *forwards = true;
-    }
+    let reversed = controller.l1;
 
     // get the calculated voltage for the x of j1
     let j1xv = (1024.0 * powf(config::DMN as f64, j1.x.abs() as f64) - 1024.0)
@@ -20,9 +14,8 @@ pub fn gen_drive_inst(controller: &Controller, forwards: &mut bool) -> [ByteCode
         * if controller.l2 { config::drive::PRECISE_MULTIPLIER as f64 } else { 1.0 } // precise turning
         * config::drive::TURN_SPEED as f64; // reduce turning speed
 
-    // get the calculated voltage for the y of j1
+    // get the calculated absolute voltage for the y of j1
     let j1yv = (1024.0 * powf(config::DMN as f64, j1.y.abs() as f64) - 1024.0)
-        * if j1.y.is_negative() { -1.0 } else { 1.0 } // un-absolute the numbers
         * if controller.l2 { config::drive::PRECISE_MULTIPLIER as f64 } else { 1.0 }; // precise driving
 
     // calculate the left and right drives according to arcade controls
@@ -31,13 +24,15 @@ pub fn gen_drive_inst(controller: &Controller, forwards: &mut bool) -> [ByteCode
         (j1yv + j1xv).clamp(-12000.0, 12000.0),
     );
 
-    // swap the right and left drives if you are driving backwards or reversed while driving forwards
-    if j1.y.is_positive() && reverse || !*forwards && j1.y.is_negative() {
-        core::mem::swap(&mut ldr, &mut rdr);
+    // un-absolute the y-axis (if the y axis was negative then flip the signs of left and right drive)
+    if j1.y.is_negative() {
+        ldr = -ldr;
+        rdr = -rdr;
     }
 
-    // if the robot is driving forwards but the joystick is pointing down then flip the sign
-    if *forwards && j1.x == 0 {
+    // swap the left and right drives and flip the sign if the robot is driving in reverse
+    if reversed {
+        core::mem::swap(&mut ldr, &mut rdr);
         ldr = -ldr;
         rdr = -rdr;
     }
