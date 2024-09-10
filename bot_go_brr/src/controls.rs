@@ -16,6 +16,7 @@ pub fn gen_drive_inst(controller: &Controller) -> [ByteCode; 2]  {
 
     // get the calculated absolute voltage for the y of j1
     let j1yv = (1024.0 * powf(config::DMN as f64, j1.y.abs() as f64) - 1024.0)
+        * if j1.y.is_negative() { -1.0 } else { 1.0 } // un-absolute the numbers
         * if controller.l2 { config::drive::PRECISE_MULTIPLIER as f64 } else { 1.0 }; // precise driving
 
     // calculate the left and right drives according to arcade controls
@@ -23,12 +24,6 @@ pub fn gen_drive_inst(controller: &Controller) -> [ByteCode; 2]  {
         (j1yv - j1xv).clamp(-12000.0, 12000.0),
         (j1yv + j1xv).clamp(-12000.0, 12000.0),
     );
-
-    // un-absolute the y-axis (if the y axis was negative then flip the signs of left and right drive)
-    if j1.y.is_negative() {
-        ldr = -ldr;
-        rdr = -rdr;
-    }
 
     // swap the left and right drives and flip the sign if the robot is driving in reverse
     if reversed {
