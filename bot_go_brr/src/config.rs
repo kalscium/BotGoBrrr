@@ -53,7 +53,7 @@ pub mod drive {
     pub const TURN_SPEED: f32 = 0.64;
 
     /// The robot's conveyor belt voltage out of `12000`
-    pub const BELT_VOLTAGE: i32 = 5400;
+    pub const BELT_VOLTAGE: i32 = 7680;
     /// The robot's graber motor's voltage out of `12000` when moving down
     pub const GRABER_VOLTAGE_DOWN: i32 = 12000;
     /// The robot's graber motor's voltage out of `12000` when moving up
@@ -68,7 +68,8 @@ pub const SOLENOID_PORT: AdiPort = AdiPort::A;
 pub const SOLENOID_DELAY: u16 = 8;
 
 /// Daniel's magic number for the joysticks
-pub const DMN: f32 = 1.0195691192404441; // 12000 = 1024a^{x} - 1024
+#[allow(clippy::excessive_precision)]
+pub const DMN: f32 = 1.02022606038826; // 12000 = 1024a^{127} - 1024
 
 /// The threshold for being 'zero' for the controller joystick (to combat stick drift) (used for robot controls)
 pub const STICK_RESET_THRESHOLD: u8 = 32;

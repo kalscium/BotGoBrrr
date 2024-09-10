@@ -20,7 +20,7 @@ pub fn gen_drive_inst(controller: &Controller, driving_state: &mut DrivingState)
     let reversed = controller.l1;
 
     // set the driving state to neutral if the stick is within the stick reset threshold
-    if j1.x.abs() as u8 <= config::STICK_RESET_THRESHOLD && j1.y.abs() as u8 <= config::STICK_RESET_THRESHOLD { // required for the next part to work
+    if j1.x.unsigned_abs()<= config::STICK_RESET_THRESHOLD && j1.y.unsigned_abs() <= config::STICK_RESET_THRESHOLD { // required for the next part to work
         *driving_state = DrivingState::Neutral;
     }
 
