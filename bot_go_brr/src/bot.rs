@@ -16,6 +16,9 @@ pub struct Robot {
     intake: Maybe<Motor>, /// The pneumatics solenoid for the goal grabber
     solenoid: Maybe<AdiDigitalOutput>,
 
+    // If the robot is currently driving forwards
+    driving_forwards: bool,
+
     /// If the solenoid is active or not
     solenoid_active: bool,
     /// The last tick that the solenoid was active
@@ -35,6 +38,8 @@ pub struct Robot {
             record: Record::new(),
             drive_train: DriveTrain::new(port_manager),
 
+            driving_forwards: false,
+            
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::BELT.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::BELT.reverse) }.ok())),
             intake: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::INTAKE.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INTAKE.reverse) }.ok())),
             solenoid: Maybe::new(Box::new(|| unsafe { new_adi_digital_output(config::SOLENOID_PORT) }.ok())),
@@ -68,7 +73,7 @@ pub struct Robot {
         screen.print(1, 0, &format!("solanoid: {};", self.solenoid_active));
         
         // get drive-inst
-        let drive_inst = controls::gen_drive_inst(&context.controller);
+        let drive_inst = controls::gen_drive_inst(&context.controller, &mut self.driving_forwards);
 
         // get the conveyor belt instruction
         let belt_inst = match (context.controller.r2, context.controller.r1) {

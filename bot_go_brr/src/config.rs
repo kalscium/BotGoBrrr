@@ -67,11 +67,11 @@ pub const SOLENOID_PORT: AdiPort = AdiPort::A;
 /// A tick delay of the solanoid
 pub const SOLENOID_DELAY: u16 = 8;
 
-/// The minimum amount of activation the controller has to have to be activated
-pub const CONTROLLER_STICK_MIN: u8 = 10;
-
 /// Daniel's magic number for the joysticks
 pub const DMN: f32 = 1.0195691192404441; // 12000 = 1024a^{x} - 1024
+
+/// The threshold for being 'zero' for the controller joystick (to combat stick drift) (used for robot controls)
+pub const STICK_RESET_THRESHOLD: u8 = 32;
 
 pub mod autonomous {
     use include_tt::include_tt;
