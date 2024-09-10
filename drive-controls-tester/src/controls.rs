@@ -1,5 +1,4 @@
-use safe_vex::controller::Controller;
-use crate::{bytecode::ByteCode, config, powf};
+use crate::config;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i8)]
@@ -12,13 +11,15 @@ pub enum DrivingState {
     Neutral = 0,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct JoyStick {
+    pub x: i8,
+    pub y: i8,
+}
+
 /// generates the drive instruction from the controller smoothly
 #[inline]
-pub fn gen_drive_inst(controller: &Controller, driving_state: &mut DrivingState) -> [ByteCode; 2]  {
-    // get joystick values and reverse values
-    let j1 = &controller.left_stick;
-    let reversed = controller.l1;
-
+pub fn gen_drive_inst(j1: JoyStick, reversed: bool, precise: bool, driving_state: &mut DrivingState) -> (i32, i32)  {
     // set the driving state to neutral if the stick is within the stick reset threshold
     if j1.x.unsigned_abs()<= config::STICK_RESET_THRESHOLD && j1.y.unsigned_abs() <= config::STICK_RESET_THRESHOLD { // required for the next part to work
         *driving_state = DrivingState::Neutral;
@@ -36,16 +37,16 @@ pub fn gen_drive_inst(controller: &Controller, driving_state: &mut DrivingState)
     }
 
     // get the calculated voltage for the x of j1
-    let mut j1xv = (1024.0 * powf(config::DMN as f64, j1.x.abs() as f64) - 1024.0)
+    let mut j1xv = (1024.0 * (config::DMN as f64).powf(j1.x.abs() as f64) - 1024.0)
         * if j1.x.is_negative() { -1.0 } else { 1.0 } // un-absolute the numbers
         * config::drive::TURN_SPEED as f64; // reduce turning speed
 
     // get the calculated absolute voltage for the y of j1
-    let mut j1yv = (1024.0 * powf(config::DMN as f64, j1.y.abs() as f64) - 1024.0)
+    let mut j1yv = (1024.0 * (config::DMN as f64).powf(j1.y.abs() as f64) - 1024.0)
         * if j1.y.is_negative() { -1.0 } else { 1.0 }; // un-absolute the numbers
 
     // reduce the voltages / speeds of the motors if precise driving is on
-    if controller.l2 {
+    if precise {
         j1xv *= config::drive::PRECISE_MULTIPLIER as f64;
         j1yv *= config::drive::PRECISE_MULTIPLIER as f64;
     }
@@ -75,8 +76,8 @@ pub fn gen_drive_inst(controller: &Controller, driving_state: &mut DrivingState)
     }
 
     // return the left and right drives
-    [
-        ByteCode::LeftDrive { voltage: ldr as i32 },
-        ByteCode::RightDrive { voltage: rdr as i32 },
-    ]
+    (
+        ldr as i32,
+        rdr as i32,
+    )
 }
