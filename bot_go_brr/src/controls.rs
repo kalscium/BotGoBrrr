@@ -36,15 +36,19 @@ pub fn gen_drive_inst(controller: &Controller, driving_state: &mut DrivingState)
     }
 
     // get the calculated voltage for the x of j1
-    let j1xv = (1024.0 * powf(config::DMN as f64, j1.x.abs() as f64) - 1024.0)
+    let mut j1xv = (1024.0 * powf(config::DMN as f64, j1.x.abs() as f64) - 1024.0)
         * if j1.x.is_negative() { -1.0 } else { 1.0 } // un-absolute the numbers
-        * if controller.l2 { config::drive::PRECISE_MULTIPLIER as f64 } else { 1.0 } // precise turning
         * config::drive::TURN_SPEED as f64; // reduce turning speed
 
     // get the calculated absolute voltage for the y of j1
-    let j1yv = (1024.0 * powf(config::DMN as f64, j1.y.abs() as f64) - 1024.0)
-        * if j1.y.is_negative() { -1.0 } else { 1.0 } // un-absolute the numbers
-        * if controller.l2 { config::drive::PRECISE_MULTIPLIER as f64 } else { 1.0 }; // precise driving
+    let mut j1yv = (1024.0 * powf(config::DMN as f64, j1.y.abs() as f64) - 1024.0)
+        * if j1.y.is_negative() { -1.0 } else { 1.0 }; // un-absolute the numbers
+
+    // reduce the voltages / speeds of the motors if precise driving is on
+    if controller.l2 {
+        j1xv *= config::drive::PRECISE_MULTIPLIER as f64;
+        j1yv *= config::drive::PRECISE_MULTIPLIER as f64;
+    }
 
     // calculate the left and right drives according to arcade controls
     let (mut ldr, mut rdr) = (
