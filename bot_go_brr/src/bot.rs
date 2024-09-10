@@ -1,6 +1,6 @@
 use alloc::{boxed::Box, format, {vec::Vec, vec}};
 use safe_vex::{adi::new_adi_digital_output, bot::Bot, context::Context, maybe::Maybe, motor::Motor, port::PortManager, vex_rt::{adi::AdiDigitalOutput, peripherals::Peripherals}};
-use crate::{append_slice, bytecode::{execute, ByteCode}, config, controls, drive_train::DriveTrain, reverse_in_place};
+use crate::{append_slice, bytecode::{execute, ByteCode}, config, controls::{self, DrivingState}, drive_train::DriveTrain, reverse_in_place};
 #[cfg(feature = "record")]
 use crate::record::Record;
 
@@ -15,6 +15,9 @@ pub struct Robot {
     /// The motor of the robot's goal scorer (for once the conveyor places the donut on the goal)
     intake: Maybe<Motor>, /// The pneumatics solenoid for the goal grabber
     solenoid: Maybe<AdiDigitalOutput>,
+
+    /// The current driving state of the robot (for controls)
+    driving_state: DrivingState,
 
     /// If the solenoid is active or not
     solenoid_active: bool,
@@ -38,6 +41,8 @@ pub struct Robot {
             belt: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::BELT.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::BELT.reverse) }.ok())),
             intake: Maybe::new(Box::new(|| unsafe { Motor::new(config::drive::INTAKE.port, config::drive::GEAR_RATIO, config::drive::UNIT, config::drive::INTAKE.reverse) }.ok())),
             solenoid: Maybe::new(Box::new(|| unsafe { new_adi_digital_output(config::SOLENOID_PORT) }.ok())),
+
+            driving_state: DrivingState::Neutral,
 
             // solenoid fields
             solenoid_active: false,
@@ -68,7 +73,7 @@ pub struct Robot {
         screen.print(1, 0, &format!("solanoid: {};", self.solenoid_active));
         
         // get drive-inst
-        let drive_inst = controls::gen_drive_inst(&context.controller);
+        let drive_inst = controls::gen_drive_inst(&context.controller, &mut self.driving_state);
 
         // get the conveyor belt instruction
         let belt_inst = match (context.controller.r2, context.controller.r1) {
