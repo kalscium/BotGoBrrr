@@ -39,7 +39,7 @@ fn main() {
         }
 
         // get voltages
-        let (ldr, rdr) = controls::gen_drive_inst(joystick, reversed, precise, &mut driving_state);
+        let (ldr, rdr) = controls::gen_drive_inst(joystick, reversed, precise);
 
         // clear screen
         print!("{}{}", termion::clear::All, termion::cursor::Goto(1, 1));

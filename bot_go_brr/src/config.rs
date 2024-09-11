@@ -71,9 +71,6 @@ pub const SOLENOID_DELAY: u16 = 8;
 #[allow(clippy::excessive_precision)]
 pub const DMN: f32 = 1.02022606038826; // 12000 = 1024a^{127} - 1024
 
-/// The threshold for being 'zero' for the controller joystick (to combat stick drift) (used for robot controls)
-pub const STICK_RESET_THRESHOLD: u8 = 32;
-
 pub mod autonomous {
     use include_tt::include_tt;
 
