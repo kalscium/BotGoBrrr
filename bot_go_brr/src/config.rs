@@ -1,5 +1,3 @@
-use safe_vex::adi::AdiPort;
-
 macro_rules! motor_config {
     ($(#[$meta:meta])* $motor:ident: $port:expr, $reverse:expr;) => {
         /// **(motor configuration)**
@@ -35,37 +33,21 @@ pub mod drive {
 
     motor_config! {
         /// Top-left drive-train motor
-        L1: 15, false;
+        L1: 1, false;
         /// Bottom-left drive-train motor
-        L2: 18, false;
+        L2: 10, false;
         /// Top-right drive-train motor
-        R1: 9, true;
+        R1: 11, true;
         /// Bottom-right drive-train motor
-        R2: 4, true;
-
-        /// Belt motor
-        BELT: 12, false;
-        /// Intake motor
-        INTAKE: 10, false;
+        R2: 20, true;
     }
 
     /// the robot's turning speed (as a multiplier)
     pub const TURN_SPEED: f32 = 0.64;
 
-    /// The robot's conveyor belt voltage out of `12000`
-    pub const BELT_VOLTAGE: i32 = 7680;
-    /// The robot's graber motor's voltage out of `12000` when moving down
-    pub const GRABER_VOLTAGE_DOWN: i32 = 12000;
-    /// The robot's graber motor's voltage out of `12000` when moving up
-    pub const GRABER_VOLTAGE_UP: i32 = 2880;
     /// the multiplier for precise speed
     pub const PRECISE_MULTIPLIER: f32 = 0.60;
 }
-
-/// The adi port of the pneumatics solanoid
-pub const SOLENOID_PORT: AdiPort = AdiPort::A;
-/// A tick delay of the solanoid
-pub const SOLENOID_DELAY: u16 = 8;
 
 /// Daniel's magic number for the joysticks
 #[allow(clippy::excessive_precision)]
