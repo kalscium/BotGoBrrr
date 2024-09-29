@@ -1,7 +1,8 @@
 #include "../include/main.h"
+#include "bytecode.h"
 
 void disabled() {}
 
-void autonomous() {}
-
 void opcontrol() {}
+
+void autonomous() {}
