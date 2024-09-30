@@ -43,6 +43,12 @@ void cycle(uint32_t tick, struct bc_stack_node **bytecode_stack, bool *solenoid_
         /* get drive instructions */
         gen_drive_inst(bytecode_stack);
 
+        /* get belt and intake instructions */
+        gen_belt_intake_inst(bytecode_stack);
+
+        /* get solenoid instructions */
+        gen_solenoid_inst(tick, solenoid_active, solenoid_tick, bytecode_stack);
+
         /* execute all instructions on the bytecode stack */
         struct optional_bytecode inst = bc_stack_pop(bytecode_stack);
         while (inst.is_some) {

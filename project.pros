@@ -1,7 +1,7 @@
 {
     "py/object": "pros.conductor.project.Project",
     "py/state": {
-        "project_name": "botgoxyii",
+        "project_name": "bot_go_brr v1.0.0-alpha C EDITION",
         "target": "v5",
         "templates": {
             "kernel": {
@@ -231,7 +231,10 @@
                 "version": "8.3.8"
             }
         },
-        "upload_options": {},
+        "upload_options": {
+            "icon": "X",
+            "slot": 1
+        },
         "use_early_access": false
     }
 }

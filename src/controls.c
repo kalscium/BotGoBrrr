@@ -57,3 +57,50 @@ void gen_drive_inst(struct bc_stack_node **bytecode_stack)
         bc_stack_push(bytecode_stack, ldri);
         bc_stack_push(bytecode_stack, rdri);
 }
+
+void gen_belt_intake_inst(struct bc_stack_node **bytecode_stack)
+{
+        /* Get the belt & intake instruction */
+        if (controller_get_digital(E_CONTROLLER_MASTER, E_CONTROLLER_DIGITAL_R2)) {
+                /* belt */
+                struct bytecode inst = { BC_BELT, ROBOT_BELT_VOLTAGE };
+                bc_stack_push(bytecode_stack, inst);
+
+                /* intake */
+                inst.type = BC_INTAKE;
+                bc_stack_push(bytecode_stack, inst);
+        } else if (controller_get_digital(E_CONTROLLER_MASTER, E_CONTROLLER_DIGITAL_R1)) {
+                /* belt */
+                struct bytecode inst = { BC_BELT, -ROBOT_BELT_VOLTAGE };
+                bc_stack_push(bytecode_stack, inst);
+
+                /* intake */
+                inst.type = BC_INTAKE;
+                bc_stack_push(bytecode_stack, inst);
+        } else {
+                /* belt */
+                struct bytecode inst = { BC_BELT, 0 };
+                bc_stack_push(bytecode_stack, inst);
+
+                /* intake */
+                inst.type = BC_INTAKE;
+                bc_stack_push(bytecode_stack, inst);
+        }
+}
+
+void gen_solenoid_inst(uint32_t tick, bool *solenoid_active, uint32_t *solenoid_tick, struct bc_stack_node **bytecode_stack)
+{
+        /* make sure the button is held down and only every `SOLENOID_DELAY` ticks */
+        if (controller_get_digital(E_CONTROLLER_MASTER, E_CONTROLLER_DIGITAL_X) && tick - *solenoid_tick >= SOLENOID_DELAY) {
+                *solenoid_tick = tick;
+                *solenoid_active = !solenoid_active;
+
+                /* update haptics */
+                if (*solenoid_active)
+                        controller_rumble(E_CONTROLLER_MASTER, ".");
+
+                /* push solenoid inst */
+                struct bytecode inst = { BC_SOLENOID, *solenoid_active };
+                bc_stack_push(bytecode_stack, inst);
+        }
+}
