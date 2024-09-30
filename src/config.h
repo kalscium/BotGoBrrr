@@ -52,9 +52,11 @@ extern const double ROBOT_PRECISE_MULTIPLIER;
 extern const double ROBOT_DMN;
 
 /*
- * The adi port of the pneumatics solanoid and the tick delay of that solanoid
+ * The adi port of the pneumatics solenoid and the tick delay of that solanoid
  * 
- * Used for stopping solanoid from just turning on and off every tick
+ * Used for stopping solenoid from just turning on and off every tick
  */
+ extern const uint8_t SOLENOID_PORT;
+ extern const uint32_t SOLENOID_DELAY;
 
 #endif

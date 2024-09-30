@@ -2,6 +2,7 @@
 #include "../include/pros/rtos.h"
 #include "config.h"
 #include "../include/pros/motors.h"
+#include "../include/pros/adi.h"
 
 void execute(struct bytecode inst)
 {
@@ -23,6 +24,8 @@ void execute(struct bytecode inst)
         case BC_INTAKE:
                 motor_move_voltage(MOTOR_CONFIG_INTAKE.port, inst.value * (MOTOR_CONFIG_INTAKE.reverse ? -1: 1));
                 break;
-        default: break;
+        case BC_SOLENOID:
+                adi_digital_write(SOLENOID_PORT, inst.value);
+                break;
         }
 }

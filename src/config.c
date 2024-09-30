@@ -15,3 +15,7 @@ const double ROBOT_TURN_SPEED = 0.64;
 const int32_t ROBOT_BELT_VOLTAGE = 760;
 const double ROBOT_PRECISE_MULTIPLIER = 0.60;
 const double ROBOT_DMN = 1.02022606038826; /* 12000 = 1024a^{127} */
+
+const uint8_t SOLENOID_PORT = 1;
+const uint32_t SOLENOID_DELAY = 8;
+
