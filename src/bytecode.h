@@ -1,16 +1,19 @@
 #ifndef BYTECODE_H_
 #define BYTECODE_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 /*
  * A single bytecode instruction type for the robot
  */
 enum bytecode_type {
-        CYCLE,
-        LEFTDRIVE,
-        RIGHTDRIVE,
-        BELT,
-        INTAKE,
-        SOLENOID,
+        BC_CYCLE,
+        BC_LEFTDRIVE,
+        BC_RIGHTDRIVE,
+        BC_BELT,
+        BC_INTAKE,
+        BC_SOLENOID,
 };
 
 /*
@@ -18,12 +21,12 @@ enum bytecode_type {
  */
 struct bytecode {
         enum bytecode_type type;
-        int value;
+        int32_t value;
 };
 
 /*
- * Executes a piece of bytecode and returns if the program should cycle or not
+ * Executes a bytecode instruction
  */
-bool execute(struct bytecode inst);
+void execute(struct bytecode inst);
 
 #endif

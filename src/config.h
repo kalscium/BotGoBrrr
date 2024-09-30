@@ -13,6 +13,11 @@ struct motor_config {
 };
 
 /*
+ * How long a single robot bytecode execution cycle 'tick'/delay is in milliseconds (1000ms in 1s)
+ */
+extern const uint32_t ROBOT_TICK_DELAY;
+
+/*
  * Motor configurations for the main four drive motors
  */
 extern const struct motor_config MOTOR_CONFIG_L1;
@@ -34,7 +39,7 @@ extern const double ROBOT_TURN_SPEED;
 /*
  * The robot's conveyor belt voltage out of `12000`
  */
-extern const int ROBOT_BELT_VOLTAGE;
+extern const int32_t ROBOT_BELT_VOLTAGE;
 
 /*
  * The mulitplier for the robot's precise movement speed
