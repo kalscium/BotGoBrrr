@@ -1,7 +1,9 @@
 #include "../include/main.h"
 #include "../include/pros/rtos.h"
+#include "bytecode.h"
 #include "config.h"
 #include "bytecode_stack.h"
+#include "controls.h"
 
 /*
  * An individual cycle during opcontrol
@@ -36,5 +38,15 @@ void opcontrol()
         }
 }
 
-void cycle(uint32_t tick, struct bc_stack_node **bytecode_stack, bool *solenoid_active, uint32_t *solenoid_tick) {
+void cycle(uint32_t tick, struct bc_stack_node **bytecode_stack, bool *solenoid_active, uint32_t *solenoid_tick)
+{
+        /* get drive instructions */
+        gen_drive_inst(bytecode_stack);
+
+        /* execute all instructions on the bytecode stack */
+        struct optional_bytecode inst = bc_stack_pop(bytecode_stack);
+        while (inst.is_some) {
+                bc_execute(inst.inst);
+                inst = bc_stack_pop(bytecode_stack);
+        }
 }

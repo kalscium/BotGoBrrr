@@ -27,6 +27,6 @@ struct bytecode {
 /*
  * Executes a bytecode instruction
  */
-void execute(struct bytecode inst);
+void bc_execute(struct bytecode inst);
 
 #endif

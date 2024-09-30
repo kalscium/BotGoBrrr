@@ -4,7 +4,7 @@
 #include "../include/pros/motors.h"
 #include "../include/pros/adi.h"
 
-void execute(struct bytecode inst)
+void bc_execute(struct bytecode inst)
 {
         switch (inst.type) {
         case BC_CYCLE:
