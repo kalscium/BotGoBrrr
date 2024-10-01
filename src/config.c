@@ -5,8 +5,10 @@ const uint32_t ROBOT_TICK_DELAY = 50;
 
 const struct motor_config MOTOR_CONFIG_L1 = { 15, false };
 const struct motor_config MOTOR_CONFIG_L2 = { 18, false };
+const struct motor_config MOTOR_CONFIG_L3 = { 0, false };
 const struct motor_config MOTOR_CONFIG_R1 = { 9, true };
 const struct motor_config MOTOR_CONFIG_R2 = { 4, true };
+const struct motor_config MOTOR_CONFIG_R3 = { 5, true };
 
 const struct motor_config MOTOR_CONFIG_BELT = { 12, false };
 const struct motor_config MOTOR_CONFIG_INTAKE = { 10, false };

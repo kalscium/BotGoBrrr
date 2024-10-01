@@ -13,10 +13,12 @@ void bc_execute(struct bytecode inst)
         case BC_LEFTDRIVE:
                 motor_move_voltage(MOTOR_CONFIG_L1.port, inst.value * (MOTOR_CONFIG_L1.reverse ? -1: 1));
                 motor_move_voltage(MOTOR_CONFIG_L2.port, inst.value * (MOTOR_CONFIG_L2.reverse ? -1: 1));
+                motor_move_voltage(MOTOR_CONFIG_L3.port, inst.value * (MOTOR_CONFIG_L3.reverse ? -1: 1));
                 break;
         case BC_RIGHTDRIVE:
                 motor_move_voltage(MOTOR_CONFIG_R1.port, inst.value * (MOTOR_CONFIG_R1.reverse ? -1: 1));
                 motor_move_voltage(MOTOR_CONFIG_R2.port, inst.value * (MOTOR_CONFIG_R2.reverse ? -1: 1));
+                motor_move_voltage(MOTOR_CONFIG_R3.port, inst.value * (MOTOR_CONFIG_R3.reverse ? -1: 1));
                 break;
         case BC_BELT:
                 motor_move_voltage(MOTOR_CONFIG_BELT.port, inst.value * (MOTOR_CONFIG_BELT.reverse ? -1: 1));

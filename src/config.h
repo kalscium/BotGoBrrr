@@ -22,8 +22,10 @@ extern const uint32_t ROBOT_TICK_DELAY;
  */
 extern const struct motor_config MOTOR_CONFIG_L1;
 extern const struct motor_config MOTOR_CONFIG_L2;
+extern const struct motor_config MOTOR_CONFIG_L3; /* the additional motor */
 extern const struct motor_config MOTOR_CONFIG_R1;
 extern const struct motor_config MOTOR_CONFIG_R2;
+extern const struct motor_config MOTOR_CONFIG_R3; /* the additional motor */
 
 /*
  * Motor configurations for the belt and intake
