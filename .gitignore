@@ -6,6 +6,9 @@
 *.bin
 *.elf
 
+# Rust stuff
+bot_go_brr/
+
 # PROS
 bin/
 .vscode/
