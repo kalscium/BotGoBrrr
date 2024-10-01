@@ -44,8 +44,9 @@ struct optional_bytecode bc_stack_pop(struct bc_stack_node **head_ref)
 
         /* extract the inst, free the old node, set the head pointer to the next node */
         struct bytecode inst = (*head_ref)->inst;
+        struct bc_stack_node *next = (*head_ref)->next;
         free(*head_ref);
-        *head_ref = (*head_ref)->next;
+        *head_ref = next;
 
         /* return the inst as some */
         struct optional_bytecode some = {

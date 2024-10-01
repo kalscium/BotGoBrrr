@@ -25,6 +25,7 @@ void bc_execute(struct bytecode inst)
                 motor_move_voltage(MOTOR_CONFIG_INTAKE.port, inst.value * (MOTOR_CONFIG_INTAKE.reverse ? -1: 1));
                 break;
         case BC_SOLENOID:
+                adi_port_set_config(SOLENOID_PORT, E_ADI_DIGITAL_OUT);
                 adi_digital_write(SOLENOID_PORT, inst.value);
                 break;
         }

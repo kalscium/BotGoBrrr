@@ -12,7 +12,7 @@ const struct motor_config MOTOR_CONFIG_BELT = { 12, false };
 const struct motor_config MOTOR_CONFIG_INTAKE = { 10, false };
 
 const double ROBOT_TURN_SPEED = 0.64;
-const int32_t ROBOT_BELT_VOLTAGE = 760;
+const int32_t ROBOT_BELT_VOLTAGE = 7600;
 const double ROBOT_PRECISE_MULTIPLIER = 0.60;
 const double ROBOT_DMN = 1.02022606038826; /* 12000 = 1024a^{127} */
 

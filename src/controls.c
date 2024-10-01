@@ -25,11 +25,11 @@ void gen_drive_inst(struct bc_stack_node **bytecode_stack)
 
         /* get the calculated voltage for the x of j1 */
         double j1xv = (1024.0 * pow(ROBOT_DMN, (double) abs(j1x)) - 1024.0)
-                * j1x < 0 ? -1.0: 1.0 /* unabsolute the numbers */
+                * (j1x < 0 ? -1.0: 1.0) /* unabsolute the numbers */
                 * ROBOT_TURN_SPEED; /* reduce turning speed */
 
         /* get the calculated voltage for the y of j1 */
-        double j1yv = (1024.0 * pow(ROBOT_DMN, (double) abs(j1y)) - 1024.0) * j1y < 0 ? -1.0: 1.0;
+        double j1yv = (1024.0 * pow(ROBOT_DMN, (double) abs(j1y)) - 1024.0) * (j1y < 0 ? -1.0: 1.0);
 
         /* reduce the voltages / speeds of the motors if precise driving is on */
         if (controller_get_digital(E_CONTROLLER_MASTER, E_CONTROLLER_DIGITAL_L2)) {
@@ -53,7 +53,7 @@ void gen_drive_inst(struct bc_stack_node **bytecode_stack)
 
         /* push the left and right drive bytecode instructions */
         struct bytecode ldri = { BC_LEFTDRIVE, (int32_t) ldr };
-        struct bytecode rdri = { BC_LEFTDRIVE, (int32_t) rdr };
+        struct bytecode rdri = { BC_RIGHTDRIVE, (int32_t) rdr };
         bc_stack_push(bytecode_stack, ldri);
         bc_stack_push(bytecode_stack, rdri);
 }
@@ -93,7 +93,7 @@ void gen_solenoid_inst(uint32_t tick, bool *solenoid_active, uint32_t *solenoid_
         /* make sure the button is held down and only every `SOLENOID_DELAY` ticks */
         if (controller_get_digital(E_CONTROLLER_MASTER, E_CONTROLLER_DIGITAL_X) && tick - *solenoid_tick >= SOLENOID_DELAY) {
                 *solenoid_tick = tick;
-                *solenoid_active = !solenoid_active;
+                *solenoid_active = !*solenoid_active;
 
                 /* update haptics */
                 if (*solenoid_active)

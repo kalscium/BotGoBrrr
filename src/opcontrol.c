@@ -34,6 +34,7 @@ void opcontrol()
          */
         while (true) {
                 cycle(tick, &bytecode_stack, &solenoid_active, &solenoid_tick);
+                tick++;
                 task_delay_until(&now, ROBOT_TICK_DELAY);
         }
 }
