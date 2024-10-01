@@ -38,10 +38,14 @@ pub mod drive {
         L1: 15, false;
         /// Bottom-left drive-train motor
         L2: 18, false;
+        /// The extra 6th motor on the left side
+        L3: 0, false;
         /// Top-right drive-train motor
         R1: 9, true;
         /// Bottom-right drive-train motor
         R2: 4, true;
+        /// The extra 6th motor on the right side
+        R3: 6, true;
 
         /// Belt motor
         BELT: 12, false;
