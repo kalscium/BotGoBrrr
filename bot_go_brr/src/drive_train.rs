@@ -34,10 +34,10 @@ impl DriveTrain {
         Self {
             l1: Maybe::new(Box::new(|| build_motor(config::drive::L1.port, config::drive::L1.reverse))),
             l2: Maybe::new(Box::new(|| build_motor(config::drive::L2.port, config::drive::L2.reverse))),
-            l3: Maybe::new(Box::new(|| build_motor(config::drive::L2.port, config::drive::L3.reverse))),
+            l3: Maybe::new(Box::new(|| build_motor(config::drive::L3.port, config::drive::L3.reverse))),
             r1: Maybe::new(Box::new(|| build_motor(config::drive::R1.port, config::drive::R1.reverse))),
             r2: Maybe::new(Box::new(|| build_motor(config::drive::R2.port, config::drive::R2.reverse))),
-            r3: Maybe::new(Box::new(|| build_motor(config::drive::R2.port, config::drive::R3.reverse))),
+            r3: Maybe::new(Box::new(|| build_motor(config::drive::R3.port, config::drive::R3.reverse))),
         }
     }
 
@@ -46,6 +46,7 @@ impl DriveTrain {
     pub fn drive_left(&mut self, voltage: i32) {
         self.l1.get().map(|x| x.move_voltage(voltage));
         self.l2.get().map(|x| x.move_voltage(voltage));
+        self.l3.get().map(|x| x.move_voltage(voltage));
     }
 
     /// Sets the voltage right motors of the drive-train
@@ -53,6 +54,7 @@ impl DriveTrain {
     pub fn drive_right(&mut self, voltage: i32) {
         self.r1.get().map(|x| x.move_voltage(voltage));
         self.r2.get().map(|x| x.move_voltage(voltage));
+        self.r3.get().map(|x| x.move_voltage(voltage));
     }
 }
 

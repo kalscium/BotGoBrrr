@@ -50,6 +50,7 @@
               cargo-watch
               rust-analyzer
               gcc-arm-embedded-13
+              bacon
             ];
 
             env = {
