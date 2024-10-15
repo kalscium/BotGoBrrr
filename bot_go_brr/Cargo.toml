@@ -9,7 +9,7 @@ edition = "2021"
 include_tt = "1.0"
 
 [dependencies.safe-vex]
-version = "4.0.0-alpha"
+version = "4.1.0-alpha"
 # path = "/home/kalscium/Github/safe-vex"
 
 [features]
