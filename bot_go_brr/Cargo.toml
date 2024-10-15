@@ -1,6 +1,6 @@
 [package]
 name = "bot_go_brr"
-version = "5.8.0"
+version = "6.0.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -9,8 +9,8 @@ edition = "2021"
 include_tt = "1.0"
 
 [dependencies.safe-vex]
-version = "3.2"
-# path = "../../safe-vex"
+version = "4.0.0-alpha"
+# path = "/home/kalscium/Github/safe-vex"
 
 [features]
 record = []

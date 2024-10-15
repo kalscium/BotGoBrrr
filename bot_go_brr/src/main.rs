@@ -1,7 +1,8 @@
 #![no_std]
 #![no_main]
 
-use bot_go_brr::bot::Robot;
-use safe_vex::entry;
-
-entry!(Robot);
+safe_vex::entry! {
+    initialize: (bot_go_brr::initialize::initialize);
+    opcontrol: (bot_go_brr::opcontrol::opcontrol);
+    autonomous: (bot_go_brr::autonomous::autonomous);
+}
