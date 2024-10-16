@@ -1,0 +1,39 @@
+# GENERAL CONFIGURATIONS
+[general]
+tick_speed = 50
+
+# SOLENOID
+[solenoid]
+port = 1
+delay = 8
+
+# DRIVE CONFIGURATIONS
+[drive]
+turn_multiplier = 0.64
+precise_multiplier = 0.64
+DMN = 1.02022606038826 # 12000 = 1024a^{127}
+
+# DRIVE MOTORS
+[drive.l1]
+port = 1
+reverse = false
+
+[drive.l2]
+port = 2
+reverse = false
+
+[drive.l3]
+port = 3
+reverse = false
+
+[drive.r1]
+port = 4
+reverse = true
+
+[drive.r2]
+port = 5
+reverse = true
+
+[drive.r3]
+port = 6
+reverse = true
