@@ -3,3 +3,4 @@
 pub mod initialize;
 pub mod opcontrol;
 pub mod autonomous;
+pub mod config;
