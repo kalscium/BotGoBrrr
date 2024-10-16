@@ -9,7 +9,7 @@ edition = "2021"
 static-toml = "1.2"
 
 [dependencies.safe-vex]
-version = "4.1.0-alpha"
+version = "4.2.1-alpha"
 # path = "/home/kalscium/Github/safe-vex"
 
 [features]

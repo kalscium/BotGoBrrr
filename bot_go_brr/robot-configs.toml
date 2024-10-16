@@ -2,6 +2,12 @@
 [general]
 tick_speed = 50
 
+# BELT
+[belt]
+port = 1
+reverse = false
+speed = 7440
+
 # SOLENOID
 [solenoid]
 port = 1

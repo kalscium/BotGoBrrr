@@ -628,9 +628,9 @@ checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
 name = "safe-vex"
-version = "4.1.0-alpha"
+version = "4.2.1-alpha"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2eab7f8044766dccd03b0f845dc35a50fb874e25fba6f953d60326800f106c7b"
+checksum = "7504c2fd9f1780edf420abf511a47b09b3437153a13ef8f9f4509d6690e32461"
 dependencies = [
  "bindgen",
  "libc",
