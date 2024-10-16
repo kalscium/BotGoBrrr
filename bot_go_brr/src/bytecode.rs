@@ -1,7 +1,6 @@
 //! Rboot Bytecode Instructions
 
 use safe_vex::{adi, motor};
-
 use crate::config;
 
 /// A single bytecode instruction
