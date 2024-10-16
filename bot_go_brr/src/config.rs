@@ -55,6 +55,11 @@ pub mod motors {
         }
     }
 
+    /// The belt motor
+    pub const BELT: MotorConfig = MotorConfig { port: u8_to_smartport(CONFIGS.belt.port as u8), reverse: CONFIGS.belt.reverse };
+    /// The belt's speed in voltage
+    pub const BELT_SPEED: i32 = CONFIGS.belt.speed as i32;
+
     /// The front left motor
     pub const L1: MotorConfig = MotorConfig { port: u8_to_smartport(CONFIGS.drive.l_1.port as u8), reverse: CONFIGS.drive.l_1.reverse };
     /// The back left motor
