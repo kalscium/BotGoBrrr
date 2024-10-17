@@ -23,7 +23,12 @@ pub fn opcontrol() {
 fn cycle(tick: u32, solenoid_active: &mut bool, solenoid_tick: &mut u32) {
     // get belt instruction
     let belt_inst = controls::belt();
+
+    // get solenoid instruction
     let solenoid_inst = controls::solenoid(tick, solenoid_active, solenoid_tick);
+
+    // get drive instruction
+    let drive_inst = controls::drive();
 
     // execute all generated instructions
     bytecode::execute(belt_inst);

@@ -1,7 +1,7 @@
 //! Functions that both determine the controls of the robot and also generate bytecode insts
 
-use safe_vex::controller::{self, Controller};
-use crate::{bytecode::ByteCode, config};
+use safe_vex::controller::{self, Controller, ControllerAnalog};
+use crate::{bytecode::ByteCode, config, maths::powf};
 
 /// Get the belt bytecode instruction
 pub fn belt() -> ByteCode {
@@ -42,4 +42,26 @@ pub fn solenoid(tick: u32, solenoid_active: &mut bool, solenoid_tick: &mut u32) 
 
     // return the current solenoid state
     ByteCode::Solenoid(*solenoid_active)
+}
+
+/// Get the drive bytecode instruction
+pub fn drive() -> ByteCode {
+    // get the joystick values (from -127..=127)
+    let j1x = controller::get_analog(Controller::Master, ControllerAnalog::LeftX).unwrap_or_default();
+    let j1y = controller::get_analog(Controller::Master, ControllerAnalog::LeftY).unwrap_or_default();
+
+    // get the calculated exponential voltage through "Daniel's Magic Number"
+    let j1xv = (1024.0 * powf(config::DMN, j1x.abs() as f64))
+        * if j1x.is_negative() { -1.0 } else { 1.0 } // unabsolute the numbers
+        * config::TURN_MULTIPLIER; // reduce turning speed
+
+    // get the calculated exponential voltage through "Daniel's Magic Number"
+    let j1yv = (1024.0 * powf(config::DMN, j1y.abs() as f64))
+        * if j1y.is_negative() { -1.0 } else { 1.0 }; // unabsolute the numbers
+
+    // return the clamped drive inst
+    ByteCode::Drive {
+        x: j1xv,
+        y: j1yv,
+    }
 }
