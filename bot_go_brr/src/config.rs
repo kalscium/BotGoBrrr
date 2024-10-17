@@ -16,8 +16,13 @@ pub const DMN: f64 = 1.02022606038826; // 12000 = 1024a^{127};
 pub mod controls {
     use safe_vex::controller::ControllerDigital;
 
+    /// The button to make the belt spin 'upwards'
     pub const BELT_UP: ControllerDigital = ControllerDigital::R2;
+    /// The button to make the belt spin 'downwards'
     pub const BELT_DOWN: ControllerDigital = ControllerDigital::R1;
+
+    /// The button to make the solenoid toggle
+    pub const SOLENOID_TOGGLE: ControllerDigital = ControllerDigital::X;
 }
 
 /// Solenoid Configurations
