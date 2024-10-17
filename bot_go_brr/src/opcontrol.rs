@@ -1,7 +1,7 @@
 //! Opcontrol routine for the robot
 
 use safe_vex::rtos;
-use crate::config;
+use crate::{bytecode, config, controls};
 
 /// The opcontrol routine entrypoint
 pub fn opcontrol() {
@@ -19,7 +19,9 @@ pub fn opcontrol() {
 
 /// An individual opcontrol cycle
 fn cycle(_tick: &mut u32) {
-    /* generate instructions here */
+    // get belt instruction
+    let belt_inst = controls::belt();
 
     // execute all generated instructions
+    bytecode::execute(belt_inst);
 }
