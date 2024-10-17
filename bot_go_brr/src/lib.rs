@@ -5,3 +5,4 @@ pub mod opcontrol;
 pub mod autonomous;
 pub mod config;
 pub mod bytecode;
+pub mod controls;
