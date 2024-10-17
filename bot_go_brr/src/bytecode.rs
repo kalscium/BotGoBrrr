@@ -11,9 +11,9 @@ pub enum ByteCode {
     /// Updates the drive-train's 'goal' position
     Drive {
         /// The `x` value
-        x: i32,
+        x: f64,
         /// The `y` value
-        y: i32,
+        y: f64,
     },
     /// Updates the voltage of the conveyor-belt motor
     Belt(i32),
