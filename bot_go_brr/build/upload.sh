@@ -7,7 +7,7 @@ cat > project.pros << EOL
 {
     "py/object": "pros.conductor.project.Project",
     "py/state": {
-        "project_name": "${NAME} v5",
+        "project_name": "${NAME} v6",
         "target": "v5",
         "templates": {
             "kernel": {
@@ -22,13 +22,13 @@ cat > project.pros << EOL
                 "system_files": [],
                 "target": "v5",
                 "user_files": [],
-                "version": "3.3.1"
+                "version": "4.1.0"
             }
         },
         "upload_options": {
             "icon": "X",
             "slot": 1,
-            "description": "v5 of robot code"
+            "description": "v6 of robot code"
         }
     }
 }
