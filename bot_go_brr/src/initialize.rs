@@ -7,6 +7,7 @@ use crate::config;
 pub fn initialize() {
     // configure the solenoid
     adi::set_config(config::solenoid::PORT, AdiConfig::DigitalOut);
+    adi::set_config(safe_vex::port::AdiPort::H, AdiConfig::DigitalIn);
 
     // calibrate the interial sensor
     if let Err(_) = imu::reset(config::IMU_PORT) {
