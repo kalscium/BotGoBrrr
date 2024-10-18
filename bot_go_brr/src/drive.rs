@@ -5,6 +5,11 @@ use crate::{config, maths};
 
 /// Drives the drive-train based on x and y values
 pub fn drive(x: f64, y: f64) {
+    // if the robot is not currently moving, then reset the inertial sensor
+    if x == 0.0 && y == 0.0 {
+        let _ = imu::tare(config::IMU_PORT);
+    }
+
     // grab the inertial sensor yaw
     let yaw = imu::get_yaw(config::IMU_PORT).unwrap_or_else(|_| {
         safe_vex::io::println!("silent error: couldn't get yaw from imu"); // no silent fails
