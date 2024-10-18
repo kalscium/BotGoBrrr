@@ -6,7 +6,7 @@ use crate::{config, maths};
 /// Drives the drive-train based on x and y values
 pub fn drive(x: f64, y: f64) {
     // if the robot is not currently moving, then reset the inertial sensor
-    if x == 0.0 && y == 0.0 {
+    if x > y {
         let _ = imu::tare(config::IMU_PORT);
     }
 
