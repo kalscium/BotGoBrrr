@@ -36,7 +36,10 @@ pub fn solenoid(tick: u32, solenoid_active: &mut bool, solenoid_tick: &mut u32) 
         *solenoid_tick = tick;
         *solenoid_active = !*solenoid_active; // also makes it so that it returns the new state in the later block
 
-        /* todo: update haptics */
+        // rumble the controller if solenoid is active
+        if *solenoid_active {
+            let _ = controller::rumble(Controller::Master, ".");
+        }
     }
 
     // return the current solenoid state
