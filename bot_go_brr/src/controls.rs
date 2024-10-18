@@ -22,8 +22,7 @@ pub fn belt() -> ByteCode {
     // if there are no belt buttons being hit, make the belt stop
     ByteCode::Belt(0)
 }
-
-/// Get the solenoid bytecode instruction
+ /// Get the solenoid bytecode instruction
 pub fn solenoid(tick: u32, solenoid_active: &mut bool, solenoid_tick: &mut u32) -> ByteCode {
     // if there hasn't been at least `config::solenoid::DELAY` ticks then do nothing
     if tick - *solenoid_tick < config::solenoid::DELAY {
@@ -51,12 +50,12 @@ pub fn drive() -> ByteCode {
     let j1y = controller::get_analog(Controller::Master, ControllerAnalog::LeftY).unwrap_or_default();
 
     // get the calculated exponential voltage through "Daniel's Magic Number"
-    let j1xv = (1024.0 * powf(config::DMN, j1x.abs() as f64))
+    let j1xv = (1024.0 * powf(config::DMN, j1x.abs() as f64) - 1024.0)
         * if j1x.is_negative() { -1.0 } else { 1.0 } // unabsolute the numbers
         * config::TURN_MULTIPLIER; // reduce turning speed
 
     // get the calculated exponential voltage through "Daniel's Magic Number"
-    let j1yv = (1024.0 * powf(config::DMN, j1y.abs() as f64))
+    let j1yv = (1024.0 * powf(config::DMN, j1y.abs() as f64) - 1024.0)
         * if j1y.is_negative() { -1.0 } else { 1.0 }; // unabsolute the numbers
 
     // return the clamped drive inst
