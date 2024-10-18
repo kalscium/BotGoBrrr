@@ -23,3 +23,17 @@ pub fn atan(x: f64) -> f64 {
     // return the nomalised version
     normal
 }
+
+/// Finds the sign number (1 or -1) of an f64
+pub fn signumf(x: f64) -> f64 {
+    if x.is_sign_negative() {
+        -1.0
+    } else {
+        1.0
+    }
+}
+
+/// Finds the absolute value of an f64
+pub fn absf(x: f64) -> f64 {
+    x * -signumf(x)
+}

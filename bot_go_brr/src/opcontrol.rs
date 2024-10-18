@@ -1,7 +1,7 @@
 //! Opcontrol routine for the robot
 
 use safe_vex::rtos;
-use crate::{bytecode, config, controls};
+use crate::{bytecode, config, controls, drive};
 
 /// The opcontrol routine entrypoint
 pub fn opcontrol() {
@@ -28,9 +28,13 @@ fn cycle(tick: u32, solenoid_active: &mut bool, solenoid_tick: &mut u32) {
     let solenoid_inst = controls::solenoid(tick, solenoid_active, solenoid_tick);
 
     // get drive instruction
-    let drive_inst = controls::drive();
+    let drive_inst = match controls::drive() {
+        bytecode::ByteCode::Drive { x, y } => (x, y),
+        _ => unreachable!("drive controls function must output drive bytecode"),
+    };
 
     // execute all generated instructions
+    drive::drive(drive_inst.0, drive_inst.1);
     bytecode::execute(belt_inst);
     bytecode::execute(solenoid_inst);
 }

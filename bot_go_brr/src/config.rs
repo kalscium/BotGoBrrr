@@ -1,5 +1,7 @@
 //! Configurations for the robot
 
+use safe_vex::port::SmartPort;
+
 /// How long (in milliseconds) each 'tick' is
 pub const TICK_SPEED: u32 = 50;
 
@@ -24,6 +26,9 @@ pub mod controls {
     /// The button to make the solenoid toggle
     pub const SOLENOID_TOGGLE: ControllerDigital = ControllerDigital::X;
 }
+
+/// The port of the intertial sensor
+pub const IMU_PORT: SmartPort = SmartPort::Twenty;
 
 /// Solenoid Configurations
 pub mod solenoid {
