@@ -1,6 +1,6 @@
 //! Drive code for the drive-train
 
-use safe_vex::{motor, imu};
+use safe_vex::{imu, motor};
 use crate::{config, maths};
 
 /// Drives the drive-train based on x and y values

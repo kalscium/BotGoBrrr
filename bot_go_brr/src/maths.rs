@@ -35,5 +35,5 @@ pub fn signumf(x: f64) -> f64 {
 
 /// Finds the absolute value of an f64
 pub fn absf(x: f64) -> f64 {
-    x * -signumf(x)
+    x * signumf(x)
 }
