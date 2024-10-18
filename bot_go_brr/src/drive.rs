@@ -6,7 +6,7 @@ use crate::{config, maths};
 /// Drives the drive-train based on x and y values
 pub fn drive(x: f64, y: f64) {
     // if the robot is not currently moving, then reset the inertial sensor
-    if x > y {
+    if maths::absf(x) >= maths::absf(y) {
         let _ = imu::tare(config::IMU_PORT);
     }
 
@@ -61,7 +61,7 @@ pub fn course_correct(x: f64, y: f64, yaw: f64) -> (f64, f64) {
 
     // calculate the course correct based on the difference
     let new_x = diff / 45.0
-        * (maths::absf(x) + maths::absf(y)) / 2.0 // find the average absolute value of x and y
+        * (maths::absf(x) + maths::absf(y) * config::TURN_MULTIPLIER) / 2.0 // find the average absolute value of x and y
         * (maths::signumf(y)); // ???
 
     (new_x, y)
