@@ -8,6 +8,12 @@ edition = "2021"
 [dependencies]
 static-toml = "1.2"
 
+[dependencies.maths]
+path = "../maths"
+
+[dependencies.drive_controls]
+path = "../drive_controls"
+
 [dependencies.safe-vex]
 version = "4.3.1-alpha"
 # path = "/home/kalscium/Github/safe-vex"

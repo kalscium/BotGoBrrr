@@ -10,7 +10,7 @@ pub fn initialize() {
     adi::set_config(safe_vex::port::AdiPort::H, AdiConfig::DigitalIn);
 
     // calibrate the interial sensor
-    if let Err(_) = imu::reset(config::IMU_PORT) {
+    if imu::reset(config::IMU_PORT).is_err() {
         safe_vex::io::println!("silent error: failed to calibrate inertial sensor"); // don't crash
     }
 }
