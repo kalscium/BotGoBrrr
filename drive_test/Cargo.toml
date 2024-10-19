@@ -1,0 +1,11 @@
+[package]
+name = "drive_test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clearscreen = "3.0"
+gilrs = "0.11" # for controller input
+
+[dependencies.drive_controls]
+path = "../drive_controls"
