@@ -76,6 +76,8 @@ dependencies = [
 name = "bot_go_brr"
 version = "6.0.0"
 dependencies = [
+ "drive_controls",
+ "maths",
  "safe-vex",
  "static-toml",
 ]
@@ -273,6 +275,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "drive_controls"
+version = "0.1.0"
+dependencies = [
+ "maths",
+]
+
+[[package]]
 name = "either"
 version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -419,6 +428,10 @@ dependencies = [
  "byteorder",
  "crc",
 ]
+
+[[package]]
+name = "maths"
+version = "0.1.0"
 
 [[package]]
 name = "memchr"

@@ -1,5 +1,9 @@
 //! My own hand-rolled std-less maths library
 
+#![no_std]
+#![allow(internal_features)]
+#![feature(core_intrinsics)]
+
 use core::f64::consts::PI;
 
 /// Raises an `f64` to the power of another `f64`

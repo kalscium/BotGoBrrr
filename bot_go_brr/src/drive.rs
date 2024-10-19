@@ -1,7 +1,7 @@
 //! Drive code for the drive-train
 
 use safe_vex::{imu, motor};
-use crate::{config, maths};
+use crate::config;
 
 /// Drives the drive-train based on x and y values
 pub fn drive(x: f64, y: f64) {
@@ -17,10 +17,13 @@ pub fn drive(x: f64, y: f64) {
     });
 
     // calculate the course corrected x and y
-    let (x, y) = course_correct(x, y, yaw);
+    let (mut x, y) = drive_controls::course_correct(x, y, yaw);
+
+    // apply the turning multiplier
+    x *= config::TURN_MULTIPLIER;
 
     // pass them through arcade drive to get left and right drives
-    let (ldr, rdr) = arcade(x as i32, y as i32);
+    let (ldr, rdr) = drive_controls::arcade(x as i32, y as i32);
 
     // drive
     voltage_left(ldr);
@@ -41,28 +44,4 @@ pub fn voltage_right(voltage: i32) {
     let _ = motor::move_voltage(config::motors::R1.port, config::motors::R1.reverse, voltage);
     let _ = motor::move_voltage(config::motors::R2.port, config::motors::R2.reverse, voltage);
     let _ = motor::move_voltage(config::motors::R3.port, config::motors::R3.reverse, voltage);
-}
-
-/// Performs an arcade drive transformation on x and y values to produce ldr and rdr valueso
-pub fn arcade(x: i32, y: i32) -> (i32, i32) {
-    let ldr = (y + x).clamp(-12000, 12000);
-    let rdr = (y - x).clamp(-12000, 12000);
-
-    (ldr, rdr)
-}
-
-/// Course corrects the x and y values based on the interial sensor yaw
-pub fn course_correct(x: f64, y: f64, yaw: f64) -> (f64, f64) {
-    // find the angle that the x and y make through the origin
-    let angle = maths::atan(x / (y + 1.0));
-
-    // find the difference in angles between the angle and the yaw
-    let diff = angle - yaw * maths::signumf(y);
-
-    // calculate the course correct based on the difference
-    let new_x = diff / 45.0
-        * (maths::absf(x) + maths::absf(y) * config::TURN_MULTIPLIER) / 2.0 // find the average absolute value of x and y
-        * (maths::signumf(y)); // ???
-
-    (new_x, y)
 }
