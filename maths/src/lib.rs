@@ -4,20 +4,20 @@
 #![allow(internal_features)]
 #![feature(core_intrinsics)]
 
-use core::f64::consts::PI;
+use core::f32::consts::PI;
 
-/// Raises an `f64` to the power of another `f64`
-pub fn powf(x: f64, y: f64) -> f64 {
-    unsafe { core::intrinsics::powf64(x, y) }
+/// Raises an `f32` to the power of another `f32`
+pub fn powf(x: f32, y: f32) -> f32 {
+    unsafe { core::intrinsics::powf32(x, y) }
 }
 
-/// Finds the square-root of an `f64`
-pub fn sqrt(x: f64) -> f64 {
-    unsafe { core::intrinsics::sqrtf64(x) }
+/// Finds the square-root of an `f32`
+pub fn sqrt(x: f32) -> f32 {
+    unsafe { core::intrinsics::sqrtf32(x) }
 }
 
-/// Approximates the Arc-Tan (in degrees) of an `f64`
-pub fn atan(x: f64) -> f64 {
+/// Approximates the Arc-Tan (in degrees) of an `f32`
+pub fn atan(x: f32) -> f32 {
     // compute the atan
     let atan = powf(PI, 2.0) * x / (4.0 + sqrt((powf(PI, 2.0) - 4.0) * sqrt(32.0) + powf(2.0 * PI * x, 2.0)));
 
@@ -28,8 +28,8 @@ pub fn atan(x: f64) -> f64 {
     normal
 }
 
-/// Finds the sign number (1 or -1) of an f64
-pub fn signumf(x: f64) -> f64 {
+/// Finds the sign number (1 or -1) of an f32
+pub fn signumf(x: f32) -> f32 {
     if x.is_sign_negative() {
         -1.0
     } else {
@@ -37,7 +37,7 @@ pub fn signumf(x: f64) -> f64 {
     }
 }
 
-/// Finds the absolute value of an f64
-pub fn absf(x: f64) -> f64 {
+/// Finds the absolute value of an f32
+pub fn absf(x: f32) -> f32 {
     x * signumf(x)
 }
