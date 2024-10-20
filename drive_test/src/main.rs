@@ -1,8 +1,11 @@
 use std::{thread::sleep, time::Duration};
-
 use gilrs::{Axis, Event, Gilrs};
 
 fn main() {
+    drive_test::game::run();
+
+    panic!();
+    
     // controller manager object
     let mut gilrs = Gilrs::new().unwrap();
 

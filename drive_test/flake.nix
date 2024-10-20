@@ -38,6 +38,7 @@
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
           packages = with pkgs; [
+            # rust
             rustToolchain
             openssl
             pkg-config
@@ -46,14 +47,29 @@
             cargo-watch
             rust-analyzer
 
+            # pkg-config dependencies
             systemd
+            alsa-lib
+            wayland
 
+            # dev tools
             bacon
           ];
 
           env = {
             # Required by rust-analyzer
             RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
+
+            # For it to run
+            LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (with pkgs; [
+            
+              xorg.libX11
+              xorg.libXcursor
+              xorg.libXi
+              xorg.libXrandr
+              vulkan-loader
+              libxkbcommon
+            ]);
           };
         };
       });
