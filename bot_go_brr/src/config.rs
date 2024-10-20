@@ -4,13 +4,10 @@
 pub const TICK_SPEED: u32 = 50;
 
 /// The multiplier applied to the robot's turning
-pub const TURN_MULTIPLIER: f64 = 0.64;
+pub const TURN_MULTIPLIER: f32 = 0.64;
 
 /// The multiplier applied to the robot while it's in it's 'precise' mode
-pub const PRECISE_MULTIPLIER: f64 = 0.64;
-
-/// Daniel's Magic Number for nice, smooth exponential controls
-pub const DMN: f64 = 1.02022606038826; // 12000 = 1024a^{127};
+pub const PRECISE_MULTIPLIER: f32 = 0.64;
 
 /// Control Configurations
 pub mod controls {

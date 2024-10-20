@@ -53,8 +53,8 @@ pub fn drive() -> ByteCode {
     let j1y = controller::get_analog(Controller::Master, ControllerAnalog::LeftY).unwrap_or_default();
 
     // get the calculated voltages
-    let j1xv = drive_controls::exp_daniel(j1x as f64 / 127.0);
-    let j1yv = drive_controls::exp_daniel(j1y as f64 / 127.0);
+    let j1xv = drive_controls::exp_daniel(j1x as f32 / 127.0);
+    let j1yv = drive_controls::exp_daniel(j1y as f32 / 127.0);
 
     // return the clamped drive inst
     ByteCode::Drive {
