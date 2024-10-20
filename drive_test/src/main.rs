@@ -41,7 +41,7 @@ fn main() {
         let (jxvc, jyvc) = drive_controls::course_correct(jxv, jyv, yaw);
 
         // get the final left and right drive voltages
-        let (ldr, rdr) = drive_controls::arcade(jxv as i32, jyv as i32);
+        let (ldr, rdr) = drive_controls::arcade(jxvc as i32, jyvc as i32);
 
         // clear the screen and print the values
         clearscreen::clear().unwrap();

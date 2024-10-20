@@ -25,12 +25,11 @@ pub fn course_correct(x: f32, y: f32, yaw: f32) -> (f32, f32) {
     let angle = maths::atan(x / (y + 1.0));
 
     // find the difference in angles between the angle and the yaw
-    let diff = angle - yaw * maths::signumf(y);
+    let diff = angle - yaw;
 
     // calculate the course correct based on the difference
     let new_x = diff / 45.0
-        * (maths::absf(x) + maths::absf(y)) / 2.0 // find the average absolute value of x and y
-        * (maths::signumf(y)); // ???
+        * (maths::absf(x) + maths::absf(y)) / 2.0; // find the average absolute value of x and y
 
     (new_x, y)
 }
