@@ -7,5 +7,29 @@ edition = "2021"
 clearscreen = "3.0"
 gilrs = "0.11" # for controller input
 
+[dependencies.bevy]
+version = "0.14"
+features = [
+  "bevy_gilrs",
+  "jpeg",
+  "wayland",
+]
+
 [dependencies.drive_controls]
 path = "../drive_controls"
+
+# Enable incremental builds
+[profile.dev]
+incremental = true
+
+# Enable max optimizations for dependencies, but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
+
+# Maximum optimisations for release code
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+incremental = false
+debug = false
