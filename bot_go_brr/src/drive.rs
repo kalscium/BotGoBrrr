@@ -4,7 +4,7 @@ use safe_vex::{imu, motor};
 use crate::config;
 
 /// Drives the drive-train based on x and y values
-pub fn drive(x: f64, y: f64) {
+pub fn drive(x: f32, y: f32) {
     // if the robot is not currently moving, then reset the inertial sensor
     if maths::absf(x) >= maths::absf(y) {
         let _ = imu::tare(config::IMU_PORT);
@@ -17,9 +17,9 @@ pub fn drive(x: f64, y: f64) {
     });
 
     // calculate the course corrected x and y
-    let (mut x, y) = drive_controls::course_correct(x, y, yaw);
+    let (mut x, y) = drive_controls::course_correct(x, y, yaw as f32);
 
-    // apply the turning multiplier
+    // apply the multipliers
     x *= config::TURN_MULTIPLIER;
 
     // pass them through arcade drive to get left and right drives
