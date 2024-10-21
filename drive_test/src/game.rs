@@ -6,8 +6,8 @@ pub fn run() {
         .insert_resource(Time::<Fixed>::from_hz(60.0))
         .add_systems(Startup, (spawn_camera, spawn_robot, spawn_text))
         .add_systems(PreUpdate, gamepad_connections)
-        .add_systems(FixedUpdate, (keyboard_movement, gamepad_movement))
-        .add_systems(PostUpdate, confine_movement)
+        .add_systems(FixedUpdate, (keyboard_movement, gamepad_movement, exact_keyboard_movement))
+        .add_systems(PostUpdate, (execute_drivetrain, confine_movement))
         .run();
 }
 
@@ -15,6 +15,13 @@ pub fn run() {
 pub struct Robot {
     movement_speed: f32,
     rotation_speed: f32,
+}
+
+/// A robot's drive-train
+#[derive(Component)]
+pub struct DriveTrain {
+    ldr: i32,
+    rdr: i32,
 }
 
 /// Simple resource to store the ID of the first connected gamepad.
@@ -63,6 +70,7 @@ pub fn spawn_robot(
 ) {
     let window = window_query.get_single().unwrap();
     commands.spawn((
+        DriveTrain { ldr: 0, rdr: 0 },
         Robot {
             movement_speed: 512.0,
             rotation_speed: 4.0,
@@ -110,16 +118,41 @@ pub fn spawn_text(
     });
 }
 
-pub fn gamepad_movement(
+pub fn execute_drivetrain(
     time: Res<Time>,
+    mut query: Query<(&Robot, &DriveTrain, &mut Transform)>
+) {
+    let (robot, drive_train, mut transform) = query.single_mut();
+
+    // convert them into an f32 `-1..=1`
+    let ldr = drive_train.ldr as f32 / 12000.0;
+    let rdr = drive_train.rdr as f32 / 12000.0;
+ // get the rotation and movement factors
+    let rotation_factor = rdr - ldr;
+    let movement_factor = ldr + rdr;
+
+    // update the robot rotation around the Z axis (perpendicular to the 2D plane of the screen)
+    transform.rotate_z(rotation_factor * robot.rotation_speed * time.delta_seconds());
+
+    // get the ship's forward vector by applying the current rotation to the robot's initial facing vector
+    let movement_direction = transform.rotation * Vec3::Y;
+    // get the distance therobot will move based on direction, the robot's movement speed and delta time
+    let movement_distance = movement_factor * robot.movement_speed * time.delta_seconds();
+    // create the change in translation using the new movement direction and distance
+    let translation_delta = movement_direction * movement_distance;
+    // update the ship translation with our new translation data
+    transform.translation += translation_delta;
+}
+
+pub fn gamepad_movement(
     axes: Res<Axis<GamepadAxis>>,
     gamepad: Option<Res<MyGamepad>>,
-    mut robot_query: Query<(&Robot, &mut Transform)>,
+    mut robot_query: Query<(&mut DriveTrain, &Transform), With<Robot>>,
     mut text_query: Query<&mut Text>,
     asset_server: Res<AssetServer>,
 ) {
     let mut text = text_query.single_mut();
-    let (robot, mut transform) = robot_query.single_mut();
+    let (mut drive_train, transform) = robot_query.single_mut();
     let Some(&MyGamepad(gamepad)) = gamepad.as_deref() else {
         // no gamepad is connected so do nothing
         return;
@@ -137,34 +170,18 @@ pub fn gamepad_movement(
     let (jx, jy) = (-axes.get(axis_jx).unwrap(), -axes.get(axis_jy).unwrap());
 
     // get the left and right drive values
-    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, transform.rotation.z * -180.0);
+    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0);
 
     // update text
     let debug_info = debug_info.join("\n");
     *text = Text::from_section(debug_info, get_text_style(asset_server));
 
-    // convert them into an f32 `-1..=1`
-    let ldr = ldr as f32 / 12000.0;
-    let rdr = rdr as f32 / 12000.0;
-
-    // get the rotation and movement factors
-    let rotation_factor = rdr - ldr;
-    let movement_factor = ldr + rdr;
-
-    // update the robot rotation around the Z axis (perpendicular to the 2D plane of the screen)
-    transform.rotate_z(rotation_factor * robot.rotation_speed * time.delta_seconds());
-
-    // get the ship's forward vector by applying the current rotation to the robot's initial facing vector
-    let movement_direction = transform.rotation * Vec3::Y;
-    // get the distance the robot will move based on direction, the robot's movement speed and delta time
-    let movement_distance = movement_factor * robot.movement_speed * time.delta_seconds();
-    // create the change in translation using the new movement direction and distance
-    let translation_delta = movement_direction * movement_distance;
-    // update the ship translation with our new translation data
-    transform.translation += translation_delta;
+    // update the drivetrain
+    drive_train.ldr = ldr;
+    drive_train.rdr = rdr;
 }
 
-pub fn keyboard_movement(
+pub fn exact_keyboard_movement(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<(&Robot, &mut Transform)>,
@@ -174,19 +191,19 @@ pub fn keyboard_movement(
     let mut rotation_factor = 0.0;
     let mut movement_factor = 0.0;
 
-    if keyboard_input.pressed(KeyCode::KeyW) {
+    if keyboard_input.pressed(KeyCode::KeyK) {
         movement_factor += 1.0;
     }
 
-    if keyboard_input.pressed(KeyCode::KeyA) {
+    if keyboard_input.pressed(KeyCode::KeyH) {
         rotation_factor += 1.0;
     }
 
-    if keyboard_input.pressed(KeyCode::KeyS) {
+    if keyboard_input.pressed(KeyCode::KeyJ) {
         movement_factor -= 1.0;
     }
 
-    if keyboard_input.pressed(KeyCode::KeyD) {
+    if keyboard_input.pressed(KeyCode::KeyL) {
         rotation_factor -= 1.0;
     }
 
@@ -195,12 +212,52 @@ pub fn keyboard_movement(
 
     // get the ship's forward vector by applying the current rotation to the robot's initial facing vector
     let movement_direction = transform.rotation * Vec3::Y;
-    // get the distance the robot will move based on direction, the robot's movement speed and delta time
+    // get the distance therobot will move based on direction, the robot's movement speed and delta time
     let movement_distance = movement_factor * robot.movement_speed * time.delta_seconds();
     // create the change in translation using the new movement direction and distance
     let translation_delta = movement_direction * movement_distance;
     // update the ship translation with our new translation data
     transform.translation += translation_delta;
+}
+
+pub fn keyboard_movement(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut query: Query<(&mut DriveTrain, &Transform)>,
+    mut text_query: Query<&mut Text>,
+    asset_server: Res<AssetServer>,
+) {
+    let (mut drive_train, transform) = query.single_mut();
+    let mut text = text_query.single_mut();
+
+    let mut jx = 0.0;
+    let mut jy = 0.0;
+
+    if keyboard_input.pressed(KeyCode::KeyW) {
+        jy += 1.0;
+    }
+
+    if keyboard_input.pressed(KeyCode::KeyA) {
+        jx -= 1.0;
+    }
+
+    if keyboard_input.pressed(KeyCode::KeyS) {
+        jy -= 1.0;
+    }
+
+    if keyboard_input.pressed(KeyCode::KeyD) {
+        jx += 1.0;
+    }
+
+    // pass them through the controls
+    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0);
+
+    // update text
+    let debug_info = debug_info.join("\n");
+    *text = Text::from_section(debug_info, get_text_style(asset_server));
+
+    // update the drivetrain
+    drive_train.ldr = ldr;
+    drive_train.rdr = rdr;
 }
 
 pub fn confine_movement(
@@ -213,6 +270,6 @@ pub fn confine_movement(
     let translation = &mut transform.translation;
 
     // clamp the x and y position
-    translation.x = translation.x.clamp(0.0, window.width() - window.width() / 16.0);
-    translation.y = translation.y.clamp(window.height() / 16.0, window.height());
+    translation.x = translation.x.clamp(0.0, window.width());
+    translation.y = translation.y.clamp(0.0, window.height());
 }
