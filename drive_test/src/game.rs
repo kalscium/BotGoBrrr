@@ -127,7 +127,11 @@ pub fn execute_drivetrain(
     // convert them into an f32 `-1..=1`
     let ldr = drive_train.ldr as f32 / 12000.0;
     let rdr = drive_train.rdr as f32 / 12000.0;
- // get the rotation and movement factors
+
+    // pass the ldr and rdr through noise
+    let (ldr, rdr) = crate::controls::noise(ldr, rdr);
+
+    // get the rotation and movement factors
     let rotation_factor = rdr - ldr;
     let movement_factor = ldr + rdr;
 

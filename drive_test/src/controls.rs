@@ -1,3 +1,5 @@
+use rand::Rng;
+
 /// A macro for printing debug information
 macro_rules! debug {
     ($debug_info:ident: $($tt:tt)*) => {
@@ -32,4 +34,13 @@ pub fn controls(x: f32, y: f32, yaw: f32) -> (i32, i32, Vec<String>) {
 
     // return them
     (ldr, rdr, debug_info)
+}
+
+/// A function that controls the noise of the left and right drives of the robot (from -1..=1)
+pub fn noise(ldr: f32, rdr: f32) -> (f32, f32) {    
+    // add random noise
+    let ldr = ldr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
+    let rdr = rdr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
+
+    (ldr, rdr)
 }
