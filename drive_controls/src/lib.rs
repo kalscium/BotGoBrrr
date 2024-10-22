@@ -33,17 +33,19 @@ pub fn new_pid() -> pid::Pid<f32> {
     pid
 }
 
-/// Course corrects the x and y values (`-12000..=12000`) based on the interial sensor yaw and PID
-pub fn course_correct(x: f32, y: f32, yaw: f32, pid: &mut pid::Pid<f32>) -> (f32, f32) {
-    // find the angle that the x and y make through the origin
-    let angle = maths::atan(x / (y + 1.0));
-
+/// Corrects the rotation of the robot based upon the yaw and the desired angle (returns the new x value)
+pub fn rot_correct(angle: f32, yaw: f32, pid: &mut pid::Pid<f32>) -> f32 {
     // update internal PID values
     pid.setpoint(angle);
 
-    // calculate the course correct based on the PID
+    // calculate correction x value
     let output = pid.next_control_output(yaw);
-    let new_x = output.output;
 
-    (new_x, y)
+    // return it
+    output.output
+}
+
+/// Finds the angle of the x and y values of the joystick
+pub fn xy_to_angle(x: f32, y: f32) -> f32 {
+    maths::atan(x / maths::absf(y + 0.0001))
 }
