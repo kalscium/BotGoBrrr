@@ -43,6 +43,8 @@ pub fn pure_driver(x: f32, y: f32, yaw: f32) -> (i32, i32, Vec<String>) {
     let (ldr, rdr) = drive_controls::arcade(xv as i32, yv as i32);
 
     // print the debug information
+    debug!(debug_info: "# Only driver control\n");
+
     debug!(debug_info: "joystick x: {x}");
     debug!(debug_info: "joystick y: {y}");
     debug!(debug_info: "joyvolt  x: {xv}");
@@ -70,6 +72,8 @@ pub fn abs_rotation(x: f32, y: f32, yaw: f32, state: &mut ControlState) -> (i32,
     let (ldr, rdr) = drive_controls::arcade(xc as i32, 0);
 
     // print the debug information
+    debug!(debug_info: "# IMU exact rotation\n");
+
     debug!(debug_info: "joystick x: {x}");
     debug!(debug_info: "joystick y: {y}\n");
     debug!(debug_info: "yaw       : {yaw}");
@@ -87,7 +91,7 @@ pub fn noise(ldr: f32, rdr: f32) -> (f32, f32) {
     // add random noise
     // let ldr = ldr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
     // let rdr = rdr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
-    let rdr = rdr - 0.2;
+    let rdr = rdr * 0.8;
 
     (ldr, rdr)
 }
