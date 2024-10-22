@@ -25,8 +25,8 @@ pub fn init_state() -> ControlState {
 
 pub fn controls(x: f32, y: f32, _delta_seconds: f32, yaw: f32, state: &mut ControlState) -> (i32, i32, Vec<String>) {
     // pick either driving method until i get a controller with two joysticks
-    pure_driver(x, y, yaw)
-    // abs_rotation(x, y, yaw, state)
+    // pure_driver(x, y, yaw)
+    abs_rotation(x, y, yaw, state)
 }
 
 const TURNING_MUL: f32 = 0.64;
@@ -87,7 +87,7 @@ pub fn noise(ldr: f32, rdr: f32) -> (f32, f32) {
     // add random noise
     // let ldr = ldr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
     // let rdr = rdr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
-    // let rdr = rdr * 0.8;
+    let rdr = rdr - 0.2;
 
     (ldr, rdr)
 }

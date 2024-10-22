@@ -45,7 +45,12 @@ pub fn rot_correct(angle: f32, yaw: f32, pid: &mut pid::Pid<f32>) -> f32 {
     output.output
 }
 
-/// Finds the angle of the x and y values of the joystick
+/// Finds the angle of the x and y values of the joystick according to the top of the joystick
 pub fn xy_to_angle(x: f32, y: f32) -> f32 {
-    maths::atan(x / maths::absf(y + 0.0001))
+    if y < 0.0 {
+        maths::atan(maths::absf(y) / (x + 0.0001))
+            + 90.0 * maths::signumf(x)
+    } else {
+        maths::atan(x / (y + 0.0001))
+    }
 }
