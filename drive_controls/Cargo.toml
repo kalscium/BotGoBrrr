@@ -3,5 +3,8 @@ name = "drive_controls"
 version = "0.1.0"
 edition = "2021"
 
+[dependencies]
+pid = "4.0.0"
+
 [dependencies.maths]
 path = "../maths"
