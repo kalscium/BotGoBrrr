@@ -179,7 +179,7 @@ pub fn gamepad_movement(
     let (jx, jy) = (-axes.get(axis_jx).unwrap(), -axes.get(axis_jy).unwrap());
 
     // get the left and right drive values
-    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, time.delta_seconds(), transform.rotation.to_euler(EulerRot::XYZ).2 * -30.0, &mut control_state);
+    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, time.delta_seconds(), transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0, &mut control_state);
 
     // update text
     let debug_info = debug_info.join("\n");
@@ -200,19 +200,19 @@ pub fn exact_keyboard_movement(
     let mut rotation_factor = 0.0;
     let mut movement_factor = 0.0;
 
-    if keyboard_input.pressed(KeyCode::ArrowUp) {
+    if keyboard_input.pressed(KeyCode::KeyK) {
         movement_factor += 1.0;
     }
 
-    if keyboard_input.pressed(KeyCode::ArrowLeft) {
+    if keyboard_input.pressed(KeyCode::KeyH) {
         rotation_factor += 1.0;
     }
 
-    if keyboard_input.pressed(KeyCode::ArrowDown) {
+    if keyboard_input.pressed(KeyCode::KeyJ) {
         movement_factor -= 1.0;
     }
 
-    if keyboard_input.pressed(KeyCode::ArrowRight) {
+    if keyboard_input.pressed(KeyCode::KeyL) {
         rotation_factor -= 1.0;
     }
 
