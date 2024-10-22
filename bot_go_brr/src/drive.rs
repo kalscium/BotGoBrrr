@@ -1,23 +1,27 @@
 //! Drive code for the drive-train
 
+use drive_controls::pid::Pid;
 use safe_vex::{imu, motor};
 use crate::config;
 
-/// Drives the drive-train based on x and y values
-pub fn drive(x: f32, y: f32) {
+/// Drives the drive-train based on x and y values and also an optional desired angle
+pub fn drive(mut x: f32, y: f32, desired_angle: Option<f32>, rot_pid: &mut Pid<f32>) {
     // if the robot is not currently moving, then reset the inertial sensor
     if maths::absf(x) >= maths::absf(y) {
         let _ = imu::tare(config::IMU_PORT);
     }
 
-    // grab the inertial sensor yaw
-    let yaw = imu::get_yaw(config::IMU_PORT).unwrap_or_else(|_| {
-        safe_vex::io::println!("silent error: couldn't get yaw from imu"); // no silent fails
-        0.0
-    });
+    // if there is a desired angle then correct for it, *(and ignore the user-input x)*
+    if let Some(angle) = desired_angle {
+        // grab the inertial sensor yaw
+        let yaw = imu::get_yaw(config::IMU_PORT).unwrap_or_else(|_| {
+            safe_vex::io::println!("silent error: couldn't get yaw from imu"); // no silent fails
+            0.0
+        }) as f32;
 
-    // calculate the course corrected x and y
-    let (mut x, y) = drive_controls::course_correct(x, y, yaw as f32);
+        // correct for the sensor yaw by setting the new x value
+        x = drive_controls::rot_correct(angle, yaw, rot_pid);
+    }
 
     // apply the multipliers
     x *= config::TURN_MULTIPLIER;

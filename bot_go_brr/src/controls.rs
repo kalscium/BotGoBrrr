@@ -51,14 +51,23 @@ pub fn drive() -> ByteCode {
     // get the joystick values (from -127..=127)
     let j1x = controller::get_analog(Controller::Master, ControllerAnalog::LeftX).unwrap_or_default();
     let j1y = controller::get_analog(Controller::Master, ControllerAnalog::LeftY).unwrap_or_default();
+    let j2x = controller::get_analog(Controller::Master, ControllerAnalog::RightX).unwrap_or_default();
+    let j2y = controller::get_analog(Controller::Master, ControllerAnalog::RightY).unwrap_or_default();
 
     // get the calculated voltages
     let j1xv = drive_controls::exp_daniel(j1x as f32 / 127.0);
     let j1yv = drive_controls::exp_daniel(j1y as f32 / 127.0);
 
+    // if the second joystick is active, then derive an angle from it's x and y values
+    let mut desired_angle = None;
+    if j2x != 0 && j2y != 0 {
+        desired_angle = Some(drive_controls::xy_to_angle(j2x as f32, j2y as f32));
+    }
+
     // return the clamped drive inst
     ByteCode::Drive {
         x: j1xv,
         y: j1yv,
+        desired_angle,
     }
 }
