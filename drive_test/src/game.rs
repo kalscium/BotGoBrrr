@@ -169,14 +169,24 @@ pub fn gamepad_movement(
 
     // joystick getters
     let axis_jx = GamepadAxis {
-        gamepad, axis_type: GamepadAxisType::LeftStickY,
+        gamepad,
+        axis_type: GamepadAxisType::LeftStickY,
     };
     let axis_jy = GamepadAxis {
-        gamepad, axis_type: GamepadAxisType::LeftStickX,
+        gamepad,
+        axis_type: GamepadAxisType::LeftStickX,
     };
 
     // get the joystick x and y values
-    let (jx, jy) = (-axes.get(axis_jx).unwrap(), -axes.get(axis_jy).unwrap());
+    let (mut jx, mut jy) = (-axes.get(axis_jx).unwrap(), -axes.get(axis_jy).unwrap());
+
+    // set the deadzones
+    if jx.abs() < 0.1 {
+        jx = 0.0;
+    }
+    if jy.abs() < 0.1 {
+        jy = 0.0;
+    }
 
     // get the left and right drive values
     let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, time.delta_seconds(), transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0, &mut control_state);
