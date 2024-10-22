@@ -23,28 +23,56 @@ pub fn init_state() -> ControlState {
     }
 }
 
-/// Passes through a joystick's x and y values through all of the drive controls and returns the left and right drives and also any debug information
-pub fn controls(x: f32, y: f32, yaw: f32, state: &mut ControlState) -> (i32, i32, Vec<String>) {
+pub fn controls(x: f32, y: f32, _delta_seconds: f32, yaw: f32, state: &mut ControlState) -> (i32, i32, Vec<String>) {
+    // pick either driving method until i get a controller with two joysticks
+    // pure_driver(x, y)
+    abs_rotation(x, y, yaw, state)
+}
+
+const TURNING_MUL: f32 = 0.64;
+
+/// A form of control that doesn't use the inertial sensor and is pure driver-control
+pub fn pure_driver(x: f32, y: f32) -> (i32, i32, Vec<String>) {
     let mut debug_info = Vec::new();
 
     // get the voltage values
-    let xv = drive_controls::exp_daniel(x);
+    let xv = drive_controls::exp_daniel(x) * TURNING_MUL;
     let yv = drive_controls::exp_daniel(y);
 
-    // course correct
-    let (xvc, yvc) = drive_controls::course_correct(xv, yv, yaw, &mut state.pid);
-
     // get the final left and right drive voltages
-    let (ldr, rdr) = drive_controls::arcade(xvc as i32, yvc as i32);
+    let (ldr, rdr) = drive_controls::arcade(xv as i32, yv as i32);
 
     // print the debug information
     debug!(debug_info: "joystick x: {x}");
     debug!(debug_info: "joystick y: {y}");
     debug!(debug_info: "joyvolt  x: {xv}");
     debug!(debug_info: "joyvolt  y: {yv}\n");
+
+    debug!(debug_info: "(ldr, rdr): ({ldr}, {rdr})");
+    
+    // return them
+    (ldr, rdr, debug_info)
+}
+
+/// A form of control that rotates the robot in an absolute way
+pub fn abs_rotation(x: f32, y: f32, yaw: f32, state: &mut ControlState) -> (i32, i32, Vec<String>) {
+    let mut debug_info = Vec::new();
+
+    // get the angle desired angle (from x and y)
+    let desired_angle = drive_controls::xy_to_angle(x, y);
+
+    // get the correction x
+    let xc = drive_controls::rot_correct(desired_angle, yaw, &mut state.pid);
+
+    // get the final left and right drive voltages
+    let (ldr, rdr) = drive_controls::arcade(xc as i32, 0);
+
+    // print the debug information
+    debug!(debug_info: "joystick x: {x}");
+    debug!(debug_info: "joystick y: {y}\n");
     debug!(debug_info: "yaw       : {yaw}");
-    debug!(debug_info: "correct  x: {xvc}");
-    debug!(debug_info: "correct  y: {yvc}\n");
+    debug!(debug_info: "desired   : {desired_angle}");
+    debug!(debug_info: "correct  x: {xc}\n");
 
     debug!(debug_info: "(ldr, rdr): ({ldr}, {rdr})");
 

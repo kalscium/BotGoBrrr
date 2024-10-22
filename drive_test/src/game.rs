@@ -152,6 +152,7 @@ pub fn execute_drivetrain(
 }
 
 pub fn gamepad_movement(
+    time: Res<Time>,
     axes: Res<Axis<GamepadAxis>>,
     gamepad: Option<Res<MyGamepad>>,
     mut control_state: ResMut<ControlState>,
@@ -178,7 +179,7 @@ pub fn gamepad_movement(
     let (jx, jy) = (-axes.get(axis_jx).unwrap(), -axes.get(axis_jy).unwrap());
 
     // get the left and right drive values
-    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, transform.rotation.to_euler(EulerRot::XYZ).2 * -30.0, &mut control_state);
+    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, time.delta_seconds(), transform.rotation.to_euler(EulerRot::XYZ).2 * -30.0, &mut control_state);
 
     // update text
     let debug_info = debug_info.join("\n");
@@ -199,19 +200,19 @@ pub fn exact_keyboard_movement(
     let mut rotation_factor = 0.0;
     let mut movement_factor = 0.0;
 
-    if keyboard_input.pressed(KeyCode::KeyK) {
+    if keyboard_input.pressed(KeyCode::ArrowUp) {
         movement_factor += 1.0;
     }
 
-    if keyboard_input.pressed(KeyCode::KeyH) {
+    if keyboard_input.pressed(KeyCode::ArrowLeft) {
         rotation_factor += 1.0;
     }
 
-    if keyboard_input.pressed(KeyCode::KeyJ) {
+    if keyboard_input.pressed(KeyCode::ArrowDown) {
         movement_factor -= 1.0;
     }
 
-    if keyboard_input.pressed(KeyCode::KeyL) {
+    if keyboard_input.pressed(KeyCode::ArrowRight) {
         rotation_factor -= 1.0;
     }
 
@@ -229,6 +230,8 @@ pub fn exact_keyboard_movement(
 }
 
 pub fn keyboard_movement(
+    time: Res<Time>,
+    gamepad: Option<Res<MyGamepad>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut control_state: ResMut<ControlState>,
     mut query: Query<(&mut DriveTrain, &Transform)>,
@@ -237,6 +240,11 @@ pub fn keyboard_movement(
 ) {
     let (mut drive_train, transform) = query.single_mut();
     let mut text = text_query.single_mut();
+
+    // if gamepad connected then don't use keyboard controls
+    if gamepad.is_some() {
+        return;
+    }
 
     let mut jx = 0.0;
     let mut jy = 0.0;
@@ -258,7 +266,7 @@ pub fn keyboard_movement(
     }
 
     // pass them through the controls
-    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0, &mut control_state);
+    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, time.delta_seconds(), transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0, &mut control_state);
 
     // update text
     let debug_info = debug_info.join("\n");
