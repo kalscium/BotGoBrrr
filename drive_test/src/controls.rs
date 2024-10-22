@@ -25,14 +25,14 @@ pub fn init_state() -> ControlState {
 
 pub fn controls(x: f32, y: f32, _delta_seconds: f32, yaw: f32, state: &mut ControlState) -> (i32, i32, Vec<String>) {
     // pick either driving method until i get a controller with two joysticks
-    // pure_driver(x, y)
-    abs_rotation(x, y, yaw, state)
+    pure_driver(x, y, yaw)
+    // abs_rotation(x, y, yaw, state)
 }
 
 const TURNING_MUL: f32 = 0.64;
 
 /// A form of control that doesn't use the inertial sensor and is pure driver-control
-pub fn pure_driver(x: f32, y: f32) -> (i32, i32, Vec<String>) {
+pub fn pure_driver(x: f32, y: f32, yaw: f32) -> (i32, i32, Vec<String>) {
     let mut debug_info = Vec::new();
 
     // get the voltage values
@@ -47,6 +47,8 @@ pub fn pure_driver(x: f32, y: f32) -> (i32, i32, Vec<String>) {
     debug!(debug_info: "joystick y: {y}");
     debug!(debug_info: "joyvolt  x: {xv}");
     debug!(debug_info: "joyvolt  y: {yv}\n");
+
+    debug!(debug_info: "yaw       : {yaw}\n");
 
     debug!(debug_info: "(ldr, rdr): ({ldr}, {rdr})");
     
@@ -84,7 +86,8 @@ pub fn abs_rotation(x: f32, y: f32, yaw: f32, state: &mut ControlState) -> (i32,
 pub fn noise(ldr: f32, rdr: f32) -> (f32, f32) {    
     // add random noise
     // let ldr = ldr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
-    let rdr = rdr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
+    // let rdr = rdr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
+    // let rdr = rdr * 0.8;
 
     (ldr, rdr)
 }
