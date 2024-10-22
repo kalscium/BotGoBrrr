@@ -19,17 +19,31 @@ pub fn exp_daniel(x: f32) -> f32 {
         * maths::signumf(x) // to maintain the sign
 }
 
-/// Course corrects the x and y values (`-12000..=12000`) based on the interial sensor yaw
-pub fn course_correct(x: f32, y: f32, yaw: f32) -> (f32, f32) {
+pub use pid;
+
+/// Creates a new PID
+pub fn new_pid() -> pid::Pid<f32> {
+    let mut pid = pid::Pid::new(0.0, 12000.0);
+
+    // configure pid
+    pid.p(1200.0, 12000.0);
+    pid.i(120.0, 12000.0);
+    pid.d(240.0, 12000.0);
+
+    pid
+}
+
+/// Course corrects the x and y values (`-12000..=12000`) based on the interial sensor yaw and PID
+pub fn course_correct(x: f32, y: f32, yaw: f32, pid: &mut pid::Pid<f32>) -> (f32, f32) {
     // find the angle that the x and y make through the origin
     let angle = maths::atan(x / (y + 1.0));
 
-    // find the difference in angles between the angle and the yaw
-    let diff = angle - yaw;
+    // update internal PID values
+    pid.setpoint(angle);
 
-    // calculate the course correct based on the difference
-    let new_x = diff / 45.0
-        * (maths::absf(x) + maths::absf(y)) / 2.0; // find the average absolute value of x and y
+    // calculate the course correct based on the PID
+    let output = pid.next_control_output(yaw);
+    let new_x = output.output;
 
     (new_x, y)
 }

@@ -1,9 +1,12 @@
 use bevy::{input::gamepad::{GamepadConnection, GamepadEvent}, prelude::*, window::PrimaryWindow};
 
+use crate::controls::ControlState;
+
 pub fn run() {
     App::new()
         .add_plugins(DefaultPlugins)
         .insert_resource(Time::<Fixed>::from_hz(60.0))
+        .insert_resource(crate::controls::init_state())
         .add_systems(Startup, (spawn_camera, spawn_robot, spawn_text))
         .add_systems(PreUpdate, gamepad_connections)
         .add_systems(FixedUpdate, (keyboard_movement, gamepad_movement, exact_keyboard_movement))
@@ -151,6 +154,7 @@ pub fn execute_drivetrain(
 pub fn gamepad_movement(
     axes: Res<Axis<GamepadAxis>>,
     gamepad: Option<Res<MyGamepad>>,
+    mut control_state: ResMut<ControlState>,
     mut robot_query: Query<(&mut DriveTrain, &Transform), With<Robot>>,
     mut text_query: Query<&mut Text>,
     asset_server: Res<AssetServer>,
@@ -174,7 +178,7 @@ pub fn gamepad_movement(
     let (jx, jy) = (-axes.get(axis_jx).unwrap(), -axes.get(axis_jy).unwrap());
 
     // get the left and right drive values
-    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0);
+    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, transform.rotation.to_euler(EulerRot::XYZ).2 * -30.0, &mut control_state);
 
     // update text
     let debug_info = debug_info.join("\n");
@@ -226,6 +230,7 @@ pub fn exact_keyboard_movement(
 
 pub fn keyboard_movement(
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut control_state: ResMut<ControlState>,
     mut query: Query<(&mut DriveTrain, &Transform)>,
     mut text_query: Query<&mut Text>,
     asset_server: Res<AssetServer>,
@@ -253,7 +258,7 @@ pub fn keyboard_movement(
     }
 
     // pass them through the controls
-    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0);
+    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0, &mut control_state);
 
     // update text
     let debug_info = debug_info.join("\n");
