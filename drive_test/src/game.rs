@@ -201,42 +201,36 @@ pub fn gamepad_movement(
 }
 
 pub fn exact_keyboard_movement(
-    time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&Robot, &mut Transform)>,
+    mut query: Query<&mut DriveTrain>,
 ) {
-    let (robot, mut transform) = query.single_mut();
+    let mut drive_train = query.single_mut();
 
     let mut rotation_factor = 0.0;
     let mut movement_factor = 0.0;
 
-    if keyboard_input.pressed(KeyCode::KeyK) {
+    if keyboard_input.pressed(KeyCode::ArrowUp) {
         movement_factor += 1.0;
     }
 
-    if keyboard_input.pressed(KeyCode::KeyH) {
-        rotation_factor += 1.0;
-    }
-
-    if keyboard_input.pressed(KeyCode::KeyJ) {
-        movement_factor -= 1.0;
-    }
-
-    if keyboard_input.pressed(KeyCode::KeyL) {
+    if keyboard_input.pressed(KeyCode::ArrowLeft) {
         rotation_factor -= 1.0;
     }
 
-    // update the robot rotation around the Z axis (perpendicular to the 2D plane of the screen)
-    transform.rotate_z(rotation_factor * robot.rotation_speed * time.delta_seconds());
+    if keyboard_input.pressed(KeyCode::ArrowDown) {
+        movement_factor -= 1.0;
+    }
 
-    // get the ship's forward vector by applying the current rotation to the robot's initial facing vector
-    let movement_direction = transform.rotation * Vec3::Y;
-    // get the distance therobot will move based on direction, the robot's movement speed and delta time
-    let movement_distance = movement_factor * robot.movement_speed * time.delta_seconds();
-    // create the change in translation using the new movement direction and distance
-    let translation_delta = movement_direction * movement_distance;
-    // update the ship translation with our new translation data
-    transform.translation += translation_delta;
+    if keyboard_input.pressed(KeyCode::ArrowRight) {
+        rotation_factor += 1.0;
+    }
+
+    // get the arcade drive values
+    let (ldr, rdr) = drive_controls::arcade((rotation_factor * 8000.0) as i32, (movement_factor * 8000.0) as i32);
+
+    // update the drive_train
+    drive_train.ldr += ldr;
+    drive_train.rdr += rdr;
 }
 
 pub fn keyboard_movement(
