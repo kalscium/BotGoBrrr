@@ -14,6 +14,8 @@ pub enum ByteCode {
         x: f32,
         /// The `y` value
         y: f32,
+        /// An optional desired angle of the robot
+        desired_angle: Option<f32>,
     },
     /// Updates the voltage of the conveyor-belt motor
     Belt(i32),
