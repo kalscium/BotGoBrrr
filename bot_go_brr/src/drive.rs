@@ -1,26 +1,21 @@
 //! Drive code for the drive-train
 
 use drive_controls::pid::Pid;
-use safe_vex::{imu, motor};
+use safe_vex::motor;
 use crate::config;
 
 /// Drives the drive-train based on x and y values and also an optional desired angle
 pub fn drive(mut x: f32, y: f32, desired_angle: Option<f32>, rot_pid: &mut Pid<f32>) {
-    // if the robot is not currently moving, then reset the inertial sensor
-    if maths::absf(x) >= maths::absf(y) {
-        let _ = imu::tare(config::IMU_PORT);
-    }
-
     // if there is a desired angle then correct for it, *(and ignore the user-input x)*
     if let Some(angle) = desired_angle {
         // grab the inertial sensor yaw
-        let yaw = imu::get_yaw(config::IMU_PORT).unwrap_or_else(|_| {
-            safe_vex::io::println!("silent error: couldn't get yaw from imu"); // no silent fails
-            0.0
-        }) as f32;
+        let yaw = unsafe {
+            safe_vex::bindings::imu_get_yaw(config::IMU_PORT as u8)
+        } as f32;
 
         // correct for the sensor yaw by setting the new x value
         x = drive_controls::rot_correct(angle, yaw, rot_pid);
+        safe_vex::io::println!("angle: {angle}\nyaw: {yaw}\nx: {x}");
     }
 
     // apply the multipliers

@@ -26,9 +26,9 @@ pub fn new_pid() -> pid::Pid<f32> {
     let mut pid = pid::Pid::new(0.0, 12000.0);
 
     // configure pid
-    pid.p(1200.0, 12000.0);
-    pid.i(120.0, 12000.0);
-    pid.d(240.0, 12000.0);
+    pid.p(64.0, 12000.0);
+    pid.i(4.0, 12000.0);
+    pid.d(8.0, 12000.0);
 
     pid
 }
@@ -48,9 +48,9 @@ pub fn rot_correct(angle: f32, yaw: f32, pid: &mut pid::Pid<f32>) -> f32 {
 /// Finds the angle of the x and y values of the joystick according to the top of the joystick
 pub fn xy_to_angle(x: f32, y: f32) -> f32 {
     if y < 0.0 {
-        maths::atan(maths::absf(y) / (x + 0.0001))
+        maths::atan(maths::absf(y) / (x + 0.1 * maths::signumf(x)))
             + 90.0 * maths::signumf(x)
     } else {
-        maths::atan(x / (y + 0.0001))
-    }
+        maths::atan(x / (y + 0.1 * maths::signumf(y)))
+    }.clamp(-179.0, 179.0)
 }

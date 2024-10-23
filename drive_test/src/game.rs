@@ -128,8 +128,8 @@ pub fn execute_drivetrain(
     let (robot, drive_train, mut transform) = query.single_mut();
 
     // convert them into an f32 `-1..=1`
-    let ldr = drive_train.ldr as f32 / 12000.0;
-    let rdr = drive_train.rdr as f32 / 12000.0;
+    let ldr = drive_train.ldr.clamp(-12000, 12000) as f32 / 12000.0;
+    let rdr = drive_train.rdr.clamp(-12000, 12000) as f32 / 12000.0;
 
     // pass the ldr and rdr through noise
     let (ldr, rdr) = crate::controls::noise(ldr, rdr);
