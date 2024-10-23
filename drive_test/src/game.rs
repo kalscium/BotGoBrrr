@@ -80,7 +80,7 @@ pub fn spawn_robot(
         },
         SpriteBundle {
             transform: Transform::from_xyz(window.width() / 2.0, window.height(), 0.0) // make the robot in the middle of the screen
-                .with_scale(Vec3::splat(0.04)), // scale down the robot
+                .with_scale(Vec3::splat(0.08)), // scale down the robot
             texture: asset_server.load("robot.jpg"), // get the robot texture
             ..Default::default()
         },
@@ -189,7 +189,7 @@ pub fn gamepad_movement(
     }
 
     // get the left and right drive values
-    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, time.delta_seconds(), transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0, &mut control_state);
+    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, time.delta_seconds(), (transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0).clamp(-180.0, 180.0), &mut control_state);
 
     // update text
     let debug_info = debug_info.join("\n");
@@ -270,7 +270,7 @@ pub fn keyboard_movement(
     }
 
     // pass them through the controls
-    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, time.delta_seconds(), transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0, &mut control_state);
+    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, time.delta_seconds(), (transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0).clamp(-180.0, 180.0), &mut control_state);
 
     // update text
     let debug_info = debug_info.join("\n");
