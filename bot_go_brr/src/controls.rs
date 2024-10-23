@@ -60,7 +60,7 @@ pub fn drive() -> ByteCode {
 
     // if the second joystick is active, then derive an angle from it's x and y values
     let mut desired_angle = None;
-    if j2x != 0 && j2y != 0 {
+    if j2x != 0 || j2y != 0 {
         desired_angle = Some(drive_controls::xy_to_angle(j2x as f32, j2y as f32));
     }
 
