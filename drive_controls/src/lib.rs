@@ -19,38 +19,43 @@ pub fn exp_daniel(x: f32) -> f32 {
         * maths::signumf(x) // to maintain the sign
 }
 
-pub use pid;
-
-/// Creates a new PID
-pub fn new_pid() -> pid::Pid<f32> {
-    let mut pid = pid::Pid::new(0.0, 12000.0);
-
-    // configure pid
-    pid.p(64.0, 12000.0);
-    pid.i(4.0, 12000.0);
-    pid.d(8.0, 12000.0);
-
-    pid
+/// Passes x (`-1..=1`) through daniel's algorithm to produce a log voltage from `-12000..=12000`
+pub fn log_daniel(x: f32) -> f32 {
+    (-1024.0 * maths::powf(DMN, maths::absf(x)) + 1024.0 * DMN)
+        * maths::signumf(x) // to maintain the sign
 }
 
-/// Corrects the rotation of the robot based upon the yaw and the desired angle (returns the new x value)
-pub fn rot_correct(angle: f32, yaw: f32, pid: &mut pid::Pid<f32>) -> f32 {
-    // update internal PID values
-    pid.setpoint(angle);
+/// Finds the lowest difference in angle between two angles (-180..=180 (for both arguments and return value))
+pub fn low_angle_diff(x: f32, y: f32) -> f32 {
+    // get the first possible difference in angle
+    let diff1 = x - y;
+    // get the second possible difference in angle
+    let diff2 = (360.0 - maths::absf(x) - maths::absf(y))
+        * maths::signumf(y);
 
-    // calculate correction x value
-    let output = pid.next_control_output(yaw);
+    // return the smaller difference
+    if maths::absf(diff2) < maths::absf(diff1) {
+        diff2
+    } else {
+        diff1 // slight preference for diff 1 but still the same distance travelled
+    }
+}
+
+/// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the new x value
+pub fn rot_correct(diff: f32) -> f32 {
+    // calculate correction x value with daniel's magic number
+    let xc = exp_daniel(diff / 180.0);
 
     // return it
-    output.output
+    xc
 }
 
 /// Finds the angle of the x and y values of the joystick according to the top of the joystick
 pub fn xy_to_angle(x: f32, y: f32) -> f32 {
     if y < 0.0 {
-        maths::atan(maths::absf(y) / (x + 0.1 * maths::signumf(x)))
+        maths::atan(maths::absf(y) / (x + 0.0001 * maths::signumf(x)))
             + 90.0 * maths::signumf(x)
     } else {
-        maths::atan(x / (y + 0.1 * maths::signumf(y)))
+        maths::atan(x / (y + 0.0001 * maths::signumf(y)))
     }.clamp(-179.0, 179.0)
 }
