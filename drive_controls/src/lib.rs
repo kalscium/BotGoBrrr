@@ -21,7 +21,7 @@ pub fn exp_daniel(x: f32) -> f32 {
 
 /// Passes x (`-1..=1`) through daniel's algorithm to produce a log voltage from `-12000..=12000`
 pub fn log_daniel(x: f32) -> f32 {
-    (-1024.0 * maths::powf(DMN, maths::absf(x)) + 1024.0 * DMN)
+    (-1024.0 * maths::powf(DMN, 1.0-maths::absf(x)) + 1024.0 * DMN)
         * maths::signumf(x) // to maintain the sign
 }
 
@@ -42,12 +42,17 @@ pub fn low_angle_diff(x: f32, y: f32) -> f32 {
 }
 
 /// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the new x value
-pub fn rot_correct(diff: f32) -> f32 {
+pub fn rot_correct(error: f32, integral: &mut f32) -> f32 {
     // calculate correction x value with daniel's magic number
-    let xc = exp_daniel(diff / 180.0);
+    let pxc = exp_daniel(error / 180.0);
+
+    // calculate the integral
+    let ixc = exp_daniel(*integral);
+    *integral += log_daniel(error / 180.0) / 12000.0;
+    *integral = integral.clamp(-1.0, 1.0);
 
     // return it
-    xc
+    pxc + ixc
 }
 
 /// Finds the angle of the x and y values of the joystick according to the top of the joystick

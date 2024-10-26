@@ -41,3 +41,8 @@ pub fn signumf(x: f32) -> f32 {
 pub fn absf(x: f32) -> f32 {
     x * signumf(x)
 }
+
+/// Finds the average of two f32s
+pub fn avgf(x: f32, y: f32) -> f32 {
+    (x + y) / 2.0
+}
