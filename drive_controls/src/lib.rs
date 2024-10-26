@@ -10,7 +10,7 @@ pub fn arcade(x: i32, y: i32) -> (i32, i32) {
     (ldr, rdr)
 }
 
-/// Daniels magic number for nice, smooth and exponential controls (`12000 = 1024a^{1}`)
+/// Daniels magic number for nice, smooth and exponential controls (`y = 1024a^{x} - 1024`)
 const DMN: f32 = 12.71875;
 
 /// Passes x (`-1..=1`) through daniel's algorithm to produce an exponential voltage from `-12000..=12000`
@@ -22,6 +22,21 @@ pub fn exp_daniel(x: f32) -> f32 {
 /// Passes x (`-1..=1`) through daniel's algorithm to produce a log voltage from `-12000..=12000`
 pub fn log_daniel(x: f32) -> f32 {
     (-1024.0 * maths::powf(DMN, 1.0-maths::absf(x)) + 1024.0 * DMN)
+        * maths::signumf(x) // to maintain the sign
+}
+
+/// Ethan's magic number for nice, smooth and exponential corrections (`y = a^{x}/56 - 1/56`)
+const EMN: f32 = 57.0;
+
+/// Passes x (`-1..=1`) through ethan's algorithm to produce an exponential number from `-1..=1`
+pub fn exp_ethan(x: f32) -> f32 {
+    (maths::powf(EMN, maths::absf(x)) / 56.0 - 1.0/56.0) // main part of the equation
+        * maths::signumf(x) // to maintain the sign
+}
+
+/// Passes x (`-1..=1`) through ethan's algorithm to produce an logarithmic number from `-1..=1`
+pub fn log_ethan(x: f32) -> f32 {
+    (maths::powf(EMN, 1.0-maths::absf(x)) / -56.0 + 1.0/56.0 * EMN) // main part of the equation
         * maths::signumf(x) // to maintain the sign
 }
 
@@ -42,13 +57,13 @@ pub fn low_angle_diff(x: f32, y: f32) -> f32 {
 }
 
 /// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the new x value
-pub fn rot_correct(error: f32, integral: &mut f32) -> f32 {
+pub fn rot_correct(error: f32, delta_seconds: f32, integral: &mut f32) -> f32 {
     // calculate correction x value with daniel's magic number
-    let pxc = exp_daniel(error / 180.0);
+    let pxc = log_ethan(error / 180.0) * 12000.0;
 
     // calculate the integral
-    let ixc = exp_daniel(*integral);
-    *integral += log_daniel(error / 180.0) / 12000.0;
+    let ixc = *integral * 12000.0;
+    *integral += log_ethan(error / 180.0) * delta_seconds;
     *integral = integral.clamp(-1.0, 1.0);
 
     // return it
