@@ -13,11 +13,14 @@ macro_rules! debug {
 /// Don't do this, this is just so that I can rapidly test new controls without modifing the game code
 #[derive(Resource)]
 pub struct ControlState {
+    avg_error: f32,
 }
 
 /// Initialises the control state
 pub fn init_state() -> ControlState {
-    ControlState { }
+    ControlState {
+        avg_error: 1.0,
+    }
 }
 
 pub fn controls(x: f32, y: f32, _delta_seconds: f32, yaw: f32, state: &mut ControlState) -> (i32, i32, Vec<String>) {
@@ -56,7 +59,7 @@ pub fn pure_driver(x: f32, y: f32, yaw: f32) -> (i32, i32, Vec<String>) {
 }
 
 /// A form of control that rotates the robot in an absolute way
-pub fn abs_rotation(x: f32, y: f32, yaw: f32, _state: &mut ControlState) -> (i32, i32, Vec<String>) {
+pub fn abs_rotation(x: f32, y: f32, yaw: f32, state: &mut ControlState) -> (i32, i32, Vec<String>) {
     let mut debug_info = Vec::new();
 
     // get the target angle (from x and y)
@@ -64,7 +67,7 @@ pub fn abs_rotation(x: f32, y: f32, yaw: f32, _state: &mut ControlState) -> (i32
 
     // get the error angle and the correction x
     let diff = drive_controls::low_angle_diff(target_angle, yaw);
-    let xc = drive_controls::rot_correct(diff);
+    let xc = drive_controls::rot_correct(diff, &mut state.avg_error);
 
     // get the final left and right drive voltages
     let (ldr, rdr) = drive_controls::arcade(xc as i32, 0);
@@ -74,9 +77,11 @@ pub fn abs_rotation(x: f32, y: f32, yaw: f32, _state: &mut ControlState) -> (i32
 
     debug!(debug_info: "joystick x: {x:.4}");
     debug!(debug_info: "joystick y: {y:.4}\n");
+
     debug!(debug_info: "yaw       : {yaw:.4}");
-    debug!(debug_info: "desired   : {target_angle:.4}");
-    debug!(debug_info: "difference: {diff:.4}");
+    debug!(debug_info: "target    : {target_angle:.4}");
+    debug!(debug_info: "error     : {diff:.4}");
+    debug!(debug_info: "avg error : {:.4}\n", state.avg_error);
     debug!(debug_info: "correct  x: {xc:.4}\n");
 
     debug!(debug_info: "(ldr, rdr): ({ldr}, {rdr})");

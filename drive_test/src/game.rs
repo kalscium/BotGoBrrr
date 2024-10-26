@@ -9,7 +9,8 @@ pub fn run() {
         .insert_resource(crate::controls::init_state())
         .add_systems(Startup, (spawn_camera, spawn_robot, spawn_text))
         .add_systems(PreUpdate, gamepad_connections)
-        .add_systems(FixedUpdate, (keyboard_movement, gamepad_movement, exact_keyboard_movement))
+        .add_systems(FixedUpdate, (keyboard_movement, gamepad_movement))
+        .add_systems(FixedPostUpdate, exact_keyboard_movement)
         .add_systems(PostUpdate, (execute_drivetrain, confine_movement))
         .run();
 }
@@ -76,7 +77,7 @@ pub fn spawn_robot(
         DriveTrain { ldr: 0, rdr: 0 },
         Robot {
             movement_speed: 512.0,
-            rotation_speed: 4.0,
+            rotation_speed: 6.0,
         },
         SpriteBundle {
             transform: Transform::from_xyz(window.width() / 2.0, window.height(), 0.0) // make the robot in the middle of the screen
