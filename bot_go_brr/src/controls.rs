@@ -1,32 +1,33 @@
 //! Functions that both determine the controls of the robot and also generate bytecode insts
 
-use safe_vex::controller::{self, Controller, ControllerAnalog};
-use crate::{bytecode::ByteCode, config};
+use safe_vex::{controller::{self, Controller, ControllerAnalog}, motor};
+use crate::config;
 
-/// Get the belt bytecode instruction
-pub fn belt() -> ByteCode {
+/// Spins the belt based on user input and returns if is spinning or not and the direction of the spin
+pub fn belt() -> Option<bool> {
     // grab the boolean activations of the bytecode 
     let up = controller::get_digital(Controller::Master, config::controls::BELT_UP);
     let down = controller::get_digital(Controller::Master, config::controls::BELT_DOWN);
 
-    // if the up button is hit, then return a belt bytecode inst to make it spin upwards
+    // if the up button is hit, then spin the belt up
     if let Ok(true) = up {
-        return ByteCode::Belt(config::motors::BELT_SPEED);
+        return Some(true);
     }
     
-    // if the down button is hit, then return a belt bytecode inst to make it spin downwards
+    // if the down button is hit, then return that the belt should spin downwards
     if let Ok(true) = down {
-        return ByteCode::Belt(-config::motors::BELT_SPEED);
+        return Some(false);
     }
 
     // if there are no belt buttons being hit, make the belt stop
-    ByteCode::Belt(0)
+    None
 }
- /// Get the solenoid bytecode instruction
-pub fn solenoid(tick: u32, solenoid_active: &mut bool, solenoid_tick: &mut u32) -> ByteCode {
+
+/// Returns if the solenoid should be active or not
+pub fn solenoid(tick: u32, solenoid_active: &mut bool, solenoid_tick: &mut u32) -> bool {
     // if there hasn't been at least `config::solenoid::DELAY` ticks then do nothing
     if tick - *solenoid_tick < config::solenoid::DELAY {
-        return ByteCode::Solenoid(*solenoid_active);
+        return *solenoid_active;
     }
 
     // otherwise check for the solenoid button being toggled
@@ -43,7 +44,7 @@ pub fn solenoid(tick: u32, solenoid_active: &mut bool, solenoid_tick: &mut u32) 
     }
 
     // return the current solenoid state
-    ByteCode::Solenoid(*solenoid_active)
+    *solenoid_active
 }
 
 /// Get the drive bytecode instruction

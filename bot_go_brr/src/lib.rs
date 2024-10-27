@@ -4,6 +4,6 @@ pub mod initialize;
 pub mod opcontrol;
 pub mod autonomous;
 pub mod config;
-pub mod bytecode;
-pub mod controls;
 pub mod drive;
+pub mod belt;
+pub mod solenoid;
