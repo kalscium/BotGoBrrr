@@ -27,18 +27,12 @@ fn cycle(
     solenoid_tick: &mut u32,
     angle_integral: &mut f32,
 ) {
-    // run the belt
+    // execute the belt
     belt::user_control();
 
-    // run the solenoid
+    // execute the solenoid
     solenoid::user_control(tick, solenoid_tick, solenoid_active);
 
-    // // get drive instruction
-    // let drive_inst = match controls::drive() {
-    //     bytecode::ByteCode::Drive { x, y, desired_angle } => (x, y, desired_angle),
-    //     _ => unreachable!("drive controls function must output drive bytecode"),
-    // };
-
-    // // execute all generated instructions
-    // drive::drive(drive_inst.0, drive_inst.1, drive_inst.2, rot_pid);
+    // execute the drivetrain
+    drive::user_control(angle_integral);
 }

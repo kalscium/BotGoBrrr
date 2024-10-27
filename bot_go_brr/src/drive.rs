@@ -1,9 +1,38 @@
 //! Drive code for the drive-train
 
-use safe_vex::motor;
+use safe_vex::{controller::{self, Controller, ControllerAnalog}, motor};
 use crate::config;
 
-/// Drives the drive-train based on x and y values and also an optional desired angle
+/// Drives the drive-train based on user input and the angle integral and returns the thrust/y value (-12000.0..=12000)
+pub fn user_control(angle_integral: &mut f32) -> i32 {
+    // get the joystick values (from -127..=127)
+    let j1x = controller::get_analog(Controller::Master, ControllerAnalog::LeftX).unwrap_or_default();
+    let j1y = controller::get_analog(Controller::Master, ControllerAnalog::LeftY).unwrap_or_default();
+    let j2x = controller::get_analog(Controller::Master, ControllerAnalog::RightX).unwrap_or_default();
+    let j2y = controller::get_analog(Controller::Master, ControllerAnalog::RightY).unwrap_or_default();
+
+    // get the calculated voltages
+    let j1xv = drive_controls::exp_daniel(j1x as f32 / 127.0);
+    let j1yv = drive_controls::exp_daniel(j1y as f32 / 127.0);
+
+
+    // if the second joystick is active, then derive an angle from it's x and y values and drive based of that instead
+    if j2x != 0 || j2y != 0 {
+        // get the target angle (from x and y)
+        let target_angle = drive_controls::xy_to_angle(j2x as f32, j2y as f32);
+
+        // drive
+        drive_exact(j1yv, target_angle, angle_integral);
+    } else {
+        // drive normally
+        drive(j1xv, j1yv);
+    }
+
+    // return the y voltage (for now)
+    j1yv as i32
+}
+
+/// Drives the drive-train based on x and y values
 pub fn drive(mut x: f32, y: f32) {
     // apply the multipliers
     x *= config::TURN_MULTIPLIER;
