@@ -1,25 +1,38 @@
 //! Drive code for the drive-train
 
-use drive_controls::pid::Pid;
 use safe_vex::motor;
 use crate::config;
 
 /// Drives the drive-train based on x and y values and also an optional desired angle
-pub fn drive(mut x: f32, y: f32, desired_angle: Option<f32>, rot_pid: &mut Pid<f32>) {
-    // if there is a desired angle then correct for it, *(and ignore the user-input x)*
-    if let Some(angle) = desired_angle {
-        // grab the inertial sensor yaw
-        let yaw = unsafe {
-            safe_vex::bindings::imu_get_yaw(config::IMU_PORT as u8)
-        } as f32;
-
-        // correct for the sensor yaw by setting the new x value
-        x = drive_controls::rot_correct(angle, yaw, rot_pid);
-        safe_vex::io::println!("angle: {angle}\nyaw: {yaw}\nx: {x}");
-    }
-
+pub fn drive(mut x: f32, y: f32) {
     // apply the multipliers
     x *= config::TURN_MULTIPLIER;
+
+    // pass them through arcade drive to get left and right drives
+    let (ldr, rdr) = drive_controls::arcade(x as i32, y as i32);
+
+    // drive
+    voltage_left(ldr);
+    voltage_right(rdr);
+}
+
+/// Drive the robot based on exact yaw values (and eventually location values aswell)
+pub fn drive_exact(
+    y: f32, // will be replaced later with target location x and y values
+    target_angle: f32,
+    angle_integral: &mut f32
+) {
+    // grab the inertial sensor yaw
+    let yaw = unsafe {
+        safe_vex::bindings::imu_get_yaw(config::IMU_PORT as u8)
+    } as f32;
+
+    // find the error in the angle and target angle
+    let error = drive_controls::low_angle_diff(target_angle, yaw);
+
+    // correct for the error by setting the new x value
+    let x = drive_controls::rot_correct(error, config::TICK_SPEED as f32, angle_integral);
+    safe_vex::io::println!("angle: {target_angle}\nyaw: {yaw}\nx: {x}");
 
     // pass them through arcade drive to get left and right drives
     let (ldr, rdr) = drive_controls::arcade(x as i32, y as i32);

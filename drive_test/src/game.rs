@@ -1,5 +1,4 @@
 use bevy::{input::gamepad::{GamepadConnection, GamepadEvent}, prelude::*, window::PrimaryWindow};
-
 use crate::controls::ControlState;
 
 pub fn run() {
