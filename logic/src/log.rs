@@ -5,7 +5,7 @@ use alloc::{boxed::Box, string::String};
 use spin::Mutex;
 
 /// The size of the log buffer
-const LOG_BUFFER_SIZE: usize = 16;
+const LOG_BUFFER_SIZE: usize = 32;
 
 /// Different levels of logging
 #[derive(Debug, Clone, Copy)]
