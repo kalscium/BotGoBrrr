@@ -1,5 +1,5 @@
 [package]
-name = "drive_test"
+name = "robot_sim"
 version = "0.1.0"
 edition = "2021"
 
@@ -14,8 +14,8 @@ features = [
   "wayland",
 ]
 
-[dependencies.drive_controls]
-path = "../drive_controls"
+[dependencies.logic]
+path = "../logic"
 
 # Enable incremental builds
 [profile.dev]

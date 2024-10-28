@@ -36,11 +36,11 @@ pub fn pure_driver(x: f32, y: f32, yaw: f32) -> (i32, i32, Vec<String>) {
     let mut debug_info = Vec::new();
 
     // get the voltage values
-    let xv = drive_controls::exp_daniel(x) * TURNING_MUL;
-    let yv = drive_controls::exp_daniel(y);
+    let xv = logic::exp_daniel(x) * TURNING_MUL;
+    let yv = logic::exp_daniel(y);
 
     // get the final left and right drive voltages
-    let (ldr, rdr) = drive_controls::arcade(xv as i32, yv as i32);
+    let (ldr, rdr) = logic::arcade(xv as i32, yv as i32);
 
     // print the debug information
     debug!(debug_info: "# Only driver control\n");
@@ -63,17 +63,19 @@ pub fn abs_rotation(x: f32, y: f32, yaw: f32, delta_seconds: f32, state: &mut Co
     let mut debug_info = Vec::new();
 
     // get the target angle (from x and y)
-    let target_angle = drive_controls::xy_to_angle(x, y);
+    let target_angle = logic::xy_to_angle(x, y);
 
     // get the error angle and the correction x
-    let diff = drive_controls::low_angle_diff(target_angle, yaw);
-    let xc = drive_controls::rot_correct(diff, delta_seconds, &mut state.integral);
+    let diff = logic::low_angle_diff(target_angle, yaw);
+    let xc = logic::rot_correct(diff, delta_seconds, &mut state.integral);
 
     // get the final left and right drive voltages
-    let (ldr, rdr) = drive_controls::arcade(xc as i32, 0);
+    let (ldr, rdr) = logic::arcade(xc as i32, 0);
 
     // print the debug information
     debug!(debug_info: "# IMU exact rotation\n");
+
+    debug!(debug_info: "logs: {}\n", logic::log::LOGGER.lock().flush()[0].msg);
 
     debug!(debug_info: "joystick x: {x:.4}");
     debug!(debug_info: "joystick y: {y:.4}\n");

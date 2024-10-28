@@ -226,7 +226,7 @@ pub fn exact_keyboard_movement(
     }
 
     // get the arcade drive values
-    let (ldr, rdr) = drive_controls::arcade((rotation_factor * 8000.0) as i32, (movement_factor * 8000.0) as i32);
+    let (ldr, rdr) = logic::arcade((rotation_factor * 8000.0) as i32, (movement_factor * 8000.0) as i32);
 
     // update the drive_train
     drive_train.ldr += ldr;

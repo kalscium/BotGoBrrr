@@ -1,9 +1,16 @@
-//! A library for generating the motor voltages of a drive-train from controller inputs
+//! A platform independant library for holding all the logic of the robot
 
 #![no_std]
 
+extern crate alloc;
+
+pub mod log;
+
+// A library for generating the motor voltages of a drive-train from controller inputs
+
 /// Performs an arcade drive transformation on x and y values (`-12000..=12000`) to produce left and right drive voltages
 pub fn arcade(x: i32, y: i32) -> (i32, i32) {
+    info!("test log");
     let ldr = (y + x).clamp(-12000, 12000);
     let rdr = (y - x).clamp(-12000, 12000);
 
