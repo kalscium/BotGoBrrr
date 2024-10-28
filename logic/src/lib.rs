@@ -5,6 +5,8 @@
 extern crate alloc;
 
 pub mod log;
+pub mod magic;
+pub mod pie;
 
 // A library for generating the motor voltages of a drive-train from controller inputs
 
