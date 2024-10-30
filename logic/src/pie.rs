@@ -14,7 +14,7 @@ pub fn correct(
 
     // calculate the integral
     let ic = *integral;
-    *integral += magic::log_ethan(error / 180.0) * delta_seconds;
+    *integral += magic::log_ethan(error / max_error) * delta_seconds;
     *integral = integral.clamp(-1.0, 1.0);
 
     // return it
