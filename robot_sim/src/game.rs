@@ -76,7 +76,7 @@ pub fn spawn_robot(
         DriveTrain { ldr: 0, rdr: 0 },
         Robot {
             movement_speed: 512.0,
-            rotation_speed: 6.0,
+            rotation_speed: 64.0,
         },
         SpriteBundle {
             transform: Transform::from_xyz(window.width() / 2.0, window.height(), 0.0) // make the robot in the middle of the screen
@@ -99,7 +99,7 @@ pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Pr
 fn get_text_style(asset_server: Res<AssetServer>) -> TextStyle {
     TextStyle {
         font: asset_server.load("JetBrainsMono-Medium.ttf"),
-        font_size: 64.0,
+        font_size: 24.0,
         ..Default::default()
     }
 }
@@ -189,11 +189,18 @@ pub fn gamepad_movement(
     }
 
     // get the left and right drive values
-    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, time.delta_seconds(), (transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0).clamp(-180.0, 180.0), &mut control_state);
+    let (ldr, rdr) = crate::controls::controls(jx, jy, time.delta_seconds(), (transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0).clamp(-180.0, 180.0), &mut control_state);
 
-    // update text
-    let debug_info = debug_info.join("\n");
-    *text = Text::from_section(debug_info, get_text_style(asset_server));
+    // flush the logical logs
+    let logs = logic::log::LOGGER.lock()
+        .flush()
+        .to_vec()
+        .into_iter()
+        .filter(|log| log.level != logic::log::Level::Debug)
+        .map(|log| log.msg)
+        .collect::<Box<[_]>>()
+        .join("\n");
+    *text = Text::from_section(logs, get_text_style(asset_server));
 
     // update the drivetrain
     drive_train.ldr = ldr;
@@ -226,7 +233,7 @@ pub fn exact_keyboard_movement(
     }
 
     // get the arcade drive values
-    let (ldr, rdr) = logic::arcade((rotation_factor * 8000.0) as i32, (movement_factor * 8000.0) as i32);
+    let (ldr, rdr) = logic::drive::arcade((rotation_factor * 8000.0) as i32, (movement_factor * 8000.0) as i32);
 
     // update the drive_train
     drive_train.ldr += ldr;
@@ -270,11 +277,18 @@ pub fn keyboard_movement(
     }
 
     // pass them through the controls
-    let (ldr, rdr, debug_info) = crate::controls::controls(jx, jy, time.delta_seconds(), (transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0).clamp(-180.0, 180.0), &mut control_state);
+    let (ldr, rdr) = crate::controls::controls(jx, jy, time.delta_seconds(), (transform.rotation.to_euler(EulerRot::XYZ).2 * -60.0).clamp(-180.0, 180.0), &mut control_state);
 
-    // update text
-    let debug_info = debug_info.join("\n");
-    *text = Text::from_section(debug_info, get_text_style(asset_server));
+    // flush the logical logs
+    let logs = logic::log::LOGGER.lock()
+        .flush()
+        .to_vec()
+        .into_iter()
+        // .filter(|log| log.level != logic::log::Level::Debug)
+        .map(|log| log.msg)
+        .collect::<Box<[_]>>()
+        .join("\n");
+    *text = Text::from_section(logs, get_text_style(asset_server));
 
     // update the drivetrain
     drive_train.ldr = ldr;

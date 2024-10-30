@@ -8,7 +8,7 @@ use spin::Mutex;
 const LOG_BUFFER_SIZE: usize = 32;
 
 /// Different levels of logging
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Level {
     Warning,
     Info,
