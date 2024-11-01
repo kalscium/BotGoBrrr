@@ -25,18 +25,24 @@
           let
             rust = prev.rust-bin;
           in
-          if builtins.pathExists ./rust-toolchain.toml then
-            rust.fromRustupToolchainFile ./rust-toolchain.toml
-          else if builtins.pathExists ./rust-toolchain then
-            rust.fromRustupToolchainFile ./rust-toolchain
-          else
+          # if builtins.pathExists ./rust-toolchain.toml then
+          #   rust.fromRustupToolchainFile ./rust-toolchain.toml
+          # else if builtins.pathExists ./rust-toolchain then
+          #   rust.fromRustupToolchainFile ./rust-toolchain
+          # else
             rust.nightly.latest.default.override {
-              extensions = [ "rust-src" "rustfmt" ];
+              extensions = [
+                "rust-src"
+                "rustfmt"
+                "rustc-codegen-cranelift-preview"
+              ];
             };
       };
 
       devShells = forEachSupportedSystem ({ pkgs }: {
-        default = pkgs.mkShell {
+        default = pkgs.mkShell.override {
+          stdenv = pkgs.clangStdenv;
+        } {
           packages = with pkgs; [
             # rust
             rustToolchain
@@ -46,6 +52,7 @@
             cargo-edit
             cargo-watch
             rust-analyzer
+            mold
 
             # pkg-config dependencies
             systemd
@@ -69,6 +76,11 @@
               xorg.libXrandr
               vulkan-loader
               libxkbcommon
+
+              # due to bevy dynamic linking for dev builds
+              wayland
+              systemd
+              alsa-lib
             ]);
           };
         };
