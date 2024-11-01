@@ -4,7 +4,8 @@ use crate::controls::ControlState;
 pub fn run() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .insert_resource(Time::<Fixed>::from_hz(60.0))
+        .insert_resource(Time::<Fixed>::from_seconds(0.02))
+        .insert_resource(RobotTimer(Timer::from_seconds(0.05, TimerMode::Repeating)))
         .insert_resource(crate::controls::init_state())
         .add_systems(Startup, (spawn_camera, spawn_robot, spawn_text))
         .add_systems(PreUpdate, gamepad_connections)
@@ -31,6 +32,10 @@ pub struct DriveTrain {
 /// We can use it to know which gamepad to use for player input.
 #[derive(Resource)]
 pub struct MyGamepad(Gamepad);
+
+/// A simple resource to only run the robot code every 50ms
+#[derive(Resource)]
+pub struct RobotTimer(Timer);
 
 fn gamepad_connections(
     mut commands: Commands,
@@ -76,7 +81,7 @@ pub fn spawn_robot(
         DriveTrain { ldr: 0, rdr: 0 },
         Robot {
             movement_speed: 512.0,
-            rotation_speed: 64.0,
+            rotation_speed: 16.0,
         },
         SpriteBundle {
             transform: Transform::from_xyz(window.width() / 2.0, window.height(), 0.0) // make the robot in the middle of the screen
@@ -153,6 +158,7 @@ pub fn execute_drivetrain(
 
 pub fn gamepad_movement(
     time: Res<Time>,
+    mut timer: ResMut<RobotTimer>,
     axes: Res<Axis<GamepadAxis>>,
     gamepad: Option<Res<MyGamepad>>,
     mut control_state: ResMut<ControlState>,
@@ -160,6 +166,10 @@ pub fn gamepad_movement(
     mut text_query: Query<&mut Text>,
     asset_server: Res<AssetServer>,
 ) {
+    if !timer.0.tick(time.delta()).just_finished() {
+        return; // only run every 50ms
+    }
+
     let mut text = text_query.single_mut();
     let (mut drive_train, transform) = robot_query.single_mut();
     let Some(&MyGamepad(gamepad)) = gamepad.as_deref() else {
@@ -242,6 +252,7 @@ pub fn exact_keyboard_movement(
 
 pub fn keyboard_movement(
     time: Res<Time>,
+    mut timer: ResMut<RobotTimer>,
     gamepad: Option<Res<MyGamepad>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut control_state: ResMut<ControlState>,
@@ -249,6 +260,10 @@ pub fn keyboard_movement(
     mut text_query: Query<&mut Text>,
     asset_server: Res<AssetServer>,
 ) {
+    if !timer.0.tick(time.delta()).just_finished() {
+        return; // only run every 50ms
+    }
+
     let (mut drive_train, transform) = query.single_mut();
     let mut text = text_query.single_mut();
 
