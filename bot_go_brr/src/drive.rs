@@ -11,64 +11,28 @@ pub fn user_control(angle_integral: &mut f32) -> i32 {
     let j2x = controller::get_analog(Controller::Master, ControllerAnalog::RightX).unwrap_or_default();
     let j2y = controller::get_analog(Controller::Master, ControllerAnalog::RightY).unwrap_or_default();
 
-    // get the calculated voltages
-    let j1xv = drive_controls::exp_daniel(j1x as f32 / 127.0);
-    let j1yv = drive_controls::exp_daniel(j1y as f32 / 127.0);
-
-
-    // if the second joystick is active, then derive an angle from it's x and y values and drive based of that instead
-    if j2x != 0 || j2y != 0 {
-        // get the target angle (from x and y)
-        let target_angle = drive_controls::xy_to_angle(j2x as f32, j2y as f32);
-
-        // drive
-        drive_exact(j1yv, target_angle, angle_integral);
-    } else {
-        // drive normally
-        drive(j1xv, j1yv);
-    }
-
-    // return the y voltage (for now)
-    j1yv as i32
-}
-
-/// Drives the drive-train based on x and y values
-pub fn drive(mut x: f32, y: f32) {
-    // apply the multipliers
-    x *= config::TURN_MULTIPLIER;
-
-    // pass them through arcade drive to get left and right drives
-    let (ldr, rdr) = drive_controls::arcade(x as i32, y as i32);
-
-    // drive
-    voltage_left(ldr);
-    voltage_right(rdr);
-}
-
-/// Drive the robot based on exact yaw values (and eventually location values aswell)
-pub fn drive_exact(
-    y: f32, // will be replaced later with target location x and y values
-    target_angle: f32,
-    angle_integral: &mut f32
-) {
-    // grab the inertial sensor yaw
+    // get the current yaw of the robot
     let yaw = unsafe {
         safe_vex::bindings::imu_get_yaw(config::IMU_PORT as u8)
-    } as f32;
+    };
 
-    // find the error in the angle and target angle
-    let error = drive_controls::low_angle_diff(target_angle, yaw);
+    // calculate the left and right motor voltages
+    let (ldr, rdr) = logic::drive::user_control(
+        j1x as f32 / 127.0,
+        j1y as f32 / 127.0,
+        j2x as f32 / 127.0,
+        j2y as f32 / 127.0,
+        yaw as f32,
+        config::TICK_SPEED as f32,
+        angle_integral,
+    );
 
-    // correct for the error by setting the new x value
-    let x = drive_controls::rot_correct(error, config::TICK_SPEED as f32, angle_integral);
-    safe_vex::io::println!("angle: {target_angle}\nyaw: {yaw}\nx: {x}");
-
-    // pass them through arcade drive to get left and right drives
-    let (ldr, rdr) = drive_controls::arcade(x as i32, y as i32);
-
-    // drive
+    // drive the robot based on the ldr and rdr values
     voltage_left(ldr);
     voltage_right(rdr);
+
+    // return the y value (for now)
+    logic::magic::exp_daniel(j1y as f32 / 127.0) as i32
 }
 
 /// Sets the voltage of the left drive-train
