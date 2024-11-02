@@ -1,6 +1,6 @@
 //! Drive code for the drive-train
 
-use safe_vex::{controller::{self, Controller, ControllerAnalog}, motor};
+use safe_vex::{controller::{self, Controller, ControllerAnalog}, imu, motor};
 use crate::config;
 
 /// Drives the drive-train based on user input and the angle integral and returns the thrust/y value (-12000.0..=12000)
@@ -12,9 +12,7 @@ pub fn user_control(angle_integral: &mut f32) -> i32 {
     let j2y = controller::get_analog(Controller::Master, ControllerAnalog::RightY).unwrap_or_default();
 
     // get the current yaw of the robot
-    let yaw = unsafe {
-        safe_vex::bindings::imu_get_yaw(config::IMU_PORT as u8)
-    };
+    let yaw = imu::get_yaw(config::IMU_PORT).unwrap_or_default();
 
     // calculate the left and right motor voltages
     let (ldr, rdr) = logic::drive::user_control(

@@ -616,12 +616,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rcstring"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b871e68ed0a7d0b3ae42f2ce19668ea6864bbfc9a095b8714ac65e67a3001a3"
-
-[[package]]
 name = "regex"
 version = "1.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -658,15 +652,14 @@ checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
 name = "safe-vex"
-version = "4.3.1-alpha"
+version = "4.4.0-alpha"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66aed6a44b71aff06dec4c9db51bf2d175edbbafd62e52c3766d8ef465b0c09d"
+checksum = "698e233b2458aa255c71eb20f96dee2c3535ba57285f18b876b1e4397d01fbf6"
 dependencies = [
  "bindgen",
  "libc",
  "libc-print",
  "newlib-alloc",
- "rcstring",
  "zip",
  "zip-extensions",
 ]
