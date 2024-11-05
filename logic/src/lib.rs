@@ -8,3 +8,4 @@ pub mod log;
 pub mod magic;
 pub mod pie;
 pub mod drive;
+pub mod inst;
