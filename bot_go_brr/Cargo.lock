@@ -95,6 +95,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 
 [[package]]
+name = "byte-strings"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "002ee5531feb8450e59862fefa550eeac39b726d60b186071672751045ebc29a"
+dependencies = [
+ "byte-strings-proc_macros",
+]
+
+[[package]]
+name = "byte-strings-proc_macros"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62f7e0e71f98d6c71bfe42b0a7a47d0f870ad808401fad2d44fa156ed5b0ae03"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.77",
+]
+
+[[package]]
 name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -652,11 +672,12 @@ checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
 name = "safe-vex"
-version = "4.4.0-alpha"
+version = "4.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "698e233b2458aa255c71eb20f96dee2c3535ba57285f18b876b1e4397d01fbf6"
+checksum = "2f8b990bf936da59b2f713bf7e0cd17820ae50f7a9e23ef5dfd7f0d1c7b76715"
 dependencies = [
  "bindgen",
+ "byte-strings",
  "libc",
  "libc-print",
  "newlib-alloc",

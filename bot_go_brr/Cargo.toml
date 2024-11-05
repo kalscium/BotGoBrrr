@@ -19,7 +19,7 @@ path = "../maths"
 path = "../logic"
 
 [dependencies.safe-vex]
-version = "4.4.0-alpha"
+version = "4.2.0"
 # path = "/home/kalscium/Github/safe-vex"
 
 [features]
@@ -31,7 +31,7 @@ incremental = false
 opt-level = "z"
 lto = true
 codegen-units = 1
-panic = "abort"
+panic = "unwind"
 strip = true
 debug = false
 

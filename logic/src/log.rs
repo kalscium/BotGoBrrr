@@ -8,11 +8,11 @@ use spin::Mutex;
 const LOG_BUFFER_SIZE: usize = 32;
 
 /// Different levels of logging
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum Level {
-    Warning,
-    Info,
-    Debug,
+    Debug = 0,
+    Info = 1,
+    Warning = 2,
 }
 
 /// The logger of the program (should only be initialised by this module)
@@ -32,7 +32,7 @@ pub static LOGGER: Mutex<Logger> = Mutex::new(Logger {
 #[derive(Debug, Clone)]
 pub struct Log {
     pub level: Level,
-    pub file: &'static str,
+    pub module_path: &'static str,
     pub line: u32,
     pub column: u32,
     pub msg: String,
@@ -74,7 +74,7 @@ macro_rules! warn {
             .lock()
             .log($crate::log::Log {
                 level: $crate::log::Level::Warning,
-                file: core::file!(),
+                module_path: core::module_path!(),
                 line: core::line!(),
                 column: core::column!(),
                 msg: alloc::format!($format, $($args),*),
@@ -90,7 +90,7 @@ macro_rules! info {
             .lock()
             .log($crate::log::Log {
                 level: $crate::log::Level::Info,
-                file: core::file!(),
+                module_path: core::module_path!(),
                 line: core::line!(),
                 column: core::column!(),
                 msg: alloc::format!($format, $($args),*),
@@ -106,7 +106,7 @@ macro_rules! debug {
             .lock()
             .log($crate::log::Log {
                 level: $crate::log::Level::Debug,
-                file: core::file!(),
+                module_path: core::module_path!(),
                 line: core::line!(),
                 column: core::column!(),
                 msg: alloc::format!($format, $($args),*),
