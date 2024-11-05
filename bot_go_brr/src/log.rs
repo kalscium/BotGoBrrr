@@ -8,6 +8,22 @@ use crate::config;
 /// An open filestream to the log file
 pub struct LogFile(Option<FileWrite>);
 
+/// Flushes all the logical logs and logs them
+pub fn logic_flush(logfile: &mut LogFile) {
+    // get the logs from the logfile
+    let logs = logic::log::LOGGER.lock().flush();
+
+    // iterate through the logs and log them
+    for log in logs {
+        log_stdout(&log); // log to stdout
+
+        // log errors during logging
+        if let Err(err) = log_logfile(&log, logfile) {
+            warn!("`PROSErr` encountered while writing to logfile: {err:?}");
+        }
+    }
+}
+
 /// Logs a message to the stdout
 pub fn log_stdout(log: &Log) {
     // only log if important enough
@@ -22,8 +38,14 @@ pub fn log_stdout(log: &Log) {
         Level::Warning => "\x1b[33;1mwarning\x1b[0m",
     };
 
-    // prints the log
-    println!("{prefix} {}", log.msg);
+    // prints the formatted log
+    println!(
+        "\x1b[33m{}:{}:{} {prefix} {}",
+        log.file,
+        log.line,
+        log.column,
+        log.msg,
+    );
 }
 
 /// Initialises a new logfile
@@ -64,7 +86,13 @@ pub fn log_logfile(log: &Log, logfile: &mut LogFile) -> Result<(), PROSErr> {
     };
 
     // format the log
-    let formatted = format!("{prefix} -> {}", log.msg);
+    let formatted = format!(
+        "[{}:{}:{}] {prefix} -> {}",
+        log.file,
+        log.line,
+        log.column,
+        log.msg,
+    );
 
     // try to write to the logfile
     file.write(&formatted)?;

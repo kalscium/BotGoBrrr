@@ -32,7 +32,7 @@ pub static LOGGER: Mutex<Logger> = Mutex::new(Logger {
 #[derive(Debug, Clone)]
 pub struct Log {
     pub level: Level,
-    pub module_path: &'static str,
+    pub file: &'static str,
     pub line: u32,
     pub column: u32,
     pub msg: String,
@@ -74,7 +74,7 @@ macro_rules! warn {
             .lock()
             .log($crate::log::Log {
                 level: $crate::log::Level::Warning,
-                module_path: core::module_path!(),
+                file: core::file!(),
                 line: core::line!(),
                 column: core::column!(),
                 msg: alloc::format!($format, $($args),*),
@@ -90,7 +90,7 @@ macro_rules! info {
             .lock()
             .log($crate::log::Log {
                 level: $crate::log::Level::Info,
-                module_path: core::module_path!(),
+                file: core::file!(),
                 line: core::line!(),
                 column: core::column!(),
                 msg: alloc::format!($format, $($args),*),
@@ -106,7 +106,7 @@ macro_rules! debug {
             .lock()
             .log($crate::log::Log {
                 level: $crate::log::Level::Debug,
-                module_path: core::module_path!(),
+                file: core::file!(),
                 line: core::line!(),
                 column: core::column!(),
                 msg: alloc::format!($format, $($args),*),
