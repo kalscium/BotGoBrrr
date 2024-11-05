@@ -1,5 +1,6 @@
 //! Functions for controlling the belt of the robot
 
+use logic::warn;
 use safe_vex::{controller::{self, Controller}, motor};
 use crate::config;
 
@@ -35,10 +36,12 @@ pub fn inst_control(active: bool, spinning_up: bool) {
         (false, _) => 0,
     };
 
-    // spin the belt motor
-    let _ = motor::move_voltage( // ignore any errors
+    // spin the belt motor and log any errors
+    if let Err(err) = motor::move_voltage(
         config::motors::BELT.port,
         config::motors::BELT.reverse,
         voltage,
-    );
+    ) {
+        warn!("`PROSErr` occured while setting motor voltage for belt: {err:?}");
+    }
 }

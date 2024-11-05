@@ -69,7 +69,7 @@ impl Logger {
 /// Logs a warning to the logic logger
 #[macro_export]
 macro_rules! warn {
-    ($format:literal $(,$args:expr)* $(,)?) => {
+    ($format:literal $(,$args:expr)* $(,)?) => {{
         let _ = $crate::log::LOGGER
             .lock()
             .log($crate::log::Log {
@@ -79,13 +79,13 @@ macro_rules! warn {
                 column: core::column!(),
                 msg: alloc::format!($format, $($args),*),
             });
-    }
+    }}
 }
 
 /// Logs information to the logic logger
 #[macro_export]
 macro_rules! info {
-    ($format:literal $(,$args:expr)* $(,)?) => {
+    ($format:literal $(,$args:expr)* $(,)?) => {{
         let _ = $crate::log::LOGGER
             .lock()
             .log($crate::log::Log {
@@ -95,13 +95,13 @@ macro_rules! info {
                 column: core::column!(),
                 msg: alloc::format!($format, $($args),*),
             });
-    }
+    }}
 }
 
 /// Logs debug information to the logic logger
 #[macro_export]
 macro_rules! debug {
-    ($format:literal $(,$args:expr)* $(,)?) => {
+    ($format:literal $(,$args:expr)* $(,)?) => {{
         let _ = $crate::log::LOGGER
             .lock()
             .log($crate::log::Log {
@@ -111,6 +111,6 @@ macro_rules! debug {
                 column: core::column!(),
                 msg: alloc::format!($format, $($args),*),
             });
-    }
+    }}
 }
 

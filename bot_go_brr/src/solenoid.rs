@@ -1,5 +1,6 @@
 //! Functions for controlling the solenoid of the robot
 
+use logic::info;
 use safe_vex::{controller::{self, Controller}, adi};
 use crate::config;
 
@@ -9,6 +10,8 @@ pub fn user_control(
     last_toggled: &mut u32,
     active: &mut bool,
 ) -> bool {
+    info!("solenoid active: {active}");
+
     // if there hasn't been at least `config::solenoid::DELAY` ticks then do nothing
     if tick - *last_toggled < config::solenoid::DELAY {
         return *active;

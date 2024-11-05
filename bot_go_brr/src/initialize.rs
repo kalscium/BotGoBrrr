@@ -1,5 +1,6 @@
 //! Initialization routine for the robot
 
+use logic::warn;
 use safe_vex::{adi::{self, AdiConfig}, imu};
 use crate::config;
 
@@ -10,7 +11,7 @@ pub fn initialize() {
     adi::set_config(safe_vex::port::AdiPort::H, AdiConfig::DigitalIn);
 
     // calibrate the interial sensor
-    if imu::reset(config::IMU_PORT).is_err() {
-        safe_vex::io::println!("silent error: failed to calibrate inertial sensor"); // don't crash
+    if let Err(err) = imu::reset(config::IMU_PORT) {
+        warn!("`PROSErr` occured while calibrating intertial sensor: {err:?}");
     }
 }
