@@ -87,7 +87,7 @@ pub fn log_logfile(log: &Log, logfile: &mut LogFile) -> Result<(), PROSErr> {
 
     // format the log
     let formatted = format!(
-        "[{}:{}:{}] {prefix} -> {}",
+        "[{}:{}:{}] {prefix} -> {}\n",
         log.file,
         log.line,
         log.column,

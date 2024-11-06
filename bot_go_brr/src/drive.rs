@@ -4,6 +4,17 @@ use logic::warn;
 use safe_vex::{controller::{self, Controller, ControllerAnalog}, imu, motor};
 use crate::config;
 
+/// Gets the current yaw of the robot
+pub fn get_yaw() -> f32 {
+    match imu::get_yaw(config::IMU_PORT) {
+        Ok(yaw) => yaw as f32,
+        Err(err) => {
+            warn!("`PROSErr` encountered while getting imu yaw: {err:?}");
+            0.0
+        },
+    }
+}
+
 /// Drives the drive-train based on user input and the angle integral and returns the thrust/y value (-12000.0..=12000)
 pub fn user_control(angle_integral: &mut f32) -> i32 {
     // get the joystick values (from -127..=127)
@@ -13,7 +24,7 @@ pub fn user_control(angle_integral: &mut f32) -> i32 {
     let j2y = controller::get_analog(Controller::Master, ControllerAnalog::RightY).unwrap_or_default();
 
     // get the current yaw of the robot
-    let yaw = imu::get_yaw(config::IMU_PORT).unwrap_or_default();
+    let yaw = get_yaw();
 
     // calculate the left and right motor voltages
     let (ldr, rdr) = logic::drive::user_control(
@@ -21,8 +32,8 @@ pub fn user_control(angle_integral: &mut f32) -> i32 {
         j1y as f32 / 127.0,
         j2x as f32 / 127.0,
         j2y as f32 / 127.0,
-        yaw as f32,
-        config::TICK_SPEED as f32,
+        yaw,
+        config::TICK_SPEED as f32 / 1000.0,
         angle_integral,
     );
 

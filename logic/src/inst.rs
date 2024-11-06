@@ -17,25 +17,25 @@ pub const INST_SIZE: usize = 4;
 pub struct Inst {
     /// Required angle for the instruction to execute
     #[packed_field(bits="0..9")]
-    req_angle: Integer<i16, packed_bits::Bits::<9>>,
+    pub req_angle: Integer<i16, packed_bits::Bits::<9>>,
 
     /// If the belt should be spinning
     #[packed_field(bits="9")]
-    act_belt_active: bool,
+    pub act_belt_active: bool,
 
     /// If the belt should be spinning 'upwards'
     ///
     /// *Ignored if the active bool is false*
     #[packed_field(bit="10")]
-    act_belt_up: bool,
+    pub act_belt_up: bool,
 
     /// If the solenoid should be active or not
     #[packed_field(bit="11")]
-    act_solenoid_active: bool,
+    pub act_solenoid_active: bool,
 
     /// The 'thrust' *(exp y value)* of the robot
     #[packed_field(bit="12..27")]
-    act_thrust: Integer<i16, packed_bits::Bits::<15>>,
+    pub thrust: Integer<i16, packed_bits::Bits::<15>>,
 }
 
 /// A stored autonomous routine
@@ -71,7 +71,7 @@ impl Iterator for AutonRoutine<'_> {
         let Ok(inst) =
             Inst::unpack(packed)
         else {
-            warn!("packed inst `{}` in auton routine at idx `{}` is invalid", hex::encode(packed), self.idx);
+            warn!("packed inst `{packed:04X?}` in auton routine at idx `{}` is invalid", self.idx);
             info!("skipping the rest of autonomous");
             return None;
         };

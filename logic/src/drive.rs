@@ -12,7 +12,7 @@ pub fn arcade(x: i32, y: i32) -> (i32, i32) {
 
 
 /// Finds the lowest difference in angle between two angles (-180..=180 (for both arguments and return value))
-fn low_angle_diff(x: f32, y: f32) -> f32 {
+pub fn low_angle_diff(x: f32, y: f32) -> f32 {
     // get the first possible difference in angle
     let diff1 = x - y;
     // get the second possible difference in angle
@@ -38,6 +38,7 @@ pub fn user_control(
     angle_integral: &mut f32,
 ) -> (i32, i32) {
     // log info
+    debug!("delta_seconds: {delta_seconds}");
 
     // get the initial calculated voltages from the first controller
     let mut xv = magic::exp_daniel(j1x);
@@ -60,6 +61,27 @@ pub fn user_control(
     // pass the final x y values through arcade drive for ldr rdr
     let (ldr, rdr) = arcade(xv as i32, yv as i32);
 
+    info!("ldr: {ldr}, rdr: {rdr}");
+
+    (ldr, rdr)
+}
+
+/// Uses thrust, target angle and yaw to generate left and right drives
+pub fn inst_control(
+    thrust: i32,
+    target: f32,
+    yaw: f32,
+    delta_seconds: f32,
+    angle_integral: &mut f32,
+) -> (i32, i32) {
+    info!("thrust: {thrust}");
+    debug!("delta_seconds: {delta_seconds}");
+
+    // corrects for the rotation
+    let cx = rot_correct(target, yaw, delta_seconds, angle_integral);
+
+    // passes the x and y values through arcade drive
+    let (ldr, rdr) = arcade(cx as i32, thrust);
     info!("ldr: {ldr}, rdr: {rdr}");
 
     (ldr, rdr)

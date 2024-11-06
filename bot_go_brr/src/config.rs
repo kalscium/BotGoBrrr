@@ -36,6 +36,12 @@ pub mod solenoid {
     pub const DELAY: u32 = 8;
 }
 
+/// Configurations for autonomous
+pub mod auton {
+    /// The required minimum precision for the robot's angle during auton (must be within this angle)
+    pub const ANGLE_PRECISION: f32 = 1.0;
+}
+
 /// Configurations for logging
 pub mod log {
     use logic::log::Level;
