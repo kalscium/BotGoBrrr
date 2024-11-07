@@ -21,21 +21,33 @@ pub fn autonomous() {
 
     // autonomous loop
     for inst in auton_routine {
-        // while the robot is not meeting the inst requirements, correct towards them
-        while {
-            // get the angle error
-            let error = logic::drive::low_angle_diff(
+        loop {
+            // get the current angle error
+            let angle_error = maths::absf(logic::drive::low_angle_diff(
                 i16::from(inst.req_angle) as f32,
                 drive::get_yaw(),
-            );
+            ));
 
-            // find the absolute error
-            let abs_err = maths::absf(error);
+            // if the absolute error is smaller than the angle precision requirement then run the inst's actions and advance to the next instruction
+            if angle_error <= config::auton::ANGLE_PRECISION {
+                // once it meets the requirements, then execute it's actions
+                belt::inst_control(inst.act_belt_active, inst.act_belt_up);
+                solenoid::inst_control(inst.act_solenoid_active);
 
-            // if the absolute error is larger than the precision threshold, then correct forit
-            abs_err > config::auton::ANGLE_PRECISION
-        } {
-            // drive according to the inst and correction
+                // flush logs
+                info!("belt active: {}, belt up: {}", inst.act_belt_active, inst.act_belt_up);
+                info!("solenoid active: {}", inst.act_solenoid_active);
+                log::logic_flush(&mut logfile);
+
+                // wait a tick cycle (also sort of an inst action)
+                rtos::task_delay_until(&mut now, config::TICK_SPEED);
+
+                break; // advance to the next inst
+            }
+
+            // correct for the required angle
+
+            // get the correction ldr and rdr (for the angle)
             let (ldr, rdr) = logic::drive::inst_control(
                 i16::from(inst.thrust) as i32,
                 i16::from(inst.req_angle) as f32,
@@ -49,19 +61,10 @@ pub fn autonomous() {
             drive::voltage_right(rdr);
 
             // flush logs
-            info!("belt active: {}, belt up: {}", inst.act_belt_active, inst.act_belt_up);
-            info!("solenoid active: {}", inst.act_solenoid_active);
             log::logic_flush(&mut logfile);
 
             // wait a tick cycle inbetween corrections
             rtos::task_delay_until(&mut now, config::TICK_SPEED);
         }
-
-        // once it meets the requirements, then execute it's actions
-        belt::inst_control(inst.act_belt_active, inst.act_belt_up);
-        solenoid::inst_control(inst.act_solenoid_active);
-
-        // wait a tick cycle (also sort of an inst action)
-        rtos::task_delay_until(&mut now, config::TICK_SPEED);
     }
 }
