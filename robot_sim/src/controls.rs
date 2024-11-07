@@ -54,7 +54,7 @@ const TURNING_MUL: f32 = 0.64;
 /// A form of control that rotates the robot in an absolute way
 pub fn abs_rotation(x: f32, y: f32, yaw: f32, delta_seconds: f32, state: &mut ControlState) -> (i32, i32) {
     logic::info!("# IMU exact rotation");
-    logic::drive::user_control(0.0, 0.0, x, y + 0.001, yaw, delta_seconds, &mut state.integral)
+    logic::drive::user_control(0.0, 0.0, x, y + 0.001, yaw, delta_seconds * 1000.0, &mut state.integral)
 
 }
 
@@ -63,7 +63,7 @@ pub fn noise(ldr: f32, rdr: f32) -> (f32, f32) {
     // add random noise
     // let ldr = ldr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
     // let rdr = rdr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
-    // let rdr = rdr * 0.8;
+    let rdr = rdr * 0.8;
 
     (ldr, rdr)
 }

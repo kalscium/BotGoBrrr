@@ -4,8 +4,8 @@ use crate::controls::ControlState;
 pub fn run() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .insert_resource(Time::<Fixed>::from_seconds(0.02))
-        .insert_resource(RobotTimer(Timer::from_seconds(0.05, TimerMode::Repeating)))
+        .insert_resource(Time::<Fixed>::from_hz(60.0))
+        .insert_resource(RobotTimer(Timer::from_seconds(0.05, TimerMode::Repeating))) // 50ms robot code execution
         .insert_resource(crate::controls::init_state())
         .add_systems(Startup, (spawn_camera, spawn_robot, spawn_text))
         .add_systems(PreUpdate, gamepad_connections)
@@ -81,7 +81,7 @@ pub fn spawn_robot(
         DriveTrain { ldr: 0, rdr: 0 },
         Robot {
             movement_speed: 512.0,
-            rotation_speed: 16.0,
+            rotation_speed: 8.0,
         },
         SpriteBundle {
             transform: Transform::from_xyz(window.width() / 2.0, window.height(), 0.0) // make the robot in the middle of the screen
