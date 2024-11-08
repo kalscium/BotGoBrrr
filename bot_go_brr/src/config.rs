@@ -40,6 +40,8 @@ pub mod solenoid {
 pub mod auton {
     /// The required minimum precision for the robot's angle during auton (must be within this angle)
     pub const ANGLE_PRECISION: f32 = 1.0;
+    /// The path of the file used for recording
+    pub const RECORD_PATH: &str = "/usd/record.rs";
 }
 
 /// Configurations for logging

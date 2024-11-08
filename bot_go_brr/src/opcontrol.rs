@@ -4,6 +4,9 @@ use logic::{debug, info};
 use safe_vex::rtos;
 use crate::{belt, config, drive, log::{self, LogFile}, solenoid};
 
+#[cfg(feature="record")]
+use crate::record::Record;
+
 /// The opcontrol routine entrypoint
 pub fn opcontrol() {
     info!("opcontrol period started");
@@ -16,10 +19,16 @@ pub fn opcontrol() {
     let mut solenoid_tick = tick; // the last time the solenoid's activity was changed
     let mut angle_integral: f32 = 0.0; // the integral for the robot's rotational corrections
 
+    // (optional) record file for auton
+    #[cfg(feature="record")]
+    let mut record = Record::new_ignore(config::auton::RECORD_PATH);
+
     // opcontrol loop
     loop {
         cycle(
             &mut logfile,
+            #[cfg(feature="record")]
+            &mut record,
             tick,
             &mut solenoid_active,
             &mut solenoid_tick,
@@ -33,6 +42,8 @@ pub fn opcontrol() {
 /// An individual opcontrol cycle
 fn cycle(
     logfile: &mut LogFile,
+    #[cfg(feature="record")]
+    record: &mut Record,
     tick: u32,
     solenoid_active: &mut bool,
     solenoid_tick: &mut u32,
@@ -41,13 +52,17 @@ fn cycle(
     debug!("opctrl tick: {tick}");
 
     // execute the belt
-    belt::user_control();
+    let _belt_inst = belt::user_control();
 
     // execute the solenoid
-    solenoid::user_control(tick, solenoid_tick, solenoid_active);
+    let _solenoid_inst = solenoid::user_control(tick, solenoid_tick, solenoid_active);
 
     // execute the drivetrain
-    drive::user_control(angle_integral);
+    let _thrust = drive::user_control(angle_integral);
+
+    // record the three values
+    #[cfg(feature="record")]
+    record.record(_thrust, _belt_inst, _solenoid_inst);
 
     // flush logs
     log::logic_flush(logfile);
