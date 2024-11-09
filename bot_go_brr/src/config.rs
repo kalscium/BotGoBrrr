@@ -1,7 +1,7 @@
 //! Configurations for the robot
 
 /// How long (in milliseconds) each 'tick' is
-pub const TICK_SPEED: u32 = 500;
+pub const TICK_SPEED: u32 = 50;
 
 /// The multiplier applied to the robot's turning
 pub const TURN_MULTIPLIER: f32 = 0.64;
@@ -49,9 +49,9 @@ pub mod log {
     use logic::log::Level;
 
     /// The logfile path for opcontrol
-    pub const LOGFILE_OP_PATH: &str = "/usd/bgb_logs.txt";
+    pub const LOGFILE_OP_PATH: &str = "/usd/bgb_logs_opctrl.txt";
     /// The logfile path for autonomous
-    pub const LOGFILE_AUTO_PATH: &str = "/usd/bgb_logs.txt";
+    pub const LOGFILE_AUTO_PATH: &str = "/usd/bgb_logs_auton.txt";
     /// The minimum log level for stdout logs
     pub const STDOUT_MIN: Level = Level::Info;
     /// THe minimum log level for logfile logs

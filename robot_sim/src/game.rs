@@ -81,7 +81,7 @@ pub fn spawn_robot(
         DriveTrain { ldr: 0, rdr: 0 },
         Robot {
             movement_speed: 512.0,
-            rotation_speed: 8.0,
+            rotation_speed: 6.0,
         },
         SpriteBundle {
             transform: Transform::from_xyz(window.width() / 2.0, window.height(), 0.0) // make the robot in the middle of the screen

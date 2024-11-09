@@ -8,10 +8,6 @@ edition = "2021"
 [dependencies]
 static-toml = "1.2"
 
-# [dependencies.packed_struct]
-# version = "0.10"
-# default-features = false
-
 [dependencies.maths]
 path = "../maths"
 

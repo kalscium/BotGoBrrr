@@ -1,7 +1,6 @@
 //! Autonomous instructions for the robot
 
 use packed_struct::prelude::*;
-
 use crate::{info, warn};
 
 /// The size (in bytes) of a single packed auton instruction
@@ -71,7 +70,7 @@ impl Iterator for AutonRoutine<'_> {
         let Ok(inst) =
             Inst::unpack(packed)
         else {
-            warn!("packed inst `{packed:04X?}` in auton routine at idx `{}` is invalid", self.idx);
+            warn!("packed inst `{packed:?}` in auton routine at idx `{}` is invalid", self.idx);
             info!("skipping the rest of autonomous");
             return None;
         };

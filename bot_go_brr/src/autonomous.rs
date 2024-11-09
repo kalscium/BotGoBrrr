@@ -12,6 +12,7 @@ pub fn autonomous() {
     let mut logfile = log::logfile_init(config::log::LOGFILE_OP_PATH); // filestream to the opcontrol logfile
     let mut now = rtos::millis(); // the current time
     let mut angle_integral: f32 = 0.0; // the integral for the robot's rotational corrections
+    let mut prev_vdr: (i32, i32) = (0, 0); // the previous voltages of the left and right drives
 
     // autonomous routine
     #[cfg(not(feature="full-autonomous"))]
@@ -53,6 +54,7 @@ pub fn autonomous() {
                 i16::from(inst.req_angle) as f32,
                 drive::get_yaw(),
                 config::TICK_SPEED as f32 / 1000.0,
+                &mut prev_vdr,
                 &mut angle_integral,
             );
 

@@ -61,11 +61,7 @@ impl Record {
         inst.pack_to_slice(&mut packed).unwrap();
 
         // format the inst to a string
-        let formatted = format!(
-            "{:04x?}, // {:?}\n",
-            packed,
-            inst,
-        );
+        let formatted = format!("{packed:?}, // {inst:?}\n");
 
         // write it to the file and report errors
         if let Err(err)  = file.write(&formatted) {

@@ -15,8 +15,8 @@ pub fn get_yaw() -> f32 {
     }
 }
 
-/// Drives the drive-train based on user input and the angle integral and returns the thrust/y value (-12000.0..=12000)
-pub fn user_control(angle_integral: &mut f32) -> i32 {
+/// Drives the drive-train based on user input, previous voltage drive and the angle integral and returns the thrust/y value (-12000.0..=12000)
+pub fn user_control(prev_vdr: &mut (i32, i32), angle_integral: &mut f32) -> i32 {
     // get the joystick values (from -127..=127)
     let j1x = controller::get_analog(Controller::Master, ControllerAnalog::LeftX).unwrap_or_default();
     let j1y = controller::get_analog(Controller::Master, ControllerAnalog::LeftY).unwrap_or_default();
@@ -34,6 +34,7 @@ pub fn user_control(angle_integral: &mut f32) -> i32 {
         j2y as f32 / 127.0,
         yaw,
         config::TICK_SPEED as f32 / 1000.0,
+        prev_vdr,
         angle_integral,
     );
 

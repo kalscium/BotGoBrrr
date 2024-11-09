@@ -35,17 +35,16 @@ pub fn user_control(
     j2y: f32,
     yaw: f32,
     delta_seconds: f32,
+    prev_vdr: &mut (i32, i32),
     angle_integral: &mut f32,
 ) -> (i32, i32) {
-    // log info
-    debug!("delta_seconds: {delta_seconds}");
+    debug!("delta_seconds: {delta_seconds:01.04}");
 
     // get the initial calculated voltages from the first controller
     let mut xv = magic::exp_daniel(j1x);
     let yv = magic::exp_daniel(j1y);
 
-    info!("yv: {yv}");
-    info!("xv: {xv}");
+    info!("xv: {xv:08.02}, yv: {yv:08.02}");
 
     // if the second joystick is active, then use the second joystick to derive an True Bearing target angle and correct for it
     if j2x != 0.0 || j2y != 0.0 {
@@ -58,10 +57,13 @@ pub fn user_control(
         xv = correct_x;
     }
 
-    // pass the final x y values through arcade drive for ldr rdr
+    // pass the ldr and rdr through arcade drive
     let (ldr, rdr) = arcade(xv as i32, yv as i32);
 
-    info!("ldr: {ldr}, rdr: {rdr}");
+    // pass the ldr and rdr through a voltage dampener
+    let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
+
+    info!("ldr: {ldr:06}, rdr: {rdr:06}");
 
     (ldr, rdr)
 }
@@ -72,19 +74,55 @@ pub fn inst_control(
     target: f32,
     yaw: f32,
     delta_seconds: f32,
+    prev_vdr: &mut (i32, i32),
     angle_integral: &mut f32,
 ) -> (i32, i32) {
-    info!("thrust: {thrust}");
-    debug!("delta_seconds: {delta_seconds}");
+    info!("thrust: {thrust:04}");
+    debug!("delta_seconds: {delta_seconds:01.04}");
 
     // corrects for the rotation
     let cx = rot_correct(target, yaw, delta_seconds, angle_integral);
 
     // passes the x and y values through arcade drive
     let (ldr, rdr) = arcade(cx as i32, thrust);
-    info!("ldr: {ldr}, rdr: {rdr}");
+
+    // dampens the ldr and rdr
+    let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
+
+    info!("ldr: {ldr:06}, rdr: {rdr:06}");
 
     (ldr, rdr)
+}
+
+/// Dampens any sudden changes to the voltage drives of the robot
+pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) {
+    // find the deltas of ldr and rdr
+    let ldr_delta = new_vdr.0 - prev_vdr.0;
+    let rdr_delta = new_vdr.1 - prev_vdr.1;
+
+    // find the exponential derivative for ldr and rdr
+    const MAX_CHANGE: f32 = 24000.;
+    const FRICTION_MUL: f32 = 0.48;
+    let exdr_ldr = magic::log_daniel(ldr_delta as f32 / MAX_CHANGE) * FRICTION_MUL;
+    let exdr_rdr = magic::log_daniel(rdr_delta as f32 / MAX_CHANGE) * FRICTION_MUL;
+
+    // get the dampened voltage drive
+    let damp_vdr = (
+        new_vdr.0 - exdr_ldr as i32,
+        new_vdr.1 - exdr_rdr as i32,
+    );
+
+    // logs
+    debug!("raw ldr: {:06}, raw rdr: {:06}", new_vdr.0, new_vdr.1);
+    debug!("prev ldr: {:06}, prev rdr: {:06}", prev_vdr.0, prev_vdr.1);
+    debug!("ldr delta: {ldr_delta:06}, rdr delta: {rdr_delta:06}");
+    debug!("exdr_ldr: {exdr_ldr:08.02}, exdr_rdr: {exdr_rdr:08.02}");
+
+    // update the previous voltage drive
+    *prev_vdr = damp_vdr.clone();
+
+    // return the dampened voltage drives
+    damp_vdr
 }
 
 /// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the new x value
@@ -105,11 +143,11 @@ pub fn rot_correct(
     ) * 12000.0;
 
     // logs
-    info!("yaw: {yaw}");
-    info!("target angle: {target}");
-    debug!("angle error: {error}");
-    debug!("angle integral: {}", *integral);
-    debug!("angle correction x: {correct_x}");
+    info!("yaw: {yaw:04.02}");
+    info!("target angle: {target:04.02}");
+    debug!("angle error: {error:04.02}");
+    debug!("angle integral: {:02.04}", *integral);
+    debug!("angle correction x: {correct_x:08.02}");
 
     // return the correction
     correct_x
