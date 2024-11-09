@@ -2,7 +2,7 @@
 
 use logic::{debug, info};
 use safe_vex::rtos;
-use crate::{belt, config, drive, log::{self, LogFile}, solenoid};
+use crate::{belt, config, drive, log, solenoid};
 
 #[cfg(feature="record")]
 use crate::record::Record;
@@ -26,47 +26,26 @@ pub fn opcontrol() {
 
     // opcontrol loop
     loop {
-        cycle(
-            &mut logfile,
-            #[cfg(feature="record")]
-            &mut record,
-            tick,
-            &mut solenoid_active,
-            &mut solenoid_tick,
-            &mut prev_vdr,
-            &mut angle_integral,
-        );
+        debug!("opctrl tick: {tick}");
+
+        // execute the belt
+        let _belt_inst = belt::user_control();
+
+        // execute the solenoid
+        let _solenoid_inst = solenoid::user_control(tick, &mut solenoid_tick, &mut solenoid_active);
+
+        // execute the drivetrain
+        let _thrust = drive::user_control(&mut prev_vdr, &mut angle_integral);
+
+        // record the three values
+        #[cfg(feature="record")]
+        record.record(_thrust, _belt_inst, _solenoid_inst);
+
+        // flush logs
+        log::logic_flush(&mut logfile);
+
+        // update the tick and wait for the next loop cycle
         tick += 1;
         rtos::task_delay_until(&mut now, config::TICK_SPEED);
     }
-}
-
-/// An individual opcontrol cycle
-fn cycle(
-    logfile: &mut LogFile,
-    #[cfg(feature="record")]
-    record: &mut Record,
-    tick: u32,
-    solenoid_active: &mut bool,
-    solenoid_tick: &mut u32,
-    prev_vdr: &mut (i32, i32),
-    angle_integral: &mut f32,
-) {
-    debug!("opctrl tick: {tick}");
-
-    // execute the belt
-    let _belt_inst = belt::user_control();
-
-    // execute the solenoid
-    let _solenoid_inst = solenoid::user_control(tick, solenoid_tick, solenoid_active);
-
-    // execute the drivetrain
-    let _thrust = drive::user_control(prev_vdr, angle_integral);
-
-    // record the three values
-    #[cfg(feature="record")]
-    record.record(_thrust, _belt_inst, _solenoid_inst);
-
-    // flush logs
-    log::logic_flush(logfile);
 }
