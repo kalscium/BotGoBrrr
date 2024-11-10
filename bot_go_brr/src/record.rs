@@ -1,7 +1,7 @@
 //! Functions recording autonomous routines
 
 use alloc::format;
-use logic::{inst::{Inst, INST_SIZE}, packed_struct::PackedStructSlice, warn};
+use logic::{debug, inst::{Inst, INST_SIZE}, packed_struct::PackedStructSlice, warn};
 use safe_vex::{error::PROSErr, fs::{self, FileWrite}};
 use crate::{config, drive};
 
