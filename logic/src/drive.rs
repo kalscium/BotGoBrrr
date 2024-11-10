@@ -40,7 +40,7 @@ pub fn user_control(
     let mut xv = magic::exp_daniel(j1x);
     let yv = magic::exp_daniel(j1y);
 
-    info!("xv: {xv:08.02}, yv: {yv:08.02}");
+    info!("xv: {xv:08.02}, yv/thrust: {yv:08.02}");
 
     // if the second joystick is active, then use the second joystick to derive an True Bearing target angle and correct for it
     if j2x != 0.0 || j2y != 0.0 {
@@ -48,7 +48,7 @@ pub fn user_control(
 
         // get the target angle (from x and y) and correction x
         let target_angle = xy_to_angle(j2x, j2y);
-        let correct_x = rot_correct(target_angle, yaw, 0.); // REMOVE THIS, just for testing
+        let correct_x = rot_correct(target_angle, yaw, 0.); // REMOVE THIS; just for testing
 
         xv = correct_x;
     }
