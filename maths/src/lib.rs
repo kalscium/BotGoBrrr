@@ -16,6 +16,15 @@ pub fn sqrt(x: f32) -> f32 {
     unsafe { core::intrinsics::sqrtf32(x) }
 }
 
+/// Divides a number while checking for zero
+pub fn checked_div(x: f32, y: f32) -> Option<f32> {
+    if y == 0. {
+        None
+    } else {
+        Some(x / y)
+    }
+}
+
 /// Approximates the Arc-Tan (in degrees) of an `f32`
 pub fn atan(x: f32) -> f32 {
     // compute the atan

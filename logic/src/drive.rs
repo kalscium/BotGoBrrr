@@ -1,6 +1,6 @@
 //! Logic code for the drive-train of the robot
 
-use crate::{debug, info, magic, pie};
+use crate::{debug, info, magic};
 
 /// Performs an arcade drive transformation on x and y values (-12000..=12000) to produce left and right drive voltages
 pub fn arcade(x: i32, y: i32) -> (i32, i32) {
@@ -34,12 +34,8 @@ pub fn user_control(
     j2x: f32,
     j2y: f32,
     yaw: f32,
-    delta_seconds: f32,
     prev_vdr: &mut (i32, i32),
-    angle_integral: &mut f32,
 ) -> (i32, i32) {
-    debug!("delta_seconds: {delta_seconds:01.04}");
-
     // get the initial calculated voltages from the first controller
     let mut xv = magic::exp_daniel(j1x);
     let yv = magic::exp_daniel(j1y);
@@ -52,7 +48,7 @@ pub fn user_control(
 
         // get the target angle (from x and y) and correction x
         let target_angle = xy_to_angle(j2x, j2y);
-        let correct_x = rot_correct(target_angle, yaw, delta_seconds, angle_integral);
+        let correct_x = rot_correct(target_angle, yaw, 0.); // REMOVE THIS, just for testing
 
         xv = correct_x;
     }
@@ -73,15 +69,13 @@ pub fn inst_control(
     thrust: i32,
     target: f32,
     yaw: f32,
-    delta_seconds: f32,
+    initial_yaw: f32,
     prev_vdr: &mut (i32, i32),
-    angle_integral: &mut f32,
 ) -> (i32, i32) {
     info!("thrust: {thrust:04}");
-    debug!("delta_seconds: {delta_seconds:01.04}");
 
     // corrects for the rotation
-    let cx = rot_correct(target, yaw, delta_seconds, angle_integral);
+    let cx = rot_correct(target, yaw, initial_yaw);
 
     // passes the x and y values through arcade drive
     let (ldr, rdr) = arcade(cx as i32, thrust);
@@ -94,6 +88,15 @@ pub fn inst_control(
     (ldr, rdr)
 }
 
+/// Corrects for any errors (delta) based upon it's inital error (delta) and returns the correction voltage
+pub fn correct_volt(error: f32, initial_error: f32) -> f32 {
+    magic::exp_ethan(
+        maths::checked_div(error, initial_error) // get the fraction of the delta (location in the slope)
+            .unwrap_or(0.) // if no delta, do nothing
+            * maths::signumf(error) // keep the sign of the delta
+    )
+}
+
 /// Dampens any sudden changes to the voltage drives of the robot
 pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) {
     // find the deltas of ldr and rdr
@@ -102,9 +105,9 @@ pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) 
 
     // find the exponential derivative for ldr and rdr
     const MAX_CHANGE: f32 = 24000.;
-    const FRICTION_MUL: f32 = 0.48;
-    let exdr_ldr = magic::log_daniel(ldr_delta as f32 / MAX_CHANGE) * FRICTION_MUL;
-    let exdr_rdr = magic::log_daniel(rdr_delta as f32 / MAX_CHANGE) * FRICTION_MUL;
+    const FRICTION_MUL: f32 = 0.32;
+    let exdr_ldr = magic::log_ethan(ldr_delta as f32 * FRICTION_MUL / MAX_CHANGE);
+    let exdr_rdr = magic::log_ethan(rdr_delta as f32 * FRICTION_MUL / MAX_CHANGE);
 
     // get the dampened voltage drive
     let damp_vdr = (
@@ -129,24 +132,17 @@ pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) 
 pub fn rot_correct(
     target: f32,
     yaw: f32,
-    delta_seconds: f32,
-    integral: &mut f32
+    initial_yaw: f32,
 ) -> f32 {
     let error = low_angle_diff(target, yaw);
-
-    // use the pie
-    let correct_x = pie::correct(
-        low_angle_diff(target, yaw),
-        180.0,
-        delta_seconds,
-        integral
-    ) * 12000.0;
+    let initial_error = low_angle_diff(target, initial_yaw);
+    let correct_x = correct_volt(error, initial_error);
 
     // logs
     info!("yaw: {yaw:04.02}");
     info!("target angle: {target:04.02}");
+    debug!("initial angle error: {initial_error:04.02}");
     debug!("angle error: {error:04.02}");
-    debug!("angle integral: {:02.04}", *integral);
     debug!("angle correction x: {correct_x:08.02}");
 
     // return the correction
