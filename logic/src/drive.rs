@@ -64,10 +64,10 @@ pub fn user_control(
     (ldr, rdr)
 }
 
-/// Uses thrust, target angle and yaw to generate left and right drives
+/// Uses thrust, target angle yaw, and initial yaw to generate left and right drives
 pub fn inst_control(
     thrust: i32,
-    target: f32,
+    target_angle: f32,
     yaw: f32,
     initial_yaw: f32,
     prev_vdr: &mut (i32, i32),
@@ -75,7 +75,7 @@ pub fn inst_control(
     info!("thrust: {thrust:04}");
 
     // corrects for the rotation
-    let cx = rot_correct(target, yaw, initial_yaw);
+    let cx = rot_correct(target_angle, yaw, initial_yaw);
 
     // passes the x and y values through arcade drive
     let (ldr, rdr) = arcade(cx as i32, thrust);

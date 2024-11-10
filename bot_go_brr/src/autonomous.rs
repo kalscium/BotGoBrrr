@@ -11,7 +11,6 @@ pub fn autonomous() {
     // variables that get mutated
     let mut logfile = log::logfile_init(config::log::LOGFILE_OP_PATH); // filestream to the opcontrol logfile
     let mut now = rtos::millis(); // the current time
-    let mut angle_integral: f32 = 0.0; // the integral for the robot's rotational corrections
     let mut prev_vdr: (i32, i32) = (0, 0); // the previous voltages of the left and right drives
 
     // autonomous routine
@@ -22,6 +21,9 @@ pub fn autonomous() {
 
     // autonomous loop
     for inst in auton_routine {
+        // get the initial yaw
+        let initial_yaw = drive::get_yaw();
+
         loop {
             // get the current angle error
             let angle_error = maths::absf(logic::drive::low_angle_diff(
@@ -53,9 +55,8 @@ pub fn autonomous() {
                 i16::from(inst.thrust) as i32,
                 i16::from(inst.req_angle) as f32,
                 drive::get_yaw(),
-                config::TICK_SPEED as f32 / 1000.0,
+                initial_yaw,
                 &mut prev_vdr,
-                &mut angle_integral,
             );
 
             // drive the correction

@@ -18,7 +18,6 @@ pub fn opcontrol() {
     let mut solenoid_active = false; // if the solenoid is active or not
     let mut solenoid_tick = tick; // the last time the solenoid's activity was changed
     let mut prev_vdr: (i32, i32) = (0, 0); // the previous voltages for the left and right drives
-    let mut angle_integral: f32 = 0.0; // the integral for the robot's rotational corrections
 
     // (optional) record file for auton
     #[cfg(feature="record")]
@@ -35,7 +34,7 @@ pub fn opcontrol() {
         let _solenoid_inst = solenoid::user_control(tick, &mut solenoid_tick, &mut solenoid_active);
 
         // execute the drivetrain
-        let _thrust = drive::user_control(&mut prev_vdr, &mut angle_integral);
+        let _thrust = drive::user_control(&mut prev_vdr);
 
         // record the three values
         #[cfg(feature="record")]
