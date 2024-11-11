@@ -34,6 +34,7 @@ pub fn user_control(
     j2x: f32,
     j2y: f32,
     yaw: f32,
+    initial_yaw: &mut f32,
     prev_vdr: &mut (i32, i32),
 ) -> (i32, i32) {
     // get the initial calculated voltages from the first controller
@@ -48,9 +49,12 @@ pub fn user_control(
 
         // get the target angle (from x and y) and correction x
         let target_angle = xy_to_angle(j2x, j2y);
-        let correct_x = rot_correct(target_angle, yaw, 0.); // REMOVE THIS; just for testing
+        let correct_x = rot_correct(target_angle, yaw, *initial_yaw);
 
         xv = correct_x;
+    } else {
+        // update the initial yaw
+        *initial_yaw = yaw;
     }
 
     // pass the ldr and rdr through arcade drive
@@ -91,9 +95,10 @@ pub fn inst_control(
 /// Corrects for any errors (delta) based upon it's inital error (delta) and returns the correction voltage
 pub fn correct_volt(error: f32, initial_error: f32) -> f32 {
     magic::exp_ethan(
-        maths::checked_div(error, initial_error) // get the fraction of the delta (location in the slope)
+        (maths::checked_div(error, initial_error) // get the fraction of the delta (location in the slope)
             .unwrap_or(0.) // if no delta, do nothing
-            * maths::signumf(error) // keep the sign of the delta
+            * maths::signumf(error)) // keep the sign of the delta
+        .clamp(-1., 1.)
     )
 }
 
