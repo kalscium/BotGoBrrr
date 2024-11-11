@@ -36,6 +36,14 @@ pub mod solenoid {
     pub const DELAY: u32 = 8;
 }
 
+/// Odometry Configurations
+pub mod odom {
+    use safe_vex::port::SmartPort;
+
+    /// The port of the x rotation sensor
+    pub const PORT_X: SmartPort = SmartPort::Ten;
+}
+
 /// Configurations for autonomous
 pub mod auton {
     /// The required minimum precision for the robot's angle during auton (must be within this angle)

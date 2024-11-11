@@ -2,6 +2,8 @@
 //!
 //! **Note:** All measurements are in millimetres
 
+use core::f32::consts::PI;
+
 /// The diameter of the robot's wheel in **mm**
 const DIAMETER: f32 = 69.85;
 
@@ -19,4 +21,20 @@ pub fn lowest_rot_delta(x: f32, y: f32) -> f32 {
     } else {
         delta1 // slight preference for diff 2
     }
+}
+
+/// Modifies an absolute coordinate based upon the current and previous angle of the rotation sensor
+pub fn account_for(current: f32, prev: &mut f32, coord: &mut f32) {
+    // find the delta
+    let angle_delta = lowest_rot_delta(current, *prev);
+
+    // update the previous angle to the current one
+    *prev = current;
+
+    // find the coordinate delta though the circumference of the wheel
+    const CIRCUMFERENCE: f32 = DIAMETER*PI; // circumference in millimeters
+    let coord_delta = angle_delta/360. * CIRCUMFERENCE;
+
+    // add the coordinate delta to the coordinate
+    *coord += coord_delta;
 }

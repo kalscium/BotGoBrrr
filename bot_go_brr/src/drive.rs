@@ -1,7 +1,7 @@
 //! Drive code for the drive-train
 
 use logic::warn;
-use safe_vex::{controller::{self, Controller, ControllerAnalog}, imu, motor};
+use safe_vex::{controller::{self, Controller, ControllerAnalog}, imu, motor, port::SmartPort, rotation};
 use crate::config;
 
 /// Gets the current yaw of the robot
@@ -15,8 +15,19 @@ pub fn get_yaw() -> f32 {
     }
 }
 
+/// Gets the angle reading from a rotation sensor at the specified port
+pub fn get_rotation_angle(port: SmartPort) -> f32 {
+    match rotation::get_angle(port) {
+        Ok(angle) => angle as f32 / 100.,
+        Err(err) => {
+            warn!("`PROSErr` encountered while getting angle of rotation sensor at port `{port:?}`: `{err:?}`");
+            0.0
+        },
+    }
+}
+
 /// Drives the drive-train based on user input, previous voltage drive and the angle integral and returns the thrust/y value (-12000.0..=12000)
-pub fn user_control(prev_vdr: &mut (i32, i32)) -> i32 {
+pub fn user_control(initial_yaw: &mut f32, prev_vdr: &mut (i32, i32)) -> i32 {
     // get the joystick values (from -127..=127)
     let j1x = controller::get_analog(Controller::Master, ControllerAnalog::LeftX).unwrap_or_default();
     let j1y = controller::get_analog(Controller::Master, ControllerAnalog::LeftY).unwrap_or_default();
@@ -33,6 +44,7 @@ pub fn user_control(prev_vdr: &mut (i32, i32)) -> i32 {
         j2x as f32 / 127.0,
         j2y as f32 / 127.0,
         yaw,
+        initial_yaw,
         prev_vdr,
     );
 
