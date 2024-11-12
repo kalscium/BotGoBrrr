@@ -57,7 +57,7 @@ pub fn user_control(
     let (ldr, rdr) = arcade(xv as i32, yv as i32);
 
     // pass the ldr and rdr through a voltage dampener
-    // let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
+    let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
 
     info!("ldr: {ldr:06}, rdr: {rdr:06}");
 
@@ -80,7 +80,7 @@ pub fn inst_control(
     let (ldr, rdr) = arcade(cx as i32, thrust);
 
     // dampens the ldr and rdr
-    // let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
+    let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
 
     info!("ldr: {ldr:06}, rdr: {rdr:06}");
 
@@ -95,39 +95,21 @@ pub fn correct_volt(error: f32, max_error: f32) -> f32 {
 
 /// Dampens any sudden changes to the voltage drives of the robot
 pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) {
-    // find the deltas of ldr and rdr
-    let ldr_delta = new_vdr.0 - prev_vdr.0;
-    let rdr_delta = new_vdr.1 - prev_vdr.1;
+    // find the average between the previous and new voltage drives
+    let ldr_avg = maths::avgf(prev_vdr.0 as f32, new_vdr.0 as f32);
+    let rdr_avg = maths::avgf(prev_vdr.1 as f32, new_vdr.1 as f32);
 
-    // find the exponential derivative for ldr and rdr
-    const MAX_CHANGE: f32 = 24000.;
-    const FRICTION_MUL: f32 = 0.32;
-    let exdr_ldr = magic::log_ethan(ldr_delta as f32 * FRICTION_MUL / MAX_CHANGE);
-    let exdr_rdr = magic::log_ethan(rdr_delta as f32 * FRICTION_MUL / MAX_CHANGE);
-
-    // get the dampened voltage drive
-    let damp_vdr = (
-        new_vdr.0 - exdr_ldr as i32,
-        new_vdr.1 - exdr_rdr as i32,
-    );
-
-    // logs
-    debug!("raw ldr: {:06}, raw rdr: {:06}", new_vdr.0, new_vdr.1);
-    debug!("prev ldr: {:06}, prev rdr: {:06}", prev_vdr.0, prev_vdr.1);
-    debug!("ldr delta: {ldr_delta:06}, rdr delta: {rdr_delta:06}");
-    debug!("exdr_ldr: {exdr_ldr:08.02}, exdr_rdr: {exdr_rdr:08.02}");
-
-    // update the previous voltage drive
-    *prev_vdr = damp_vdr.clone();
-
-    // return the dampened voltage drives
-    damp_vdr
+    // reutrn the minimum voltage between the two
+    (
+        new_vdr.0.abs().min((ldr_avg as i32).abs()) * new_vdr.0.signum(),
+        new_vdr.1.abs().min((rdr_avg as i32).abs()) * new_vdr.1.signum(),
+    )
 }
 
 /// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the new x value
 pub fn rot_correct(target: f32, yaw: f32) -> f32 {
     let error = low_angle_diff(target, yaw);
-    let correct_x = correct_volt(error, 90.);
+    let correct_x = correct_volt(error, 45.);
 
     // logs
     info!("yaw: {yaw:04.02}");
