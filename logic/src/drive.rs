@@ -34,7 +34,6 @@ pub fn user_control(
     j2x: f32,
     j2y: f32,
     yaw: f32,
-    initial_yaw: &mut f32,
     prev_vdr: &mut (i32, i32),
 ) -> (i32, i32) {
     // get the initial calculated voltages from the first controller
@@ -49,19 +48,16 @@ pub fn user_control(
 
         // get the target angle (from x and y) and correction x
         let target_angle = xy_to_angle(j2x, j2y);
-        let correct_x = rot_correct(target_angle, yaw, *initial_yaw);
+        let correct_x = rot_correct(target_angle, yaw);
 
         xv = correct_x;
-    } else {
-        // update the initial yaw
-        *initial_yaw = yaw;
     }
 
     // pass the ldr and rdr through arcade drive
     let (ldr, rdr) = arcade(xv as i32, yv as i32);
 
     // pass the ldr and rdr through a voltage dampener
-    let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
+    // let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
 
     info!("ldr: {ldr:06}, rdr: {rdr:06}");
 
@@ -73,19 +69,18 @@ pub fn inst_control(
     thrust: i32,
     target_angle: f32,
     yaw: f32,
-    initial_yaw: f32,
     prev_vdr: &mut (i32, i32),
 ) -> (i32, i32) {
     info!("thrust: {thrust:04}");
 
     // corrects for the rotation
-    let cx = rot_correct(target_angle, yaw, initial_yaw);
+    let cx = rot_correct(target_angle, yaw);
 
     // passes the x and y values through arcade drive
     let (ldr, rdr) = arcade(cx as i32, thrust);
 
     // dampens the ldr and rdr
-    let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
+    // let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
 
     info!("ldr: {ldr:06}, rdr: {rdr:06}");
 
@@ -93,13 +88,9 @@ pub fn inst_control(
 }
 
 /// Corrects for any errors (delta) based upon it's inital error (delta) and returns the correction voltage
-pub fn correct_volt(error: f32, initial_error: f32) -> f32 {
-    magic::exp_ethan(
-        (maths::checked_div(error, initial_error) // get the fraction of the delta (location in the slope)
-            .unwrap_or(0.) // if no delta, do nothing
-            * maths::signumf(error)) // keep the sign of the delta
-        .clamp(-1., 1.)
-    )
+pub fn correct_volt(error: f32, max_error: f32) -> f32 {
+    magic::exp_daniel(error / max_error)
+        .clamp(-12000., 12000.)
 }
 
 /// Dampens any sudden changes to the voltage drives of the robot
@@ -134,19 +125,13 @@ pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) 
 }
 
 /// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the new x value
-pub fn rot_correct(
-    target: f32,
-    yaw: f32,
-    initial_yaw: f32,
-) -> f32 {
+pub fn rot_correct(target: f32, yaw: f32) -> f32 {
     let error = low_angle_diff(target, yaw);
-    let initial_error = low_angle_diff(target, initial_yaw);
-    let correct_x = correct_volt(error, initial_error);
+    let correct_x = correct_volt(error, 90.);
 
     // logs
     info!("yaw: {yaw:04.02}");
     info!("target angle: {target:04.02}");
-    debug!("initial angle error: {initial_error:04.02}");
     debug!("angle error: {error:04.02}");
     debug!("angle correction x: {correct_x:08.02}");
 

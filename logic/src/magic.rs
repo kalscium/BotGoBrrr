@@ -16,11 +16,11 @@ pub fn log_daniel(x: f32) -> f32 {
 }
 
 /// Ethan's magic number for precise, smooth and exponential corrections (https://www.desmos.com/calculator/upgbzz4cz5) or (`y = 128a^{x} - 128` when `(1, 12000)`)
-pub const EMN: f32 = 94.75;
+pub const EMN: f32 = 188.5;
 
 /// Passes x (`-1..=1`) through ethan's algorithm to produce an exponential voltage from `-12000..=12000`
 pub fn exp_ethan(x: f32) -> f32 {
-    (128.0 * maths::powf(EMN, maths::absf(x)) - 128.0) // main part of the equation
+    (64.0 * maths::powf(EMN, maths::absf(x)) - 64.0) // main part of the equation
         * maths::signumf(x) // to maintain the sign
 }
 
