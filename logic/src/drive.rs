@@ -95,15 +95,28 @@ pub fn correct_volt(error: f32, max_error: f32) -> f32 {
 
 /// Dampens any sudden changes to the voltage drives of the robot
 pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) {
-    // find the average between the previous and new voltage drives
-    let ldr_avg = maths::avgf(prev_vdr.0 as f32, new_vdr.0 as f32);
-    let rdr_avg = maths::avgf(prev_vdr.1 as f32, new_vdr.1 as f32);
+    /// The percentage used to determine the linear interpolation
+    const LERP_CONST: f32 = 0.16;
+
+    // linearly interpolate between the two based upon a constant
+    let ldr_lerp = maths::lerp(prev_vdr.0 as f32, new_vdr.0 as f32, LERP_CONST);
+    let rdr_lerp = maths::lerp(prev_vdr.1 as f32, new_vdr.1 as f32, LERP_CONST);
+
+    // find the minimum votlage between the two
+    let vdr = (
+        new_vdr.0.abs().min((ldr_lerp as i32).abs()) * new_vdr.0.signum(),
+        new_vdr.1.abs().min((rdr_lerp as i32).abs()) * new_vdr.1.signum(),
+    );
+
+    // logs
+    info!("prev ldr: {}, prev rdr: {}", prev_vdr.0, prev_vdr.1);
+    info!("raw ldr: {}, raw rdr: {}", new_vdr.0, new_vdr.1);
+
+    // update the previous voltage drive
+    *prev_vdr = vdr.clone();
 
     // reutrn the minimum voltage between the two
-    (
-        new_vdr.0.abs().min((ldr_avg as i32).abs()) * new_vdr.0.signum(),
-        new_vdr.1.abs().min((rdr_avg as i32).abs()) * new_vdr.1.signum(),
-    )
+    vdr
 }
 
 /// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the new x value

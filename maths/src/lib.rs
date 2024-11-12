@@ -55,3 +55,8 @@ pub fn absf(x: f32) -> f32 {
 pub fn avgf(x: f32, y: f32) -> f32 {
     (x + y) / 2.0
 }
+
+/// Linearly interpolates between two values based upon a percentage (0.=1)
+pub fn lerp(x: f32, y: f32, percent: f32) -> f32 {
+    x * (1. - percent) + (y * percent)
+}

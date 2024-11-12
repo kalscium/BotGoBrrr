@@ -19,7 +19,7 @@ pub fn init_state() -> ControlState {
 
 pub fn controls(x: f32, y: f32, delta_second: f32, yaw: f32, state: &mut ControlState) -> (i32, i32) {
     // pick either driving method until i get a controller with two joysticks
-    // pure_driver(x, y, yaw, delta_seconds, state)
+    // pure_driver(x, y, yaw, delta_second, state)
     abs_rotation(x, y, yaw, delta_second, state)
 }
 
