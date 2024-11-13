@@ -21,9 +21,6 @@ pub fn autonomous() {
 
     // autonomous loop
     for inst in auton_routine {
-        // get the initial yaw
-        let initial_yaw = drive::get_yaw();
-
         loop {
             // get the current angle error
             let angle_error = maths::absf(logic::drive::low_angle_diff(
@@ -55,7 +52,6 @@ pub fn autonomous() {
                 i16::from(inst.thrust) as i32,
                 i16::from(inst.req_angle) as f32,
                 drive::get_yaw(),
-                initial_yaw,
                 &mut prev_vdr,
             );
 
