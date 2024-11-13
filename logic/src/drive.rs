@@ -64,20 +64,22 @@ pub fn user_control(
     (ldr, rdr)
 }
 
-/// Uses thrust, target angle yaw, and initial yaw to generate left and right drives
+/// Uses target angle yaw, target y coord (in mm) (and their actual values), to generate left and right drives
 pub fn inst_control(
-    thrust: i32,
     target_angle: f32,
+    target_y_coord: i32,
     yaw: f32,
+    y_coord: i32,
     prev_vdr: &mut (i32, i32),
 ) -> (i32, i32) {
-    info!("thrust: {thrust:04}");
-
     // corrects for the rotation
     let cx = rot_correct(target_angle, yaw);
 
+    // corrects for the odom y coord
+    let cy = y_coord_correct(target_y_coord, y_coord);
+
     // passes the x and y values through arcade drive
-    let (ldr, rdr) = arcade(cx as i32, thrust);
+    let (ldr, rdr) = arcade(cx as i32, cy as i32);
 
     // dampens the ldr and rdr
     let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
@@ -119,10 +121,13 @@ pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) 
     vdr
 }
 
-/// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the new x value
+/// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the x correction voltage
 pub fn rot_correct(target: f32, yaw: f32) -> f32 {
+    /// The point in which, the error is so large that the robot runs at full speed
+    const MAX_SPEED_THRESHOLD: f32 = 45.;
+
     let error = low_angle_diff(target, yaw);
-    let correct_x = correct_volt(error, 45.);
+    let correct_x = correct_volt(error, MAX_SPEED_THRESHOLD);
 
     // logs
     info!("yaw: {yaw:04.02}");
@@ -132,6 +137,24 @@ pub fn rot_correct(target: f32, yaw: f32) -> f32 {
 
     // return the correction
     correct_x
+}
+
+/// Corrects for the odometry's y coord (in mm) based upon the error (difference in) location and returns the y correction voltage
+pub fn y_coord_correct(target: i32, coord: i32) -> f32 {
+    /// The point in which, the error is so large that the robot runs at full speed
+    const MAX_SPEED_THRESHOLD: f32 = 457.2; // i just set it to the robot size limit (arbitrary, will tune later)
+
+    let error = target - coord;
+    let correct_y = correct_volt(error as f32, MAX_SPEED_THRESHOLD);
+
+    // logs
+    info!("y coord: {coord}");
+    info!("target y coord: {target}");
+    debug!("y coord error: {error}");
+    debug!("y correction: {correct_y}");
+
+    // return the correction
+    correct_y
 }
 
 /// Finds the angle of the x and y values of the joystick according to the top of the joystick

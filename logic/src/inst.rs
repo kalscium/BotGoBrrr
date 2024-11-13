@@ -18,23 +18,23 @@ pub struct Inst {
     #[packed_field(bits="0..9")]
     pub req_angle: Integer<i16, packed_bits::Bits::<9>>,
 
+    /// Required odom y coordinate (in mm)
+    #[packed_field(bits="9..22")]
+    pub req_odom_y: Integer<i16, packed_bits::Bits::<9>>,
+
     /// If the belt should be spinning
-    #[packed_field(bits="9")]
+    #[packed_field(bits="22")]
     pub act_belt_active: bool,
 
     /// If the belt should be spinning 'upwards'
     ///
     /// *Ignored if the active bool is false*
-    #[packed_field(bit="10")]
+    #[packed_field(bit="23")]
     pub act_belt_up: bool,
 
     /// If the solenoid should be active or not
-    #[packed_field(bit="11")]
+    #[packed_field(bit="24")]
     pub act_solenoid_active: bool,
-
-    /// The 'thrust' *(exp y value)* of the robot
-    #[packed_field(bit="12..27")]
-    pub thrust: Integer<i16, packed_bits::Bits::<15>>,
 }
 
 /// A stored autonomous routine

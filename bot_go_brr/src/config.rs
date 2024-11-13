@@ -40,8 +40,8 @@ pub mod solenoid {
 pub mod odom {
     use safe_vex::port::SmartPort;
 
-    /// The port of the x rotation sensor
-    pub const PORT_X: SmartPort = SmartPort::Ten;
+    /// The port of the odom y rotation sensor
+    pub const PORT_Y: SmartPort = SmartPort::Ten;
 }
 
 /// Configurations for autonomous

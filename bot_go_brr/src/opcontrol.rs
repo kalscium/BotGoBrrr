@@ -23,17 +23,9 @@ pub fn opcontrol() {
     #[cfg(feature="record")]
     let mut record = Record::new_ignore(config::auton::RECORD_PATH);
 
-    debug!("testing odom!");
-    let mut odom: f32 = 0.;
-    let mut prev_odom: f32 = 0.;
-
     // opcontrol loop
     loop {
         debug!("opctrl tick: {tick}");
-
-        // test odom
-        logic::odom::account_for(drive::get_rotation_angle(config::odom::PORT_X), &mut prev_odom, &mut odom);
-        info!("odom: {odom}mm");
 
         // execute the belt
         let _belt_inst = belt::user_control();

@@ -49,9 +49,10 @@ pub fn autonomous() {
 
             // get the correction ldr and rdr (for the angle)
             let (ldr, rdr) = logic::drive::inst_control(
-                i16::from(inst.thrust) as i32,
                 i16::from(inst.req_angle) as f32,
+                i16::from(inst.req_odom_y) as i32,
                 drive::get_yaw(),
+                12,
                 &mut prev_vdr,
             );
 
