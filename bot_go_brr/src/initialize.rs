@@ -12,11 +12,11 @@ pub fn initialize() {
 
     // calibrate the interial sensor
     if let Err(err) = imu::reset(config::IMU_PORT) {
-        warn!("`PROSErr` occured while calibrating intertial sensor: {err:?}");
+        warn!("`PROSErr` occured while calibrating intertial sensor at port {}: {err:?}", config::IMU_PORT as u8);
     }
 
     // calibrate the odom x rotation sensor
     if let Err(err) = rotation::reset(config::odom::PORT_X) {
-        warn!("`PROSErr` occured while calibrating odom x rotation sensor: {err:?}");
+        warn!("`PROSErr` occured while calibrating odom x rotation sensor at port {}: {err:?}", config::IMU_PORT as u8);
     }
 }

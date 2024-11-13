@@ -42,6 +42,6 @@ pub fn inst_control(active: bool, spinning_up: bool) {
         config::motors::BELT.reverse,
         voltage,
     ) {
-        warn!("`PROSErr` occured while setting motor voltage for belt: {err:?}");
+        warn!("`PROSErr` occured while setting motor voltage for belt at port {}: {err:?}", config::motors::BELT.port as u8);
     }
 }

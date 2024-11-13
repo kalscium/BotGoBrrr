@@ -59,13 +59,13 @@ pub fn user_control(prev_vdr: &mut (i32, i32)) -> i32 {
 pub fn voltage_left(voltage: i32) {
     // log any errors
     if let Err(err) = motor::move_voltage(config::motors::L1.port, config::motors::L1.reverse, voltage) {
-        warn!("`PROSErr` occured while setting drivetrain motor L1's voltage: {err:?}");
+        warn!("`PROSErr` occured while setting drivetrain motor L1's voltage at port {}: {err:?}", config::motors::L1.port as u8);
     }
     if let Err(err) = motor::move_voltage(config::motors::L2.port, config::motors::L2.reverse, voltage) {
-        warn!("`PROSErr` occured while setting drivetrain motor L2's voltage: {err:?}");
+        warn!("`PROSErr` occured while setting drivetrain motor L2's voltage at port {}: {err:?}", config::motors::L2.port as u8);
     }
     if let Err(err) = motor::move_voltage(config::motors::L3.port, config::motors::L3.reverse, voltage) {
-        warn!("`PROSErr` occured while setting drivetrain motor L3's voltage: {err:?}");
+        warn!("`PROSErr` occured while setting drivetrain motor L3's voltage at port {}: {err:?}", config::motors::L3.port as u8);
     }
 }
 
@@ -73,12 +73,12 @@ pub fn voltage_left(voltage: i32) {
 pub fn voltage_right(voltage: i32) {
     // log any errors
     if let Err(err) = motor::move_voltage(config::motors::R1.port, config::motors::R1.reverse, voltage) {
-        warn!("`PROSErr` occured while setting drivetrain motor R1's voltage: {err:?}");
+        warn!("`PROSErr` occured while setting drivetrain motor R1's voltage at port {}: {err:?}", config::motors::R1.port as u8);
     }
     if let Err(err) = motor::move_voltage(config::motors::R2.port, config::motors::R2.reverse, voltage) {
-        warn!("`PROSErr` occured while setting drivetrain motor R2's voltage: {err:?}");
+        warn!("`PROSErr` occured while setting drivetrain motor R2's voltage at port {}: {err:?}", config::motors::R2.port as u8);
     }
     if let Err(err) = motor::move_voltage(config::motors::R3.port, config::motors::R3.reverse, voltage) {
-        warn!("`PROSErr` occured while setting drivetrain motor R3's voltage: {err:?}");
+        warn!("`PROSErr` occured while setting drivetrain motor R3's voltage at port {}: {err:?}", config::motors::R3.port as u8);
     }
 }
