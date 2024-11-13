@@ -3,8 +3,6 @@
 use logic::{debug, info};
 use safe_vex::rtos;
 use crate::{belt, config, drive, log, solenoid};
-
-#[cfg(feature="record")]
 use crate::record::Record;
 
 /// The opcontrol routine entrypoint
@@ -17,11 +15,8 @@ pub fn opcontrol() {
     let mut tick: u32 = 0; // the current tick
     let mut solenoid_active = false; // if the solenoid is active or not
     let mut solenoid_tick = tick; // the last time the solenoid's activity was changed
+    let mut record = Record::new_ignore(config::auton::RECORD_PATH); // record file for auton
     let mut prev_vdr: (i32, i32) = (0, 0); // the previous voltages for the left and right drives
-
-    // (optional) record file for auton
-    #[cfg(feature="record")]
-    let mut record = Record::new_ignore(config::auton::RECORD_PATH);
 
     // opcontrol loop
     loop {
@@ -37,7 +32,6 @@ pub fn opcontrol() {
         let _thrust = drive::user_control(&mut prev_vdr);
 
         // record the three values
-        #[cfg(feature="record")]
         record.record(_thrust, _belt_inst, _solenoid_inst);
 
         // flush logs

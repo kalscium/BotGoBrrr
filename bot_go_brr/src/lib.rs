@@ -10,6 +10,4 @@ pub mod drive;
 pub mod belt;
 pub mod solenoid;
 pub mod log;
-
-#[cfg(feature="record")]
 pub mod record;
