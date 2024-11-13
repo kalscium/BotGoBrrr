@@ -6,7 +6,7 @@ use crate::config;
 
 /// Gets the current yaw of the robot
 pub fn get_yaw() -> f32 {
-    match imu::get_yaw(config::IMU_PORT) {
+    match imu::get_yaw(config::auton::IMU_PORT) {
         Ok(yaw) => yaw as f32,
         Err(err) => {
             warn!("`PROSErr` encountered while getting imu yaw: {err:?}");

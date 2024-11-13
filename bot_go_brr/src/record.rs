@@ -9,6 +9,8 @@ use crate::{config, drive};
 pub struct Record {
     file: Option<FileWrite>,
     current: Option<Inst>,
+    prev_angle_delta: f32,
+    prev_y_coord_delta: f32,
 }
 
 impl Record {
@@ -20,6 +22,8 @@ impl Record {
             return Ok(Record {
                 file: None,
                 current: None,
+                prev_angle_delta: 0.,
+                prev_y_coord_delta: 0.,
             });
         }
 
@@ -31,6 +35,8 @@ impl Record {
         Ok(Record {
             file: Some(file),
             current: None,
+            prev_angle_delta: 0.,
+            prev_y_coord_delta: 0.,
         })
     }
 
@@ -43,13 +49,15 @@ impl Record {
                 Record {
                     file: None,
                     current: None,
+                    prev_angle_delta: 0.,
+                    prev_y_coord_delta: 0.,
                 }
             },
         }
     }
 
     /// Writes another autonomous instruction to the auton routine recordfile
-    pub fn record(&mut self, thrust: i32, belt_inst: Option<bool>, solenoid_inst: bool) {
+    pub fn record(&mut self, y_coord: f32, belt_inst: Option<bool>, solenoid_inst: bool) {
         // try get the record file, otherwise do nothing
         let Some(ref mut file) = self.file
         else {
@@ -62,7 +70,7 @@ impl Record {
         // create a new inst
         let new_inst = Inst {
             req_angle: (yaw as i16).into(),
-            thrust: (thrust as i16).into(),
+            req_odom_y: (y_coord as i16).into(),
             act_belt_active: belt_inst.is_some(),
             act_belt_up: belt_inst.unwrap_or(false),
             act_solenoid_active: solenoid_inst,
@@ -77,15 +85,26 @@ impl Record {
             return;
         };
 
-        // check if the new instruction is moving in the same direction as the 'current' one, is larger than the angle precision (not the same angle) and also has the same actions
+        // find the deltas between the current and the new inst
         let angle_delta = logic::drive::low_angle_diff(i16::from(current.req_angle) as f32, yaw);
+        let y_coord_delta = i16::from(current.req_odom_y) as f32 - y_coord;
+
+        // get if the robot is turning the same direction or moving the same direction
+        let turn_same = self.prev_angle_delta.is_sign_positive() == angle_delta.is_sign_positive();
+        let move_same = self.prev_y_coord_delta.is_sign_positive() == y_coord_delta.is_sign_positive();
+
+        // update the 'previous' deltas
+        self.prev_angle_delta = angle_delta;
+        self.prev_y_coord_delta = y_coord_delta;
+
+        // check if the new instruction is moving in the same direction as the 'current' one, is larger than the angle precision (not the same angle) and also has the same actions
         if
-            // must be turning the same direction
-            maths::signumf(angle_delta) == maths::signumf(yaw) // may cause issues, remove when odom is written
-            // must be turning
-            && maths::absf(angle_delta) > config::auton::ANGLE_PRECISION
+            // must be turning and moving the same direction
+            turn_same && move_same
+            // must be turning or moving
+            && (maths::absf(angle_delta) > config::auton::ANGLE_PRECISION || maths::absf(y_coord_delta) > config::auton::ODOM_PRECISION)
             // must have the same actions
-            && (new_inst.thrust, new_inst.act_belt_active, new_inst.act_belt_up, new_inst.act_solenoid_active) == (current.thrust, current.act_belt_active, current.act_belt_up, current.act_solenoid_active)
+            && (new_inst.act_belt_active, new_inst.act_belt_up, new_inst.act_solenoid_active) == (current.act_belt_active, current.act_belt_up, current.act_solenoid_active)
         {
             // update the current inst's required angle to the new one and return
             debug!("recorded (and compressed) a similar looking instruction");
@@ -114,6 +133,15 @@ impl Record {
 impl Drop for Record {
     fn drop(&mut self) {
         if let Some(ref mut file) = self.file {
+            // pack, format and write the final inst (if there is one)
+            if let Some(current) = self.current {
+                let mut packed = [0u8; INST_SIZE];
+                current.pack_to_slice(&mut packed).unwrap();
+                let _ = file.write(
+                    &format!("{packed:?} // {current:?}\n"),
+                );
+            }
+
             // write the closing `]`
             let _ = file.write("]\n");
         }

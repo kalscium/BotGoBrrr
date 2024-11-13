@@ -10,8 +10,6 @@ pub fn user_control(
     last_toggled: &mut u32,
     active: &mut bool,
 ) -> bool {
-    info!("solenoid active: {active}");
-
     // if there hasn't been at least `config::solenoid::DELAY` ticks then do nothing
     if tick - *last_toggled < config::solenoid::DELAY {
         return *active;
@@ -37,6 +35,7 @@ pub fn user_control(
 
 /// Activates the solenoid based on provided state
 pub fn inst_control(active: bool) {
+    info!("solenoid active: {active}");
     unsafe {
         adi::digital_write(config::solenoid::PORT, active)
             .expect("solenoid should've been configured long before this point");

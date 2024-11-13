@@ -18,21 +18,32 @@ pub fn opcontrol() {
     let mut record = Record::new_ignore(config::auton::RECORD_PATH); // record file for auton
     let mut prev_vdr: (i32, i32) = (0, 0); // the previous voltages for the left and right drives
 
+    // variables for odometry
+    let mut prev_rot_y: f32 = 0.; // the previous measurement from the y rotation sensor
+    let mut y_coord: f32 = 0.; // the current calculated y coordinate of the robot
+
     // opcontrol loop
     loop {
         debug!("opctrl tick: {tick}");
 
+        // update the odometry calculations
+        logic::odom::account_for(
+            drive::get_rotation_angle(config::auton::ODOM_Y_PORT),
+            &mut prev_rot_y,
+            &mut y_coord,
+        ); info!("y coord: {y_coord}");
+
         // execute the belt
-        let _belt_inst = belt::user_control();
+        let belt_inst = belt::user_control();
 
         // execute the solenoid
-        let _solenoid_inst = solenoid::user_control(tick, &mut solenoid_tick, &mut solenoid_active);
+        let solenoid_inst = solenoid::user_control(tick, &mut solenoid_tick, &mut solenoid_active);
 
         // execute the drivetrain
-        let _thrust = drive::user_control(&mut prev_vdr);
+        drive::user_control(&mut prev_vdr);
 
         // record the three values
-        record.record(_thrust, _belt_inst, _solenoid_inst);
+        record.record(y_coord, belt_inst, solenoid_inst);
 
         // flush logs
         log::logic_flush(&mut logfile);

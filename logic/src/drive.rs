@@ -67,9 +67,9 @@ pub fn user_control(
 /// Uses target angle yaw, target y coord (in mm) (and their actual values), to generate left and right drives
 pub fn inst_control(
     target_angle: f32,
-    target_y_coord: i32,
+    target_y_coord: f32,
     yaw: f32,
-    y_coord: i32,
+    y_coord: f32,
     prev_vdr: &mut (i32, i32),
 ) -> (i32, i32) {
     // corrects for the rotation
@@ -140,12 +140,12 @@ pub fn rot_correct(target: f32, yaw: f32) -> f32 {
 }
 
 /// Corrects for the odometry's y coord (in mm) based upon the error (difference in) location and returns the y correction voltage
-pub fn y_coord_correct(target: i32, coord: i32) -> f32 {
+pub fn y_coord_correct(target: f32, coord: f32) -> f32 {
     /// The point in which, the error is so large that the robot runs at full speed
     const MAX_SPEED_THRESHOLD: f32 = 457.2; // i just set it to the robot size limit (arbitrary, will tune later)
 
     let error = target - coord;
-    let correct_y = correct_volt(error as f32, MAX_SPEED_THRESHOLD);
+    let correct_y = correct_volt(error, MAX_SPEED_THRESHOLD);
 
     // logs
     info!("y coord: {coord}");
