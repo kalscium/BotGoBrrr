@@ -26,7 +26,7 @@ incremental = false
 opt-level = "z"
 lto = true
 codegen-units = 1
-panic = "unwind"
+panic = "abort"
 strip = true
 debug = false
 

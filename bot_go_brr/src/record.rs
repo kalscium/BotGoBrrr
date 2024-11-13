@@ -27,11 +27,8 @@ impl Record {
             });
         }
 
-        // create a new record file and write the initial `[` (rust syntax for an array)
-        let mut file = FileWrite::create(path)?;
-        file.write("[\n")?;
-
-        // return self
+        // create a new record file and return the record
+        let file = FileWrite::create(path)?;
         Ok(Record {
             file: Some(file),
             current: None,
@@ -127,23 +124,5 @@ impl Record {
         // update the current inst
         debug!("recorded a different instruction");
         *current = new_inst;
-    }
-}
-
-impl Drop for Record {
-    fn drop(&mut self) {
-        if let Some(ref mut file) = self.file {
-            // pack, format and write the final inst (if there is one)
-            if let Some(current) = self.current {
-                let mut packed = [0u8; INST_SIZE];
-                current.pack_to_slice(&mut packed).unwrap();
-                let _ = file.write(
-                    &format!("{packed:?} // {current:?}\n"),
-                );
-            }
-
-            // write the closing `]`
-            let _ = file.write("]\n");
-        }
     }
 }
