@@ -86,6 +86,7 @@ pub fn autonomous() {
 
         // logs
         info!("precision requirements achieved");
+        info!("correction time: {}", now - rtos::millis());
         info!("belt active: {}, belt up: {}", inst.act_belt_active, inst.act_belt_up);
         info!("solenoid active: {}", inst.act_solenoid_active);
 

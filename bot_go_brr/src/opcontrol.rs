@@ -45,6 +45,9 @@ pub fn opcontrol() {
         // record the three values
         record.record(y_coord, belt_inst, solenoid_inst);
 
+        // log how long the cycle took
+        info!("cycle time: {}", now - rtos::millis());
+
         // flush logs
         log::logic_flush(&mut logfile);
 
