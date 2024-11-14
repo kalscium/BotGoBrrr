@@ -111,8 +111,8 @@ pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) 
     );
 
     // logs
-    info!("prev ldr: {}, prev rdr: {}", prev_vdr.0, prev_vdr.1);
-    info!("raw ldr: {}, raw rdr: {}", new_vdr.0, new_vdr.1);
+    info!("prev ldr: {:06}, prev rdr: {:06}", prev_vdr.0, prev_vdr.1);
+    info!("raw ldr: {:06}, raw rdr: {:06}", new_vdr.0, new_vdr.1);
 
     // update the previous voltage drive
     *prev_vdr = vdr.clone();
