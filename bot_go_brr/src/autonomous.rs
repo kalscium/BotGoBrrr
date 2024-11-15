@@ -2,7 +2,7 @@
 
 use logic::{info, inst::AutonRoutine};
 use safe_vex::rtos;
-use crate::{belt, config, drive, log, solenoid};
+use crate::{belt, config, doinker, drive, log, solenoid};
 
 /// The autonomous routine entrypoint
 pub fn autonomous() {
@@ -82,6 +82,7 @@ pub fn autonomous() {
 
         // once it meets the requirements, then execute it's actions
         belt::inst_control(inst.act_belt_active, inst.act_belt_up);
+        doinker::inst_control(inst.act_doinker_active, inst.act_doinker_up);
         solenoid::inst_control(inst.act_solenoid_active);
 
         // logs

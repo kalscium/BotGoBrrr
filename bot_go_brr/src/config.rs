@@ -18,6 +18,11 @@ pub mod controls {
     /// The button to make the belt spin 'downwards'
     pub const BELT_DOWN: ControllerDigital = ControllerDigital::R1;
 
+    /// The button to make the doinker spin 'upwards'
+    pub const DOINKER_UP: ControllerDigital = ControllerDigital::A;
+    /// The button to make the doinker spin 'downwards'
+    pub const DOINKER_DOWN: ControllerDigital = ControllerDigital::B;
+
     /// The button to make the solenoid toggle
     pub const SOLENOID_TOGGLE: ControllerDigital = ControllerDigital::X;
 }
@@ -85,6 +90,15 @@ pub mod motors {
 
     /// The belt's speed in voltage
     pub const BELT_SPEED: i32 = 12000 * 62 / 100;
+
+    /// The MotorConfig of the doinker
+    pub const DOINKER: MotorConfig = MotorConfig {
+        port: safe_vex::port::SmartPort::Six,
+        reverse: false,
+    };
+
+    /// The doinker's speed in voltage
+    pub const DOINKER_SPEED: i32 = 12000 * 100 / 100;
 
     /// The front left motor
     pub const L1: MotorConfig = MotorConfig { port: SmartPort::Sixteen, reverse: false };

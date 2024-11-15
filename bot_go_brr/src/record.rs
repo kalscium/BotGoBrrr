@@ -54,7 +54,13 @@ impl Record {
     }
 
     /// Writes another autonomous instruction to the auton routine recordfile
-    pub fn record(&mut self, y_coord: f32, belt_inst: Option<bool>, solenoid_inst: bool) {
+    pub fn record(
+        &mut self,
+        y_coord: f32,
+        belt_inst: Option<bool>,
+        doinker_inst: Option<bool>,
+        solenoid_inst: bool,
+    ) {
         // try get the record file, otherwise do nothing
         let Some(ref mut file) = self.file
         else {
@@ -70,6 +76,8 @@ impl Record {
             req_odom_y: (y_coord as i16).into(),
             act_belt_active: belt_inst.is_some(),
             act_belt_up: belt_inst.unwrap_or(false),
+            act_doinker_active: doinker_inst.is_some(),
+            act_doinker_up: doinker_inst.unwrap_or(false),
             act_solenoid_active: solenoid_inst,
         };
 

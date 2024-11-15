@@ -2,7 +2,7 @@
 
 use logic::{debug, info};
 use safe_vex::rtos;
-use crate::{belt, config, drive, log, solenoid};
+use crate::{belt, config, doinker, drive, log, solenoid};
 use crate::record::Record;
 
 /// The opcontrol routine entrypoint
@@ -36,6 +36,9 @@ pub fn opcontrol() {
         // execute the belt
         let belt_inst = belt::user_control();
 
+        // execute the doinker
+        let doinker_inst = doinker::user_control();
+
         // execute the solenoid
         let solenoid_inst = solenoid::user_control(tick, &mut solenoid_tick, &mut solenoid_active);
 
@@ -43,7 +46,7 @@ pub fn opcontrol() {
         drive::user_control(&mut prev_vdr);
 
         // record the three values
-        record.record(y_coord, belt_inst, solenoid_inst);
+        record.record(y_coord, belt_inst, doinker_inst, solenoid_inst);
 
         // log how long the cycle took
         info!("cycle time: {}", now - rtos::millis());

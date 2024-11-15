@@ -9,5 +9,6 @@ pub mod config;
 pub mod drive;
 pub mod belt;
 pub mod solenoid;
+pub mod doinker;
 pub mod log;
 pub mod record;

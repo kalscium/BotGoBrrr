@@ -35,6 +35,16 @@ pub struct Inst {
     /// If the solenoid should be active or not
     #[packed_field(bit="24")]
     pub act_solenoid_active: bool,
+
+    /// If the doinker should be spinning
+    #[packed_field(bits="25")]
+    pub act_doinker_active: bool,
+
+    /// If the doinker should be spinning 'upwards'
+    ///
+    /// *Ignored if the active bool is false*
+    #[packed_field(bit="26")]
+    pub act_doinker_up: bool,
 }
 
 /// A stored autonomous routine
