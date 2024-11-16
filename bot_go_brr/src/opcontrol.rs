@@ -25,6 +25,7 @@ pub fn opcontrol() {
     // opcontrol loop
     loop {
         debug!("opctrl tick: {tick}");
+        debug!("time: {}s", rtos::millis() as f32 / 1000.);
 
         // update the odometry calculations
         logic::odom::account_for(
@@ -49,7 +50,7 @@ pub fn opcontrol() {
         record.record(y_coord, belt_inst, doinker_inst, solenoid_inst);
 
         // log how long the cycle took
-        info!("cycle time: {}", now - rtos::millis());
+        info!("cycle time: {}", (now - rtos::millis()) as f32 / 1000.);
 
         // flush logs
         log::logic_flush(&mut logfile);

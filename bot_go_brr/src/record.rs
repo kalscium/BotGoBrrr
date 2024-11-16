@@ -114,6 +114,7 @@ impl Record {
             // update the current inst's required angle to the new one and return
             debug!("recorded (and compressed) a similar looking instruction");
             current.req_angle = new_inst.req_angle;
+            current.req_odom_y = new_inst.req_odom_y;
             return;
         }
 

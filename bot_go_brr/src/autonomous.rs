@@ -9,7 +9,7 @@ pub fn autonomous() {
     info!("autonomous period started");
 
     // variables that get mutated
-    let mut logfile = log::logfile_init(config::log::LOGFILE_OP_PATH); // filestream to the opcontrol logfile
+    let mut logfile = log::logfile_init(config::log::LOGFILE_AUTO_PATH); // filestream to the opcontrol logfile
     let mut now = rtos::millis(); // the current time
     let mut prev_vdr: (i32, i32) = (0, 0); // the previous voltages of the left and right drives
 

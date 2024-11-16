@@ -32,8 +32,8 @@ pub fn user_control() -> Option<bool> {
 pub fn inst_control(active: bool, spinning_up: bool) {
     // get the desired voltage
     let voltage = match (active, spinning_up) {
-        (true, true) => config::motors::DOINKER_SPEED,
-        (true, false) => -config::motors::DOINKER_SPEED,
+        (true, true) => config::motors::DOINKER_VOLTS,
+        (true, false) => -config::motors::DOINKER_VOLTS,
         (false, _) => 0,
     };
 

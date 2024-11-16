@@ -43,7 +43,7 @@ pub mod auton {
     use safe_vex::port::SmartPort;
 
     /// The port of the intertial sensor
-    pub const IMU_PORT: safe_vex::port::SmartPort = safe_vex::port::SmartPort::Twenty;
+    pub const IMU_PORT: safe_vex::port::SmartPort = safe_vex::port::SmartPort::Nine;
 
     /// The required minimum precision for the robot's angle during auton (must be within this angle)
     pub const ANGLE_PRECISION: f32 = 1.0;
@@ -84,33 +84,33 @@ pub mod motors {
 
     /// The MotorConfig of the belt
     pub const BELT: MotorConfig = MotorConfig {
-        port: safe_vex::port::SmartPort::Twelve,
-        reverse: false,
-    };
-
-    /// The belt's speed in voltage
-    pub const BELT_SPEED: i32 = 12000 * 62 / 100;
-
-    /// The MotorConfig of the doinker
-    pub const DOINKER: MotorConfig = MotorConfig {
         port: safe_vex::port::SmartPort::Six,
         reverse: false,
     };
 
+    /// The belt's speed in voltage
+    pub const BELT_VOLTS: i32 = 12000 * 100 / 100;
+
+    /// The MotorConfig of the doinker
+    pub const DOINKER: MotorConfig = MotorConfig {
+        port: safe_vex::port::SmartPort::Fourteen,
+        reverse: false,
+    };
+
     /// The doinker's speed in voltage
-    pub const DOINKER_SPEED: i32 = 12000 * 100 / 100;
+    pub const DOINKER_VOLTS: i32 = 12000 * 100 / 100;
 
     /// The front left motor
-    pub const L1: MotorConfig = MotorConfig { port: SmartPort::Sixteen, reverse: false };
+    pub const L1: MotorConfig = MotorConfig { port: SmartPort::Nineteen, reverse: true };
     /// The back left motor
-    pub const L2: MotorConfig = MotorConfig { port: SmartPort::Nineteen, reverse: false };
+    pub const L2: MotorConfig = MotorConfig { port: SmartPort::Thirteen, reverse: true };
     /// The top left motor (the extra 3rd one)
-    pub const L3: MotorConfig = MotorConfig { port: SmartPort::Eighteen, reverse: false };
+    pub const L3: MotorConfig = MotorConfig { port: SmartPort::Five, reverse: false };
 
     /// The front right motor
-    pub const R1: MotorConfig = MotorConfig { port: SmartPort::Nine, reverse: true };
+    pub const R1: MotorConfig = MotorConfig { port: SmartPort::Eleven, reverse: false };
     /// The back right motor
-    pub const R2: MotorConfig = MotorConfig { port: SmartPort::Four, reverse: true };
+    pub const R2: MotorConfig = MotorConfig { port: SmartPort::Twelve, reverse: false };
     /// The top right motor (the extra 3rd one)
-    pub const R3: MotorConfig = MotorConfig { port: SmartPort::Five, reverse: true };
+    pub const R3: MotorConfig = MotorConfig { port: SmartPort::Three, reverse: true };
 }
