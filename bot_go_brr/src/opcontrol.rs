@@ -19,7 +19,7 @@ pub fn opcontrol() {
     let mut prev_vdr: (i32, i32) = (0, 0); // the previous voltages for the left and right drives
 
     // variables for odometry
-    let mut prev_rot_y: f32 = 0.; // the previous measurement from the y rotation sensor
+    let mut prev_rot_y: f32 = drive::get_rotation_angle(config::auton::ODOM_Y_PORT); // the previous measurement from the y rotation sensor
     let mut y_coord: f32 = 0.; // the current calculated y coordinate of the robot
 
     // opcontrol loop
@@ -50,7 +50,7 @@ pub fn opcontrol() {
         record.record(y_coord, belt_inst, doinker_inst, solenoid_inst);
 
         // log how long the cycle took
-        info!("cycle time: {}", (now - rtos::millis()) as f32 / 1000.);
+        info!("cycle time: {}", (rtos::millis() - now) as f32 / 1000.);
 
         // flush logs
         log::logic_flush(&mut logfile);

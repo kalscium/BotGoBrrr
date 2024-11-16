@@ -81,8 +81,8 @@ pub fn inst_control(
     // passes the x and y values through arcade drive
     let (ldr, rdr) = arcade(cx as i32, cy as i32);
 
-    // dampens the ldr and rdr
-    let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
+    // dampes the ldr and rdr
+    // let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
 
     info!("ldr: {ldr:06}, rdr: {rdr:06}");
 
@@ -91,8 +91,9 @@ pub fn inst_control(
 
 /// Corrects for any errors (delta) based upon it's inital error (delta) and returns the correction voltage
 pub fn correct_volt(error: f32, max_error: f32) -> f32 {
-    magic::exp_daniel(error / max_error)
-        .clamp(-12000., 12000.)
+    // magic::exp_daniel(error / max_error)
+    //     .clamp(-8000., 8000.)
+    6000.0 * maths::signumf(error)
 }
 
 /// Dampens any sudden changes to the voltage drives of the robot
@@ -124,7 +125,7 @@ pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) 
 /// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the x correction voltage
 pub fn rot_correct(target: f32, yaw: f32) -> f32 {
     /// The point in which, the error is so large that the robot runs at full speed
-    const MAX_SPEED_THRESHOLD: f32 = 45.;
+    const MAX_SPEED_THRESHOLD: f32 = 20.;
 
     let error = low_angle_diff(target, yaw);
     let correct_x = correct_volt(error, MAX_SPEED_THRESHOLD);
@@ -142,7 +143,7 @@ pub fn rot_correct(target: f32, yaw: f32) -> f32 {
 /// Corrects for the odometry's y coord (in mm) based upon the error (difference in) location and returns the y correction voltage
 pub fn y_coord_correct(target: f32, coord: f32) -> f32 {
     /// The point in which, the error is so large that the robot runs at full speed
-    const MAX_SPEED_THRESHOLD: f32 = 457.2; // i just set it to the robot size limit (arbitrary, will tune later)
+    const MAX_SPEED_THRESHOLD: f32 = 128.; // i just set it to the robot size limit (arbitrary, will tune later)
 
     let error = target - coord;
     let correct_y = correct_volt(error, MAX_SPEED_THRESHOLD);

@@ -91,8 +91,8 @@ impl Record {
         };
 
         // find the deltas between the current and the new inst
-        let angle_delta = logic::drive::low_angle_diff(i16::from(current.req_angle) as f32, yaw);
-        let y_coord_delta = i16::from(current.req_odom_y) as f32 - y_coord;
+        let angle_delta = logic::drive::low_angle_diff(yaw, i16::from(current.req_angle) as f32);
+        let y_coord_delta = y_coord - i16::from(current.req_odom_y) as f32;
 
         // get if the robot is turning the same direction or moving the same direction
         let turn_same = self.prev_angle_delta.is_sign_positive() == angle_delta.is_sign_positive();

@@ -19,14 +19,14 @@ pub fn lowest_rot_delta(x: f32, y: f32) -> f32 {
     if maths::absf(delta2) < maths::absf(delta1) {
         delta2
     } else {
-        delta1 // slight preference for diff 2
+        delta1 // slight preference for diff 1
     }
 }
 
 /// Modifies an absolute coordinate based upon the current and previous angle of the rotation sensor
 pub fn account_for(current: f32, prev: &mut f32, coord: &mut f32) {
     // find the delta
-    let angle_delta = lowest_rot_delta(current, *prev);
+    let angle_delta = lowest_rot_delta(*prev, current);
 
     // update the previous angle to the current one
     *prev = current;

@@ -14,7 +14,7 @@ pub fn autonomous() {
     let mut prev_vdr: (i32, i32) = (0, 0); // the previous voltages of the left and right drives
 
     // variables for odometry
-    let mut prev_rot_y: f32 = 0.; // the previous measurement from the y rotation sensor
+    let mut prev_rot_y: f32 = drive::get_rotation_angle(config::auton::ODOM_Y_PORT); // the previous measurement from the y rotation sensor
     let mut y_coord: f32 = 0.; // the current calculated y coordinate of the robot
 
     // autonomous routine
