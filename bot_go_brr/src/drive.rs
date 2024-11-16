@@ -39,6 +39,7 @@ pub fn user_control(prev_vdr: &mut (i32, i32)) -> i32 {
 
     // calculate the left and right motor voltages
     let (ldr, rdr) = logic::drive::user_control(
+        config::TURN_MULTIPLIER,
         j1x as f32 / 127.0,
         j1y as f32 / 127.0,
         j2x as f32 / 127.0,
