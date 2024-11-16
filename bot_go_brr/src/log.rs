@@ -33,8 +33,8 @@ pub fn log_stdout(log: &Log) {
 
     // generates a prefix based upon log level
     let prefix = match log.level {
-        Level::Debug   => "\x1b[35;1mdebug  \x1b[0m",
-        Level::Info    => "\x1b[34;1minfo   \x1b[0m",
+        Level::Debug   => "\x1b[35;1mdebug\x1b[0m",
+        Level::Info    => "\x1b[34;1minfo\x1b[0m",
         Level::Warning => "\x1b[33;1mwarning\x1b[0m",
     };
 
