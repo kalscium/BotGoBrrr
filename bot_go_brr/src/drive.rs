@@ -27,7 +27,7 @@ pub fn get_rotation_angle(port: SmartPort) -> f32 {
 }
 
 /// Drives the drive-train based on user input and previous voltage drive
-pub fn user_control(prev_vdr: &mut (i32, i32)) {
+pub fn user_control(prev_vdr: &mut (i32, i32)) -> i32 {
     // get the joystick values (from -127..=127)
     let j1x = controller::get_analog(Controller::Master, ControllerAnalog::LeftX).unwrap_or_default();
     let j1y = controller::get_analog(Controller::Master, ControllerAnalog::LeftY).unwrap_or_default();
@@ -50,6 +50,9 @@ pub fn user_control(prev_vdr: &mut (i32, i32)) {
     // drive the robot based on the ldr and rdr values
     voltage_left(ldr);
     voltage_right(rdr);
+
+    // return the thrust (for now)
+    logic::magic::exp_daniel(j1y as f32 / 127.) as i32
 }
 
 /// Sets the voltage of the left drive-train

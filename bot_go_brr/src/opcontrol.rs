@@ -18,21 +18,10 @@ pub fn opcontrol() {
     let mut record = Record::new_ignore(config::auton::RECORD_PATH); // record file for auton
     let mut prev_vdr: (i32, i32) = (0, 0); // the previous voltages for the left and right drives
 
-    // variables for odometry
-    let mut prev_rot_y: f32 = drive::get_rotation_angle(config::auton::ODOM_Y_PORT); // the previous measurement from the y rotation sensor
-    let mut y_coord: f32 = 0.; // the current calculated y coordinate of the robot
-
     // opcontrol loop
     loop {
         debug!("opctrl tick: {tick}");
         debug!("time: {}s", rtos::millis() as f32 / 1000.);
-
-        // update the odometry calculations
-        logic::odom::account_for(
-            drive::get_rotation_angle(config::auton::ODOM_Y_PORT),
-            &mut prev_rot_y,
-            &mut y_coord,
-        ); info!("y coord: {y_coord}");
 
         // execute the belt
         let belt_inst = belt::user_control();
@@ -44,10 +33,10 @@ pub fn opcontrol() {
         let solenoid_inst = solenoid::user_control(tick, &mut solenoid_tick, &mut solenoid_active);
 
         // execute the drivetrain
-        drive::user_control(&mut prev_vdr);
+        let thrust = drive::user_control(&mut prev_vdr);
 
         // record the three values
-        record.record(y_coord, belt_inst, doinker_inst, solenoid_inst);
+        record.record(thrust, belt_inst, doinker_inst, solenoid_inst);
 
         // log how long the cycle took
         info!("cycle time: {}", (rtos::millis() - now) as f32 / 1000.);

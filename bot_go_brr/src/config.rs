@@ -40,8 +40,6 @@ pub mod solenoid {
 
 /// Configurations for autonomous
 pub mod auton {
-    use safe_vex::port::SmartPort;
-
     /// The port of the intertial sensor
     pub const IMU_PORT: safe_vex::port::SmartPort = safe_vex::port::SmartPort::Nine;
 
@@ -50,12 +48,6 @@ pub mod auton {
 
     /// The path of the file used for recording
     pub const RECORD_PATH: &str = "/usd/record.rs";
-
-    /// The port of the odom y rotation sensor
-    pub const ODOM_Y_PORT: SmartPort = SmartPort::Sixteen;
-
-    /// The required minimum precision for the robot's coordinates (in mm) during auton (if you set this too low the robot will occilate forever)
-    pub const ODOM_PRECISION: f32 = 16.;
 }
 
 /// Configurations for logging

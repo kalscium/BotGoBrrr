@@ -56,33 +56,28 @@ pub fn user_control(
     // pass the ldr and rdr through arcade drive
     let (ldr, rdr) = arcade(xv as i32, yv as i32);
 
-    // pass the ldr and rdr through a voltage dampener
-    let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
+    // // pass the ldr and rdr through a voltage dampener
+    // let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
 
     info!("ldr: {ldr:06}, rdr: {rdr:06}");
 
     (ldr, rdr)
 }
 
-/// Uses target angle yaw, target y coord (in mm) (and their actual values), to generate left and right drives
+/// Uses thrust, target angle yaw, and initial yaw to generate left and right drives
 pub fn inst_control(
     target_angle: f32,
-    target_y_coord: f32,
     yaw: f32,
-    y_coord: f32,
     prev_vdr: &mut (i32, i32),
 ) -> (i32, i32) {
     // corrects for the rotation
     let cx = rot_correct(target_angle, yaw);
 
-    // corrects for the odom y coord
-    let cy = y_coord_correct(target_y_coord, y_coord);
-
     // passes the x and y values through arcade drive
-    let (ldr, rdr) = arcade(cx as i32, cy as i32);
+    let (ldr, rdr) = arcade(cx as i32, 0);
 
     // dampes the ldr and rdr
-    // let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
+    let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
 
     info!("ldr: {ldr:06}, rdr: {rdr:06}");
 
@@ -91,9 +86,9 @@ pub fn inst_control(
 
 /// Corrects for any errors (delta) based upon it's inital error (delta) and returns the correction voltage
 pub fn correct_volt(error: f32, max_error: f32) -> f32 {
-    // magic::exp_daniel(error / max_error)
-    //     .clamp(-8000., 8000.)
-    6000.0 * maths::signumf(error)
+    magic::exp_daniel(error / max_error * 1.2)
+        .clamp(-6000., 6000.)
+    // 6000.0 * maths::signumf(error)
 }
 
 /// Dampens any sudden changes to the voltage drives of the robot
@@ -122,7 +117,7 @@ pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) 
     vdr
 }
 
-/// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the x correction voltage
+/// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the new x value
 pub fn rot_correct(target: f32, yaw: f32) -> f32 {
     /// The point in which, the error is so large that the robot runs at full speed
     const MAX_SPEED_THRESHOLD: f32 = 20.;
@@ -139,25 +134,6 @@ pub fn rot_correct(target: f32, yaw: f32) -> f32 {
     // return the correction
     correct_x
 }
-
-/// Corrects for the odometry's y coord (in mm) based upon the error (difference in) location and returns the y correction voltage
-pub fn y_coord_correct(target: f32, coord: f32) -> f32 {
-    /// The point in which, the error is so large that the robot runs at full speed
-    const MAX_SPEED_THRESHOLD: f32 = 128.; // i just set it to the robot size limit (arbitrary, will tune later)
-
-    let error = target - coord;
-    let correct_y = correct_volt(error, MAX_SPEED_THRESHOLD);
-
-    // logs
-    info!("y coord: {coord}");
-    info!("target y coord: {target}");
-    debug!("y coord error: {error}");
-    debug!("y correction: {correct_y}");
-
-    // return the correction
-    correct_y
-}
-
 /// Finds the angle of the x and y values of the joystick according to the top of the joystick
 fn xy_to_angle(x: f32, y: f32) -> f32 {
     if y < 0.0 {
