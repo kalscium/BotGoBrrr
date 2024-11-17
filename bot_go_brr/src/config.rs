@@ -4,10 +4,10 @@
 pub const TICK_SPEED: u32 = 50;
 
 /// The multiplier applied to the robot's turning
-pub const TURN_MULTIPLIER: f32 = 0.64;
+pub const TURN_MULTIPLIER: f32 = 0.56;
 
 /// The multiplier applied to the robot while it's in it's 'precise' mode
-pub const PRECISE_MULTIPLIER: f32 = 0.64;
+pub const PRECISE_MULTIPLIER: f32 = 0.56;
 
 /// Control Configurations
 pub mod controls {

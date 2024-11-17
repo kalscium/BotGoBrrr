@@ -62,7 +62,7 @@ pub fn autonomous() {
 
         // drive based on thrust
         drive::voltage_left(i16::from(inst.thrust) as i32);
-        drive::voltage_left(i16::from(inst.thrust) as i32);
+        drive::voltage_right(i16::from(inst.thrust) as i32);
 
         // logs
         info!("precision requirements achieved");

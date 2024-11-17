@@ -57,8 +57,8 @@ pub fn user_control(
     // pass the ldr and rdr through arcade drive
     let (ldr, rdr) = arcade(xv as i32, yv as i32);
 
-    // pass the ldr and rdr through a voltage dampener
-    let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
+    // // pass the ldr and rdr through a voltage dampener
+    // let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
 
     info!("ldr: {ldr:06}, rdr: {rdr:06}");
 
@@ -121,7 +121,7 @@ pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) 
 /// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the new x value
 pub fn rot_correct(target: f32, yaw: f32) -> f32 {
     /// The point in which, the error is so large that the robot runs at full speed
-    const MAX_SPEED_THRESHOLD: f32 = 20.;
+    const MAX_SPEED_THRESHOLD: f32 = 30.;
 
     let error = low_angle_diff(target, yaw);
     let correct_x = correct_volt(error, MAX_SPEED_THRESHOLD);

@@ -101,8 +101,12 @@ impl Record {
             turn_same
             // must be turning
             && maths::absf(angle_delta) > config::auton::ANGLE_PRECISION
+            // thrust, belt and doinker must no be active
+            && (i16::from(new_inst.thrust) == 0 && !new_inst.act_belt_active && !new_inst.act_doinker_active)
+            // make sure the solenoid doesn't change
+            && new_inst.act_solenoid_active == current.act_solenoid_active
             // must have the same actions
-            && (new_inst.act_belt_active, new_inst.act_belt_up, new_inst.act_solenoid_active) == (current.act_belt_active, current.act_belt_up, current.act_solenoid_active)
+            && (new_inst.thrust, new_inst.act_belt_active, new_inst.act_belt_up, new_inst.act_solenoid_active) == (current.thrust, current.act_belt_active, current.act_belt_up, current.act_solenoid_active)
         {
             // update the current inst's required angle to the new one and return
             debug!("recorded (and compressed) a similar looking instruction");
