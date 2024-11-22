@@ -159,7 +159,7 @@ pub fn y_coord_correct(target: f32, coord: f32) -> f32 {
 }
 
 /// Finds the angle of the x and y values of the joystick according to the top of the joystick
-fn xy_to_angle(x: f32, y: f32) -> f32 {
+pub fn xy_to_angle(x: f32, y: f32) -> f32 {
     if y < 0.0 {
         maths::atan(maths::absf(y) / (x + 0.0001 * maths::signumf(x)))
             + 90.0 * maths::signumf(x)
