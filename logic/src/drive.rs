@@ -34,7 +34,6 @@ pub fn user_control(
     j2x: f32,
     j2y: f32,
     yaw: f32,
-    prev_vdr: &mut (i32, i32),
 ) -> (i32, i32) {
     // get the initial calculated voltages from the first controller
     let mut xv = magic::exp_daniel(j1x);
@@ -56,9 +55,6 @@ pub fn user_control(
     // pass the ldr and rdr through arcade drive
     let (ldr, rdr) = arcade(xv as i32, yv as i32);
 
-    // pass the ldr and rdr through a voltage dampener
-    let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
-
     info!("ldr: {ldr:06}, rdr: {rdr:06}");
 
     (ldr, rdr)
@@ -79,9 +75,6 @@ pub fn inst_control(
 
     // passes the x and y values through arcade drive
     let (ldr, rdr) = arcade(cx as i32, cy as i32);
-
-    // dampes the ldr and rdr
-    // let (ldr, rdr) = damp_volts((ldr, rdr), prev_vdr);
 
     info!("ldr: {ldr:06}, rdr: {rdr:06}");
 

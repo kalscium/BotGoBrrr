@@ -35,11 +35,9 @@ pub fn abs_rotation(x: f32, y: f32, yaw: f32, delta_seconds: f32, state: &mut Co
     logic::info!("# IMU exact rotation");
 
     const MAX_ERR: f32 = 45.;
-    const MAX_TIME: f32 = 0.25;
     const PID: PIDConsts = PIDConsts {
         kp: 1. / MAX_ERR * 12000.0,
-        // kp: 0.,
-        ki: 1. / MAX_TIME,
+        ki: 16.,
         saturation: 12000.,
     };
 

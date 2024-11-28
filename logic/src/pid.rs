@@ -19,6 +19,12 @@ pub struct PIDConsts {
 pub struct PIDState {
     /// The current integral of the PID controller
     pub integral: f32,
+    /// The previous measurement
+    pub prev_measure: f32,
+    /// The previous velocity
+    pub prev_velocity: f32,
+    /// The previous acceleration
+    pub prev_accel: f32,
 }
 
 /// Updates the state of the PID based upon the current target and measurement
@@ -30,6 +36,21 @@ pub fn update(
     consts: &PIDConsts,
     diff: impl Fn(f32, f32) -> f32,
 ) -> f32 {
+    // calculate the velocity, acceleration and jerk
+    let velocity = diff(measurement, state.prev_measure) / delta_seconds;
+    let accel = velocity - state.prev_velocity / delta_seconds;
+    let jerk = accel - state.prev_accel / delta_seconds;
+
+    // update the previous measurement, velocity and acceleration
+    state.prev_measure = measurement;
+    state.prev_velocity = velocity;
+    state.prev_accel = accel;
+
+    // predict the future measurement based on the robot's velocity, acceleration and jerk
+    let future_accel = accel + jerk * delta_seconds;
+    let future_vel = velocity + future_accel * delta_seconds;
+    let measurement = measurement + future_vel * delta_seconds;
+
     // find the error
     let error = diff(target, measurement);
 
