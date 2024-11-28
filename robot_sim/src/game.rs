@@ -4,8 +4,8 @@ use crate::controls::ControlState;
 pub fn run() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .insert_resource(Time::<Fixed>::from_hz(60.0))
-        .insert_resource(RobotTimer(Timer::from_seconds(0.05, TimerMode::Repeating))) // 50ms robot code execution
+        .insert_resource(Time::<Fixed>::from_seconds(0.002))
+        .insert_resource(RobotTimer(Timer::from_seconds(0.01, TimerMode::Repeating))) // 10ms robot code execution
         .insert_resource(crate::controls::init_state())
         .add_systems(Startup, (spawn_camera, spawn_robot, spawn_text))
         .add_systems(PreUpdate, gamepad_connections)
@@ -300,7 +300,10 @@ pub fn keyboard_movement(
         .to_vec()
         .into_iter()
         // .filter(|log| log.level != logic::log::Level::Debug)
-        .map(|log| log.msg)
+        .map(|log| {
+            println!("{}", log.msg);
+            log.msg
+        })
         .collect::<Box<[_]>>()
         .join("\n");
     *text = Text::from_section(logs, get_text_style(asset_server));

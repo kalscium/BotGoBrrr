@@ -12,13 +12,11 @@ pub struct PIDConsts {
     /// The derivative gain
     pub kd: f32,
 
-    /// Derivative low-pass filter time constant
-    pub tau: f32,
+    /// The rate of linear interpolation throuogh the derivative components
+    pub derive_lerp: f32,
 
-    /// The minimum output limit
-    pub limit_min: f32,
-    /// The maximum output limit
-    pub limit_max: f32,
+    /// The saturation point (output limit) (must be POSITIVE)
+    pub saturation: f32,
 }
 
 /// A state of the PID controller
@@ -28,10 +26,12 @@ pub struct PIDState {
     pub integral: f32,
     /// The previous error (required for the integral)
     pub prev_error: f32,
-    /// The current derivative of the PID controller
-    pub derivative: f32,
     /// The previous measurement (required for the derivative)
     pub prev_measure: f32,
+    /// The previous velocity (required for the derivative)
+    pub avg_velocity: f32,
+    /// The previous accelleration (required for the derivative)
+    pub avg_accel: f32,
 }
 
 /// Updates the state of the PID based upon the current target and measurement
@@ -49,46 +49,46 @@ pub fn update(
     // find the proportional correction
     let prop = consts.kp * error;
 
+    // clamp the proportional corerction
+    let prop = prop.clamp(-consts.saturation, consts.saturation);
+
     // find the integral correction
-    state.integral += 0.5 * consts.ki * delta_seconds * (error + state.prev_error);
-
-    // anti-windup via dynamic intergrator clamping
-
-    // set the upper bounds for the integral
-    let limit_max_int = if consts.limit_max > prop {
-        consts.limit_max - prop
-    } else {
-        0.
-    };
-
-    // set the lower bounds for the integral
-    let limit_min_int = if consts.limit_min < prop {
-        consts.limit_min - prop
-    } else {
-        0.
-    };
+    state.integral += consts.ki * delta_seconds * error;
 
     // clamp the integral
-    state.integral = state.integral.clamp(limit_min_int, limit_max_int);
+    let limit_int = consts.saturation - prop;
+    state.integral = state.integral.clamp(-limit_int, limit_int);
 
-    // derive the derivative (band-limited differentiator)
-    state.derivative = (2. * consts.kd * diff(measurement, state.prev_measure)) // note: derivative on measurement!
-                     + (2. * consts.tau - delta_seconds) * state.derivative
-                     / (2. * consts.tau + delta_seconds);
+    // calculate the 1st, 2nd and 3rd order derivatives
+    let velocity = diff(measurement, state.prev_measure) / delta_seconds;
+    let acceleration = diff(velocity, state.avg_velocity) / delta_seconds;
+    let jerk = diff(acceleration, state.avg_accel) / delta_seconds;
+
+    // find the derivative correction
+    let derivative = -(consts.kd * jerk);
+
+    // clamp the derivative correction
+    let derivative = derivative.clamp(-maths::absf(prop), maths::absf(prop));
+
+    // update the avg derivatives with anti-windup
+    state.prev_error = error;
+    state.prev_measure = measurement;
+    state.avg_velocity = maths::lerp(state.avg_velocity, velocity, (consts.derive_lerp * delta_seconds).clamp(0., 1.));
+    state.avg_accel = maths::lerp(state.avg_accel, acceleration, (consts.derive_lerp * delta_seconds).clamp(0., 1.));
 
     // compute the output and apply the limits
-    let out = (prop + state.integral + state.derivative).clamp(consts.limit_min, consts.limit_max);
+    let output = (prop + state.integral + derivative).clamp(-consts.saturation, consts.saturation);
 
     info!("error: {error}");
     info!("pid proportional: {prop}");
     info!("pid integral: {}", state.integral);
-    info!("pid derivative: {}", state.derivative);
-    info!("pid out: {out}");
-
-    // update the error and previous measurement
-    state.prev_measure = measurement;
-    state.prev_error = error;
+    info!("pid prev_measure: {}", state.prev_measure);
+    info!("pid avg_velocity: {}", state.avg_velocity);
+    info!("pid avg_accel: {}", state.avg_accel);
+    info!("pid jerk: {}", jerk);
+    info!("pid derivative: {}", derivative);
+    info!("pid out: {output}");
     
     // return the output
-    out
+    output
 }

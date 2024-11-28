@@ -70,7 +70,6 @@ pub fn inst_control(
     target_y_coord: f32,
     yaw: f32,
     y_coord: f32,
-    prev_vdr: &mut (i32, i32),
 ) -> (i32, i32) {
     // corrects for the rotation
     let cx = rot_correct(target_angle, yaw);
@@ -91,9 +90,8 @@ pub fn inst_control(
 
 /// Corrects for any errors (delta) based upon it's inital error (delta) and returns the correction voltage
 pub fn correct_volt(error: f32, max_error: f32) -> f32 {
-    // magic::exp_daniel(error / max_error)
-    //     .clamp(-8000., 8000.)
-    6000.0 * maths::signumf(error)
+    magic::exp_daniel(error / max_error)
+        .clamp(-8000., 8000.)
 }
 
 /// Dampens any sudden changes to the voltage drives of the robot

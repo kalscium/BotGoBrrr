@@ -34,15 +34,14 @@ pub fn pure_driver(x: f32, y: f32, yaw: f32, _delta_second: f32, state: &mut Con
 pub fn abs_rotation(x: f32, y: f32, yaw: f32, delta_seconds: f32, state: &mut ControlState) -> (i32, i32) {
     logic::info!("# IMU exact rotation");
 
+    const MAX_ERR: f32 = 45.;
     const PID: PIDConsts = PIDConsts {
-        kp: 128.,
-        ki: 256.0,
-        kd: 16.,
-
-        tau: 0.02,
-
-        limit_min: -12000.,
-        limit_max: 12000.,
+        kp: 1. / MAX_ERR * 12000.0,
+        ki: 0.,
+        kd: 0., // increase until it doesn't overshoot
+        // kd: 0.,
+        derive_lerp: 48., // make it a step (bing bang) response, decrease until robot stops oscillating
+        saturation: 12000.,
     };
 
     let target = logic::drive::xy_to_angle(x, y + 0.0001);
@@ -64,9 +63,9 @@ pub fn abs_rotation(x: f32, y: f32, yaw: f32, delta_seconds: f32, state: &mut Co
 /// A function that controls the noise of the left and right drives of the robot (from -1..=1)
 pub fn noise(ldr: f32, rdr: f32) -> (f32, f32) {    
     // add random noise
-    // let ldr = ldr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
-    // let rdr = rdr + rand::thread_rng().gen_range(-100..100) as f32 * 0.01;
-    let rdr = rdr * 0.4;
+    // let ldr = ldr + rand::thread_rng().gen_range(-100..100) as f32 * 0.1;
+    // let rdr = rdr + rand::thread_rng().gen_range(-100..100) as f32 * 0.1;
+    // let rdr = rdr * 0.8;
 
     (ldr, rdr)
 }
