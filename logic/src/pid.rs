@@ -9,6 +9,8 @@ pub struct PIDConsts {
     pub kp: f32,
     /// The integral gain
     pub ki: f32,
+    /// The derivative gain
+    pub kd: f32,
 
     /// The saturation point (output limit) (must be POSITIVE)
     pub saturation: f32,
@@ -18,13 +20,13 @@ pub struct PIDConsts {
 #[derive(Debug, Clone, Default)]
 pub struct PIDState {
     /// The current integral of the PID controller
-    pub integral: f32,
+    integral: f32,
     /// The previous measurement
-    pub prev_measure: f32,
+    prev_measure: f32,
     /// The previous velocity
-    pub prev_velocity: f32,
+    prev_velocity: f32,
     /// The previous acceleration
-    pub prev_accel: f32,
+    prev_accel: f32,
 }
 
 /// Updates the state of the PID based upon the current target and measurement
@@ -72,14 +74,18 @@ pub fn update(
         state.integral += consts.ki * delta_seconds * error;
     }
 
+    // penalise acceleration through the derivative gain
+    let dc = -(accel * consts.kd * delta_seconds * delta_seconds);
+
     // compute the output and apply the limits
-    let output = (pc + ic).clamp(-consts.saturation, consts.saturation);
+    let output = (pc + ic + dc).clamp(-consts.saturation, consts.saturation);
 
     info!("error: {error}");
     info!("pid proportional: {pc}");
     info!("pid integrator: {}", state.integral);
     info!("pid integral: {}", ic);
-    info!("pid out: {output}");
+    info!("pid derivative: {}", dc);
+     info!("pid out: {output}");
     
     // return the output
     output

@@ -34,10 +34,11 @@ pub fn pure_driver(x: f32, y: f32, yaw: f32, _delta_second: f32, state: &mut Con
 pub fn abs_rotation(x: f32, y: f32, yaw: f32, delta_seconds: f32, state: &mut ControlState) -> (i32, i32) {
     logic::info!("# IMU exact rotation");
 
-    const MAX_ERR: f32 = 45.;
+    const MAX_ERR: f32 = 45.; // the maximum error before saturation
     const PID: PIDConsts = PIDConsts {
         kp: 1. / MAX_ERR * 12000.0,
-        ki: 16.,
+        ki: 16., // decrease until ocillations reduce enough
+        kd: 128., // increase until overshoot is low enough
         saturation: 12000.,
     };
 
