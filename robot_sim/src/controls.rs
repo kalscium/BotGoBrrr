@@ -35,12 +35,11 @@ pub fn abs_rotation(x: f32, y: f32, yaw: f32, delta_seconds: f32, state: &mut Co
     logic::info!("# IMU exact rotation");
 
     const MAX_ERR: f32 = 45.;
+    const MAX_TIME: f32 = 0.25;
     const PID: PIDConsts = PIDConsts {
         kp: 1. / MAX_ERR * 12000.0,
-        ki: 0.,
-        kd: 0., // increase until it doesn't overshoot
-        // kd: 0.,
-        derive_lerp: 48., // make it a step (bing bang) response, decrease until robot stops oscillating
+        // kp: 0.,
+        ki: 1. / MAX_TIME,
         saturation: 12000.,
     };
 
@@ -65,7 +64,7 @@ pub fn noise(ldr: f32, rdr: f32) -> (f32, f32) {
     // add random noise
     // let ldr = ldr + rand::thread_rng().gen_range(-100..100) as f32 * 0.1;
     // let rdr = rdr + rand::thread_rng().gen_range(-100..100) as f32 * 0.1;
-    // let rdr = rdr * 0.8;
+    let rdr = rdr * 0.9;
 
     (ldr, rdr)
 }
