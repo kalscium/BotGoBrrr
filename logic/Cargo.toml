@@ -3,10 +3,6 @@ name = "logic"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies.packed_struct]
-version = "0.10"
-default-features = false
-
 [dependencies]
 spin = "0.9"
 

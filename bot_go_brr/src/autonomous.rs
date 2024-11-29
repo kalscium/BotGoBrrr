@@ -1,6 +1,6 @@
 //! Autonomous routine for the robot
 
-use logic::{info, inst::AutonRoutine};
+use logic::info;
 use safe_vex::rtos;
 use crate::{belt, config, doinker, drive, log, solenoid};
 

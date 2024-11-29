@@ -7,8 +7,5 @@ extern crate alloc;
 pub mod log;
 pub mod magic;
 pub mod drive;
-pub mod inst;
 pub mod odom;
 pub mod pid;
-
-pub use packed_struct;
