@@ -37,6 +37,21 @@ fn match_auton(
     rot_pid: &mut PIDState,
     odom_y: &mut OdomState,
 ) {
+    // move 72cm into the mogo infront
+    act::y_coord(720., odom_y, logfile, odom_y_pid);
+
+    // make sure the robot is straight and then activate the solenoid
+    act::rotate(0., logfile, rot_pid);
+    act::solenoid(true);
+
+    // activate the belt for around 2 seconds
+    act::belt(config::motors::BELT_VOLTS);
+    act::wait(2000);
+
+    // move to hit the pylon
+    act::rotate(0., logfile, rot_pid);
+    act::y_coord(720. + 580., odom_y, logfile, odom_y_pid); // move another 58cm
+
     // flush logs
     log::logic_flush(logfile);
 }
@@ -48,6 +63,8 @@ fn skills_auton(
     rot_pid: &mut PIDState,
     odom_y: &mut OdomState,
 ) {
+    act::wait(5000); // wait 5 seconds to calibrate imu
+
     // flush logs
     log::logic_flush(logfile);
 }

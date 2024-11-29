@@ -1,6 +1,7 @@
 //! Common actions and functions used during autonomous
 
 use logic::info;
+use logic::odom::OdomState;
 use logic::pid::PIDState;
 use safe_vex::rtos;
 use crate::log;
@@ -17,7 +18,7 @@ pub use crate::belt::inst_control as belt;
 pub use crate::doinker::inst_control as doinker;
 
 /// Correct for a specified yaw angle / rotation
-pub fn correct_rot(
+pub fn rotate(
     target: f32,
     logfile: &mut LogFile,
     pid: &mut PIDState,
@@ -48,6 +49,8 @@ pub fn correct_rot(
         drive::voltage_left(ldr);
         drive::voltage_right(rdr);
 
+        // add code to update odom if you run into problems
+
         // flush logs
         log::logic_flush(logfile);
 
@@ -59,9 +62,9 @@ pub fn correct_rot(
 }
 
 /// Correct for a specified y coordinate
-pub fn correct_y_coord(
+pub fn y_coord(
     target: f32,
-    y_coord: f32,
+    odom: &mut OdomState,
     logfile: &mut LogFile,
     pid: &mut PIDState,
 ) {
@@ -76,7 +79,7 @@ pub fn correct_y_coord(
         // get correction y value
         let correct_y = logic::drive::rot_correct(
             target,
-            y_coord,
+            odom.y_coord,
             config::TICK_SPEED as f32 / 1000., // convert ms to s
             &config::auton::Y_PID,
             pid,
@@ -88,6 +91,13 @@ pub fn correct_y_coord(
         // drive
         drive::voltage_left(ldr);
         drive::voltage_right(rdr);
+
+        // update odom
+        logic::odom::account_for(
+            drive::get_rotation_angle(config::auton::ODOM_LY_PORT),
+            drive::get_rotation_angle(config::auton::ODOM_RY_PORT),
+            odom,
+        );
 
         // flush logs
         log::logic_flush(logfile);
