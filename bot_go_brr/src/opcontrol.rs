@@ -1,9 +1,8 @@
 //! Opcontrol routine for the robot
 
-use logic::{debug, info};
+use logic::{debug, info, odom::OdomState, pid::PIDState};
 use safe_vex::rtos;
 use crate::{belt, config, doinker, drive, log, solenoid};
-use crate::record::Record;
 
 /// The opcontrol routine entrypoint
 pub fn opcontrol() {
@@ -15,13 +14,17 @@ pub fn opcontrol() {
     let mut tick: u32 = 0; // the current tick
     let mut solenoid_active = false; // if the solenoid is active or not
     let mut solenoid_tick = tick; // the last time the solenoid's activity was changed
-    let mut record = Record::new_ignore(config::auton::RECORD_PATH); // record file for auton
-    let mut prev_vdr: (i32, i32) = (0, 0); // the previous voltages for the left and right drives
 
     // variables for odometry
-    let mut prev_rot_y: f32 = drive::get_rotation_angle(config::auton::ODOM_Y_PORT); // the previous measurement from the y rotation sensor
-    let mut y_coord: f32 = 0.; // the current calculated y coordinate of the robot
+    let mut y_odom = OdomState {
+        prev_ly: drive::get_rotation_angle(config::auton::ODOM_LY_PORT),
+        prev_ry: drive::get_rotation_angle(config::auton::ODOM_RY_PORT),
+        y_coord: 0.,
+    };
 
+    // variables for the pid
+    let mut odom_pid = PIDState::default();
+    
     // opcontrol loop
     loop {
         debug!("opctrl tick: {tick}");
@@ -29,11 +32,11 @@ pub fn opcontrol() {
 
         // update the odometry calculations
         logic::odom::account_for(
-            drive::get_rotation_angle(config::auton::ODOM_Y_PORT),
-            &mut prev_rot_y,
-            &mut y_coord,
-        ); info!("y coord: {y_coord}");
-
+            drive::get_rotation_angle(config::auton::ODOM_LY_PORT),
+            drive::get_rotation_angle(config::auton::ODOM_RY_PORT),
+            &mut y_odom,
+        );
+        
         // execute the belt
         let belt_inst = belt::user_control();
 
@@ -44,10 +47,11 @@ pub fn opcontrol() {
         let solenoid_inst = solenoid::user_control(tick, &mut solenoid_tick, &mut solenoid_active);
 
         // execute the drivetrain
-        drive::user_control(&mut prev_vdr);
-
-        // record the three values
-        record.record(y_coord, belt_inst, doinker_inst, solenoid_inst);
+        drive::user_control(
+            config::TICK_SPEED as f32 / 1000.,
+            todo!(),
+            &mut odom_pid,
+        );
 
         // log how long the cycle took
         info!("cycle time: {}", (rtos::millis() - now) as f32 / 1000.);

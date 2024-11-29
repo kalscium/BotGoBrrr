@@ -34,6 +34,9 @@ pub fn user_control(
     j2x: f32,
     j2y: f32,
     yaw: f32,
+    delta_seconds: f32,
+    rot_pid_consts: &PIDConsts,
+    rot_pid_state: &mut PIDState,
 ) -> (i32, i32) {
     // get the initial calculated voltages from the first controller
     let mut xv = magic::exp_daniel(j1x);
@@ -48,7 +51,8 @@ pub fn user_control(
         // get the target angle (from x and y) and correction x
         let target_angle = xy_to_angle(j2x, j2y);
 
-        xv = todo!();
+        // get correction x from yaw corrections
+        xv = pid::update(yaw, target_angle, delta_seconds, rot_pid_state, rot_pid_consts, low_angle_diff);
     }
 
     // pass the ldr and rdr through arcade drive
@@ -123,7 +127,7 @@ pub fn y_coord_correct(
         delta_seconds,
         pid_state,
         pid_consts,
-        |target, measure| target - coord,
+        |target, measure| target - measure,
     );
 
     debug!("y correction: {correct_y}");

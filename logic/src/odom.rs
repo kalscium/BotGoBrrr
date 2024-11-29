@@ -4,6 +4,8 @@
 
 use core::f32::consts::PI;
 
+use crate::info;
+
 /// The diameter of the robot's wheel in **mm**
 const DIAMETER: f32 = 101.6;
 
@@ -26,9 +28,9 @@ pub fn lowest_rot_delta(prev: f32, measurement: f32) -> f32 {
 #[derive(Debug, Clone)]
 pub struct OdomState {
     /// The previous left rotational sensor for measuring the y coordinate
-    prev_ly: f32,
+    pub prev_ly: f32,
     /// The previous right rotational sensor for measuring the y coordinate
-    prev_ry: f32,
+    pub prev_ry: f32,
     /// The current y-coordinate
     pub y_coord: f32,
 }
@@ -66,4 +68,7 @@ pub fn account_for(
 
     // add the coordinate deltas to the state
     state.y_coord += y_delta;
+
+    // log the current y coord
+    info!("y coord: {}", state.y_coord);
 }

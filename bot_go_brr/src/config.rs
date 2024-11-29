@@ -1,7 +1,7 @@
 //! Configurations for the robot
 
 /// How long (in milliseconds) each 'tick' is
-pub const TICK_SPEED: u32 = 50;
+pub const TICK_SPEED: u32 = 10;
 
 /// The multiplier applied to the robot's turning
 pub const TURN_MULTIPLIER: f32 = 0.64;
@@ -40,22 +40,30 @@ pub mod solenoid {
 
 /// Configurations for autonomous
 pub mod auton {
+    use logic::pid::PIDConsts;
     use safe_vex::port::SmartPort;
 
     /// The port of the intertial sensor
     pub const IMU_PORT: safe_vex::port::SmartPort = safe_vex::port::SmartPort::Nine;
 
     /// The required minimum precision for the robot's angle during auton (must be within this angle)
-    pub const ANGLE_PRECISION: f32 = 10.0;
+    pub const ANGLE_PRECISION: f32 = 1.;
 
-    /// The path of the file used for recording
-    pub const RECORD_PATH: &str = "/usd/record.rs";
-
-    /// The port of the odom y rotation sensor
-    pub const ODOM_Y_PORT: SmartPort = SmartPort::Sixteen;
+    /// The port of the left odom y rotation sensor
+    pub const ODOM_LY_PORT: SmartPort = SmartPort::Sixteen;
+    /// The port of the right odom y rotation sensor
+    pub const ODOM_RY_PORT: SmartPort = SmartPort::Sixteen;
 
     /// The required minimum precision for the robot's coordinates (in mm) during auton (if you set this too low the robot will occilate forever)
     pub const ODOM_PRECISION: f32 = 16.;
+
+    /// The PID gain / configuration values for rotational/yaw corrections
+    pub const ROT_PID: PIDConsts = PIDConsts {
+        kp: 0.,
+        ki: 0.,
+        kd: 0.,
+        saturation: 12000.,
+    };
 }
 
 /// Configurations for logging

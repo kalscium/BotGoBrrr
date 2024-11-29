@@ -1,6 +1,6 @@
 //! Drive code for the drive-train
 
-use logic::warn;
+use logic::{pid::{PIDConsts, PIDState}, warn};
 use safe_vex::{controller::{self, Controller, ControllerAnalog}, imu, motor, port::SmartPort, rotation};
 use crate::config;
 
@@ -26,8 +26,12 @@ pub fn get_rotation_angle(port: SmartPort) -> f32 {
     }
 }
 
-/// Drives the drive-train based on user input and previous voltage drive
-pub fn user_control(prev_vdr: &mut (i32, i32)) {
+/// Drives the drive-train based on user input, delta_seconds and pid values for rotation
+pub fn user_control(
+    delta_seconds: f32,
+    rot_pid_consts: &PIDConsts,
+    rot_pid_state: &mut PIDState,
+) {
     // get the joystick values (from -127..=127)
     let j1x = controller::get_analog(Controller::Master, ControllerAnalog::LeftX).unwrap_or_default();
     let j1y = controller::get_analog(Controller::Master, ControllerAnalog::LeftY).unwrap_or_default();
@@ -44,6 +48,9 @@ pub fn user_control(prev_vdr: &mut (i32, i32)) {
         j2x as f32 / 127.0,
         j2y as f32 / 127.0,
         yaw,
+        delta_seconds,
+        rot_pid_consts,
+        rot_pid_state,
     );
 
     // drive the robot based on the ldr and rdr values
