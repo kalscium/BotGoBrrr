@@ -49,7 +49,7 @@ pub fn opcontrol() {
         // execute the drivetrain
         drive::user_control(
             config::TICK_SPEED as f32 / 1000.,
-            todo!(),
+            &config::auton::ROT_PID,
             &mut odom_pid,
         );
 

@@ -9,8 +9,9 @@ pub struct PIDConsts {
     pub kp: f32,
     /// The integral gain
     pub ki: f32,
-    /// The derivative gain
-    pub kd: f32,
+
+    /// How far into the future in seconds the PID will predict and act on
+    pub prediction_window: f32,
 
     /// The saturation point (output limit) (must be POSITIVE)
     pub saturation: f32,
@@ -49,9 +50,9 @@ pub fn update(
     state.prev_accel = accel;
 
     // predict the future measurement based on the robot's velocity, acceleration and jerk
-    let future_accel = accel + jerk * delta_seconds;
-    let future_vel = velocity + future_accel * delta_seconds;
-    let measurement = measurement + future_vel * delta_seconds;
+    let future_accel = accel + jerk * consts.prediction_window;
+    let future_vel = velocity + future_accel * consts.prediction_window;
+    let measurement = measurement + future_vel * consts.prediction_window;
 
     // find the error
     let error = diff(target, measurement);
@@ -74,17 +75,13 @@ pub fn update(
         state.integral += consts.ki * delta_seconds * error;
     }
 
-    // penalise acceleration through the derivative gain
-    let dc = -(accel * consts.kd * delta_seconds * delta_seconds);
-
     // compute the output and apply the limits
-    let output = (pc + ic + dc).clamp(-consts.saturation, consts.saturation);
+    let output = (pc + ic).clamp(-consts.saturation, consts.saturation);
 
     info!("error: {error}");
     debug!("pid proportional: {pc}");
     debug!("pid integrator: {}", state.integral);
     debug!("pid integral: {}", ic);
-    debug!("pid derivative: {}", dc);
     
     // return the output
     output

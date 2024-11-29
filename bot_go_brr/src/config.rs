@@ -57,11 +57,14 @@ pub mod auton {
     /// The required minimum precision for the robot's coordinates (in mm) during auton (if you set this too low the robot will occilate forever)
     pub const ODOM_PRECISION: f32 = 16.;
 
+    /// The max rotational error before saturation
+    pub const MAX_ROT_ERR: f32 = 45.;
+
     /// The PID gain / configuration values for rotational/yaw corrections
     pub const ROT_PID: PIDConsts = PIDConsts {
-        kp: 0.,
-        ki: 0.,
-        kd: 0.,
+        kp: 1. / MAX_ROT_ERR * 12000.,
+        ki: 2., // decrease until oscillations are small enough
+        prediction_window: 0.02, // decrease until the weird jittering stops
         saturation: 12000.,
     };
 }
