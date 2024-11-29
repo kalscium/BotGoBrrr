@@ -44,7 +44,6 @@ pub fn user_control(prev_vdr: &mut (i32, i32)) {
         j2x as f32 / 127.0,
         j2y as f32 / 127.0,
         yaw,
-        prev_vdr,
     );
 
     // drive the robot based on the ldr and rdr values
