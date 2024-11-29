@@ -19,7 +19,7 @@ version = "4.4.0"
 # path = "/home/kalscium/Github/safe-vex"
 
 [features]
-full-autonomous = []
+skills = []
 
 [profile.release]
 incremental = false
