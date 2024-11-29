@@ -1,7 +1,7 @@
 //! Initialization routine for the robot
 
 use logic::warn;
-use safe_vex::{adi::{self, AdiConfig}, imu, rotation};
+use safe_vex::{adi::{self, AdiConfig}, imu};
 use crate::config;
 
 /// The initialization routine entrypoint

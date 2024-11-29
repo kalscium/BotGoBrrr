@@ -38,13 +38,13 @@ pub fn opcontrol() {
         );
         
         // execute the belt
-        let belt_inst = belt::user_control();
+        belt::user_control();
 
         // execute the doinker
-        let doinker_inst = doinker::user_control();
+        doinker::user_control();
 
         // execute the solenoid
-        let solenoid_inst = solenoid::user_control(tick, &mut solenoid_tick, &mut solenoid_active);
+        solenoid::user_control(tick, &mut solenoid_tick, &mut solenoid_active);
 
         // execute the drivetrain
         drive::user_control(

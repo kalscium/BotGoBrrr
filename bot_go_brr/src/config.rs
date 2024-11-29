@@ -67,6 +67,17 @@ pub mod auton {
         prediction_window: 0.02, // decrease until the weird jittering stops
         saturation: 12000.,
     };
+
+    /// The max y coordinate error in mm before saturation
+    pub const MAX_Y_ERR: f32 = 150.;
+
+    /// The PID gain / configuration values for y_coordinate corrections
+    pub const Y_PID: PIDConsts = PIDConsts {
+        kp: 1. / MAX_Y_ERR * 12000.,
+        ki: 0., // decrease until oscillations are small enough
+        prediction_window: 0., // decrease until the weird jittering stops
+        saturation: 12000.,
+    };
 }
 
 /// Configurations for logging
