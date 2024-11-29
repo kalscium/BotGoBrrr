@@ -1,6 +1,6 @@
 //! Logic code for the drive-train of the robot
 
-use crate::{debug, info, magic};
+use crate::{debug, info, magic, pid::{self, PIDConsts, PIDState}};
 
 /// Performs an arcade drive transformation on x and y values (-12000..=12000) to produce left and right drive voltages
 pub fn arcade(x: i32, y: i32) -> (i32, i32) {
@@ -47,9 +47,8 @@ pub fn user_control(
 
         // get the target angle (from x and y) and correction x
         let target_angle = xy_to_angle(j2x, j2y);
-        let correct_x = rot_correct(target_angle, yaw);
 
-        xv = correct_x;
+        xv = todo!();
     }
 
     // pass the ldr and rdr through arcade drive
@@ -58,33 +57,6 @@ pub fn user_control(
     info!("ldr: {ldr:06}, rdr: {rdr:06}");
 
     (ldr, rdr)
-}
-
-/// Uses target angle yaw, target y coord (in mm) (and their actual values), to generate left and right drives
-pub fn inst_control(
-    target_angle: f32,
-    target_y_coord: f32,
-    yaw: f32,
-    y_coord: f32,
-) -> (i32, i32) {
-    // corrects for the rotation
-    let cx = rot_correct(target_angle, yaw);
-
-    // corrects for the odom y coord
-    let cy = y_coord_correct(target_y_coord, y_coord);
-
-    // passes the x and y values through arcade drive
-    let (ldr, rdr) = arcade(cx as i32, cy as i32);
-
-    info!("ldr: {ldr:06}, rdr: {rdr:06}");
-
-    (ldr, rdr)
-}
-
-/// Corrects for any errors (delta) based upon it's inital error (delta) and returns the correction voltage
-pub fn correct_volt(error: f32, max_error: f32) -> f32 {
-    magic::exp_daniel(error / max_error)
-        .clamp(-8000., 8000.)
 }
 
 /// Dampens any sudden changes to the voltage drives of the robot
@@ -114,17 +86,19 @@ pub fn damp_volts(new_vdr: (i32, i32), prev_vdr: &mut (i32, i32)) -> (i32, i32) 
 }
 
 /// Corrects the rotation of the robot based upon the error (difference in) angle (-180..=180) and returns the x correction voltage
-pub fn rot_correct(target: f32, yaw: f32) -> f32 {
-    /// The point in which, the error is so large that the robot runs at full speed
-    const MAX_SPEED_THRESHOLD: f32 = 20.;
-
-    let error = low_angle_diff(target, yaw);
-    let correct_x = correct_volt(error, MAX_SPEED_THRESHOLD);
-
-    // logs
+pub fn rot_correct(
+    target: f32,
+    yaw: f32,
+    delta_seconds: f32,
+    pid_consts: &PIDConsts,
+    pid_state: &mut PIDState,
+) -> f32 {
+    info!("correcting for rotation/yaw");
     info!("yaw: {yaw:04.02}");
     info!("target angle: {target:04.02}");
-    debug!("angle error: {error:04.02}");
+
+    let correct_x = pid::update(yaw, target, delta_seconds, pid_state, pid_consts, low_angle_diff);
+
     debug!("angle correction x: {correct_x:08.02}");
 
     // return the correction
@@ -132,17 +106,26 @@ pub fn rot_correct(target: f32, yaw: f32) -> f32 {
 }
 
 /// Corrects for the odometry's y coord (in mm) based upon the error (difference in) location and returns the y correction voltage
-pub fn y_coord_correct(target: f32, coord: f32) -> f32 {
-    /// The point in which, the error is so large that the robot runs at full speed
-    const MAX_SPEED_THRESHOLD: f32 = 128.; // i just set it to the robot size limit (arbitrary, will tune later)
-
-    let error = target - coord;
-    let correct_y = correct_volt(error, MAX_SPEED_THRESHOLD);
-
-    // logs
+pub fn y_coord_correct(
+    target: f32,
+    coord: f32,
+    delta_seconds: f32,
+    pid_consts: &PIDConsts,
+    pid_state: &mut PIDState,
+) -> f32 {
+    info!("correcting for odom y coordinate");
     info!("y coord: {coord}");
     info!("target y coord: {target}");
-    debug!("y coord error: {error}");
+
+    let correct_y = pid::update(
+        coord,
+        target,
+        delta_seconds,
+        pid_state,
+        pid_consts,
+        |target, measure| target - coord,
+    );
+
     debug!("y correction: {correct_y}");
 
     // return the correction

@@ -1,6 +1,6 @@
 //! A simple PID implementation
 
-use crate::info;
+use crate::{debug, info};
 
 /// PID Controller Constants
 #[derive(Debug, Clone)]
@@ -81,11 +81,10 @@ pub fn update(
     let output = (pc + ic + dc).clamp(-consts.saturation, consts.saturation);
 
     info!("error: {error}");
-    info!("pid proportional: {pc}");
-    info!("pid integrator: {}", state.integral);
-    info!("pid integral: {}", ic);
-    info!("pid derivative: {}", dc);
-     info!("pid out: {output}");
+    debug!("pid proportional: {pc}");
+    debug!("pid integrator: {}", state.integral);
+    debug!("pid integral: {}", ic);
+    debug!("pid derivative: {}", dc);
     
     // return the output
     output
