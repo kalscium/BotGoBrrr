@@ -3,6 +3,20 @@
 use crate::{debug, info};
 
 /// PID Controller Constants
+///
+/// # Tuning Guide
+/// ```rust
+/// use logic::pid::PIDConsts;
+///
+/// const SATURATION: f32 = 12000.; // the maximum correction/outupt physically possible (in this example, a `12V` output of a motor)
+/// const MAX_ERR: f32 = 45.; // the maximum error before saturation
+/// const PID: PIDConsts = PIDConsts {
+///     kp: 1. / MAX_ERR * SATURATION, // calculates the P gain from the max error and sutration
+///     ki: 16., // decrease until ocillations reduce enough (only one overshoot; overshoot is alright as it'll be solved by the next value)
+///     prediction_window: 0.02, // decrease until the weird jittering stops (sudden stops and starts) and increase until overshoot is eliminated
+///     saturation: SATURATION, // your saturation point (max output)
+/// };
+/// ```
 #[derive(Debug, Clone)]
 pub struct PIDConsts {
     /// The proportional gain

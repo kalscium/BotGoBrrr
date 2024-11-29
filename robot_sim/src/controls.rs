@@ -38,7 +38,7 @@ pub fn abs_rotation(x: f32, y: f32, yaw: f32, delta_seconds: f32, state: &mut Co
     const PID: PIDConsts = PIDConsts {
         kp: 1. / MAX_ERR * 12000.0,
         ki: 16., // decrease until ocillations reduce enough
-        kd: 128., // increase until overshoot is low enough
+        prediction_window: 0., // would be a non-zero value in an environment with physics
         saturation: 12000.,
     };
 
