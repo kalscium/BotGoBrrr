@@ -50,12 +50,12 @@ pub mod auton {
     pub const ANGLE_PRECISION: f32 = 1.;
 
     /// The port of the left odom y rotation sensor
-    pub const ODOM_LY_PORT: SmartPort = SmartPort::Sixteen;
+    pub const ODOM_LY_PORT: SmartPort = SmartPort::Eighteen;
     /// The port of the right odom y rotation sensor
-    pub const ODOM_RY_PORT: SmartPort = SmartPort::Sixteen;
+    pub const ODOM_RY_PORT: SmartPort = SmartPort::Fourteen;
 
     /// The required minimum precision for the robot's coordinates (in mm) during auton (if you set this too low the robot will occilate forever)
-    pub const ODOM_PRECISION: f32 = 16.;
+    pub const ODOM_PRECISION: f32 = 4.;
 
     /// The max rotational error before saturation
     pub const MAX_ROT_ERR: f32 = 45.;
@@ -69,13 +69,13 @@ pub mod auton {
     };
 
     /// The max y coordinate error in mm before saturation
-    pub const MAX_Y_ERR: f32 = 150.;
+    pub const MAX_Y_ERR: f32 = 300.;
 
     /// The PID gain / configuration values for y_coordinate corrections
     pub const Y_PID: PIDConsts = PIDConsts {
         kp: 1. / MAX_Y_ERR * 12000.,
-        ki: 0., // decrease until oscillations are small enough
-        prediction_window: 0., // decrease until the weird jittering stops
+        ki: 2., // decrease until oscillations are small enough
+        prediction_window: 0.02, // decrease until the weird jittering stops
         saturation: 12000.,
     };
 }
