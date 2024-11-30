@@ -9,10 +9,10 @@ pub fn user_control(
     tick: u32,
     last_toggled: &mut u32,
     active: &mut bool,
-) -> bool {
+) {
     // if there hasn't been at least `config::solenoid::DELAY` ticks then do nothing
     if tick - *last_toggled < config::solenoid::DELAY {
-        return *active;
+        return;
     }
 
     // otherwise check for the solenoid button being toggled
@@ -30,7 +30,6 @@ pub fn user_control(
 
     // update the solenoid and return it's state
     inst_control(*active);
-    *active
 }
 
 /// Activates the solenoid based on provided state

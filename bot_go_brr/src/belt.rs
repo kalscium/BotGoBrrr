@@ -12,12 +12,12 @@ pub fn user_control() {
 
     // if the up button is hit, then spin the belt up
     if let Ok(true) = up {
-        inst_control(config::motors::BELT_VOLTS);
+        return inst_control(config::motors::BELT_VOLTS);
     }
     
     // if the down button is hit, then spin the belt downwards
     if let Ok(true) = down {
-        inst_control(-config::motors::BELT_VOLTS);
+        return inst_control(-config::motors::BELT_VOLTS);
     }
 
     // if there are no belt buttons being hit, make the belt stop

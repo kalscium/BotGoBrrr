@@ -12,12 +12,12 @@ pub fn user_control() {
 
     // if the up button is hit, then spin the doinker up
     if let Ok(true) = up {
-        inst_control(config::motors::DOINKER_VOLTS);
+        return inst_control(config::motors::DOINKER_VOLTS);
     }
     
     // if the down button is hit, then return that the doinker should spin downwards
     if let Ok(true) = down {
-        inst_control(-config::motors::DOINKER_VOLTS);
+        return inst_control(-config::motors::DOINKER_VOLTS);
     }
 
     // if there are no doinker buttons being hit, make the doinker stop
