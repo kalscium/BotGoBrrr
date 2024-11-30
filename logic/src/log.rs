@@ -12,7 +12,8 @@ const LOG_BUFFER_SIZE: usize = 32;
 pub enum Level {
     Debug = 0,
     Info = 1,
-    Warning = 2,
+    Intent = 2,
+    Warning = 3,
 }
 
 /// The logger of the program (should only be initialised by this module)
@@ -74,6 +75,22 @@ macro_rules! warn {
             .lock()
             .log($crate::log::Log {
                 level: $crate::log::Level::Warning,
+                file: core::file!(),
+                line: core::line!(),
+                column: core::column!(),
+                msg: alloc::format!($format, $($args),*),
+            });
+    }}
+}
+
+/// Logs information to the logic logger
+#[macro_export]
+macro_rules! intent {
+    ($format:literal $(,$args:expr)* $(,)?) => {{
+        let _ = $crate::log::LOGGER
+            .lock()
+            .log($crate::log::Log {
+                level: $crate::log::Level::Intent,
                 file: core::file!(),
                 line: core::line!(),
                 column: core::column!(),

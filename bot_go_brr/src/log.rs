@@ -35,6 +35,7 @@ pub fn log_stdout(log: &Log) {
     let prefix = match log.level {
         Level::Debug   => "\x1b[35;1mdebug\x1b[0m",
         Level::Info    => "\x1b[34;1minfo\x1b[0m",
+        Level::Intent  => "\x1b[32;1mintent\x1b[0m",
         Level::Warning => "\x1b[33;1mwarning\x1b[0m",
     };
 
@@ -82,6 +83,7 @@ pub fn log_logfile(log: &Log, logfile: &mut LogFile) -> Result<(), PROSErr> {
     let prefix = match log.level {
         Level::Debug => "debug",
         Level::Info  => "info",
+        Level::Intent => "intent",
         Level::Warning => "warning",
     };
 
