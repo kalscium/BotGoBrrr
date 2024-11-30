@@ -21,11 +21,10 @@ pub use crate::doinker::inst_control as doinker;
 pub fn rotate(
     target: f32,
     logfile: &mut LogFile,
-    pid: &mut PIDState,
 ) {
-    let mut now = rtos::millis();
-
     info!("correcting for yaw of {target} degrees");
+    let mut pid = PIDState::default();
+    let mut now = rtos::millis();
 
     while
         // the error is larger than the precision limit
@@ -39,7 +38,7 @@ pub fn rotate(
             yaw,
             config::TICK_SPEED as f32 / 1000., // convert ms to s
             &config::auton::ROT_PID,
-            pid,
+            &mut pid,
         );
 
         // run it through arcade
@@ -66,23 +65,29 @@ pub fn y_coord(
     target: f32,
     odom: &mut OdomState,
     logfile: &mut LogFile,
-    pid: &mut PIDState,
 ) {
+    info!("correcting for y coordinate of {target}mm");
+    let mut pid = PIDState::default();
     let mut now = rtos::millis();
 
-    info!("correcting for y coordinate of {target}mm");
+    // update odom
+    logic::odom::account_for(
+        drive::get_rotation_angle(config::auton::ODOM_LY_PORT),
+        drive::get_rotation_angle(config::auton::ODOM_RY_PORT),
+        odom,
+    );
 
     while
         // the error is larger than the precision limit
-        maths::absf(logic::drive::low_angle_diff(target, drive::get_yaw())) > config::auton::ODOM_PRECISION
+        maths::absf(target - odom.y_coord) > config::auton::ODOM_PRECISION
     {
         // get correction y value
-        let correct_y = logic::drive::rot_correct(
+        let correct_y = logic::drive::y_coord_correct(
             target,
             odom.y_coord,
             config::TICK_SPEED as f32 / 1000., // convert ms to s
             &config::auton::Y_PID,
-            pid,
+            &mut pid,
         );
 
         // run it through arcade
