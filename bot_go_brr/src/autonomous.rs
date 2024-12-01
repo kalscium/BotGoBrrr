@@ -29,44 +29,34 @@ pub fn autonomous() {
 /// The autonomous routine for the begining of matches
 fn match_auton(
     logfile: &mut LogFile,
-    odom_y: &mut OdomState,
+    odom: &mut OdomState,
 ) {
-    intent!("move 90cm into the mogo infront");
-    act::y_coord(900., odom_y, logfile);
+    // to let the program calculate where the robot should relatively be in the y_coord instead of me
+    let mut desired_y = 0.;
 
-    intent!("make sure the robot is straight and then activate the solenoid");
-    act::rotate(0., logfile);
+    intent!("move 100cm into the mogo infront and activate the solenoid");
+    desired_y += 1000.;
+    act::goto(0., desired_y, odom, logfile);
     act::solenoid(true);
 
-    intent!("activate the belt for around 2 seconds");
+    intent!("activate the belt and wait for it to score the preload before moving on");
     act::belt(config::motors::BELT_VOLTS);
+    act::wait(2000); // note that the belt doesn't stop
+
+    intent!("move backwards about 77cm at an angle of -45 degrees to grab another ring and wait for it to score");
+    desired_y -= 770.;
+    act::goto(-45., desired_y, odom, logfile);
     act::wait(2000);
-    act::belt(0);
 
-    intent!("turn to -45 degrees and activate belt");
-    act::rotate(-45., logfile);
-    act::belt(config::motors::BELT_VOLTS);
+    intent!("rotate to face backwards before moving backwards about 54cm to try grab another ring and wait for it to score (then finally stop the belt aswell)");
+    desired_y -= 540.;
+    act::goto(179., desired_y, odom, logfile);
+    act::wait(2000);
+    act::belt(0); // belt stops
 
-    intent!("move backwards about 78cm to grab another ring");
-    act::y_coord(900. - 780., odom_y, logfile); // grab the ring
-    act::rotate(-45., logfile);
-    act::wait(2000); // wait for the ring to score
-    act::belt(0); // stop the belt
-
-    intent!("rotate to face backwards");
-    act::rotate(179., logfile);
-    act::belt(config::motors::BELT_VOLTS);
-
-    intent!("move backwards about 54cm to try grab another ring");
-    act::y_coord(900. - 780. - 540., odom_y, logfile); // grab the ring
-    act::rotate(179., logfile);
-    act::wait(2000); // wait for the ring to score
-    act::belt(0); // stop the belt
-
-    intent!("rotate to -45 degrees and then move 66cm to hit the pylons");
-    act::rotate(-45., logfile);
-    act::y_coord(720. - 520. - 480. + 660., odom_y, logfile);
-    act::rotate(-45., logfile);
+    intent!("move forward about 64cm at an angle of -45 degrees to hit the pylons");
+    desired_y += 640.;
+    act::goto(-45., desired_y, odom, logfile);
 
     // flush logs
     log::logic_flush(logfile);
@@ -75,150 +65,115 @@ fn match_auton(
 /// The autonomous routine for autonomous skills runs
 fn skills_auton(
     logfile: &mut LogFile,
-    odom_y: &mut OdomState,
+    odom: &mut OdomState,
 ) {
+    // to let the program calculate where the robot should relatively be in the y_coord instead of me
+    let mut desired_y = 0.;
+
     act::wait(5000); // wait 5 seconds to calibrate imu
 
-    intent!("move 30cm into the mogo infront");
-    act::y_coord(300., odom_y, logfile);
-
-    intent!("make sure the robot is straight and then activate the solenoid");
-    act::rotate(0., logfile);
+    intent!("move 30cm into the mogo infront and then activate the solenoid");
+    desired_y += 300.;
+    act::goto(0., desired_y, odom, logfile);
     act::solenoid(true);
 
-    intent!("activate the belt for around 2 seconds to score");
+    intent!("activate the belt for around 2 seconds to score before moving on");
     act::belt(config::motors::BELT_VOLTS);
+    act::wait(2000); // note how the belt is still spinning
+
+    intent!("go backwards about 54cm while facing backwards to grab and wait for another ring to score");
+    desired_y -= 540.;
+    act::goto(179., desired_y, odom, logfile);
+    act::wait(2000); // wait for the ring to score
+
+    intent!("move forwards about 54cm to get back to where you were before");
+    desired_y += 540.;
+    act::goto(179., desired_y, odom, logfile);
+
+    intent!("move backwards about 90cm at an angle of -90 degrees to grab another 2 rings and wait for them to score");
+    desired_y -= 900.;
+    act::goto(-90., desired_y, odom, logfile);
+    act::wait(2000);
+
+    intent!("move forwards another 30cm to prepare for the next action");
+    desired_y += 300.;
+    act::goto(-90., desired_y, odom, logfile);
+
+    intent!("move backwards 27cm at an angle of 0 degrees to grab yet another ring and wait for it to score before finally stopping the belt");
+    desired_y -= 270.;
+    act::goto(0., desired_y, odom, logfile);
     act::wait(2000);
     act::belt(0);
 
-    intent!("turn 180 degrees and activate belt");
-    act::rotate(179., logfile);
-    act::belt(config::motors::BELT_VOLTS);
-
-    intent!("move backwards about 54cm to grab and score a ring");
-    act::y_coord(300. - 540., odom_y, logfile);
-    act::rotate(179., logfile); // make sure it's still right
-    act::wait(2000); // wait for the ring to score
-    act::belt(0); // stop the belt
-
-    intent!("move forwards about 54cm to get back to where you were before");
-    act::y_coord(300., odom_y, logfile);
-
-    intent!("turn to -90 degrees and activate belt");
-    act::rotate(-90., logfile);
-    act::belt(config::motors::BELT_VOLTS);
-
-    intent!("move backwards about 90 cm to grab another 2 rings");
-    act::y_coord(300. - 900., odom_y, logfile);
-    act::rotate(-90., logfile); // make sure it's still right
-    act::wait(2000); // wait for the ring to score
-    act::belt(0); // stop the belt
-
-    intent!("move back forwards another 30 cm and turn to zero degrees before turning on the belt");
-    act::y_coord(300. - 900. + 300., odom_y, logfile);
-    act::rotate(0., logfile);
-    act::belt(config::motors::BELT_VOLTS);
-
-    intent!("move backwards 26cm to grab yet another ring and score it");
-    act::y_coord(300. - 900. + 300. - 260., odom_y, logfile);
-    act::wait(2000); // wait for the ring to score
-    act::belt(0); // stop the belt
-
-    intent!("turn to -75 degrees and go backwards 36cm to push the mogo into the corner and let go");
-    act::rotate(-75., logfile);
-    act::y_coord(300. - 900. + 300. - 260. - 360., odom_y, logfile);
-    act::rotate(-75., logfile);
+    intent!("move forwards 36cm at an angle of 105 degrees to push the mogo into the corner and let go");
+    desired_y += 360.;
+    act::goto(105., desired_y, odom, logfile);
     act::solenoid(false);
 
     intent!("turn to -18 degrees and go forwards 336cm to grab the next blue mogo");
-    act::rotate(-18., logfile);
-    act::y_coord(-920. + 3360., odom_y, logfile);
-    act::rotate(-18., logfile);
+    desired_y += 3360.;
+    act::goto(-18., desired_y, odom, logfile);
     act::solenoid(true);
 
     intent!("turn to 80 degrees and then go forwards for 110cm to push the mogo into the corner");
-    act::rotate(80., logfile);
-    act::y_coord(-920. + 3360. + 1100., odom_y, logfile);
-    act::rotate(80., logfile);
+    desired_y += 1100.;
+    act::goto(80., desired_y, odom, logfile);
     act::solenoid(false);
 
     intent!("turn to -95 degrees and then go forwards for 243cm to grab another blue mogo");
-    act::rotate(-95., logfile);
-    act::y_coord(-920. + 3360. + 1100. + 2430., odom_y, logfile);
-    act::rotate(-95., logfile);
+    desired_y += 2430.;
+    act::goto(-95., desired_y, odom, logfile);
     act::solenoid(true);
 
-    intent!("turn to -80 degrees and then go forwards for 100cm to push it into the corner");
-    act::rotate(-80., logfile);
-    act::y_coord(-920. + 3360. + 1100. + 2430. + 1000., odom_y, logfile);
-    act::rotate(-80., logfile);
+    intent!("turn to -80 degrees and then go forwards for 80cm to push it into the corner");
+    desired_y += 800.;
+    act::goto(-80., desired_y, odom, logfile);
     act::solenoid(false);
 
-    intent!("turn to 108 degrees and then go forwards 170cm to grab an empty mogo");
-    act::rotate(108., logfile);
-    act::y_coord(6970. + 1700., odom_y, logfile);
-    act::rotate(108., logfile);
+    intent!("turn to 108 degrees and then go forwards 180cm to grab an empty mogo");
+    desired_y += 1800.;
+    act::goto(108., desired_y, odom, logfile);
     act::solenoid(true);
 
-    intent!("turn to 50 degrees and activate belt");
-    act::rotate(50., logfile);
+    intent!("move backwards 90cm at an angle of 50 degrees to grab a ring and wait for it to score");
+    desired_y -= 900.;
+    act::goto(50., desired_y, odom, logfile);
     act::belt(config::motors::BELT_VOLTS);
-
-    intent!("move backwards 90cm to collect and score a ring");
-    act::y_coord(5980. + 1700. - 900., odom_y, logfile);
-    act::rotate(50., logfile);
     act::wait(2000);
-    act::belt(0); // stop belt
 
-    intent!("turn to 90 degrees and then activate belt");
-    act::rotate(90., logfile);
-    act::belt(config::motors::BELT_VOLTS);
-
-    intent!("move backwards by 63cm to collect and score a ring");
-    act::y_coord(5980. + 1700. - 900. - 630., odom_y, logfile);
-    act::rotate(90., logfile);
+    intent!("move backwards 63cm at an angle of 90 degrees, grab a ring and wait for it to score");
+    desired_y -= 630.;
+    act::goto(90., desired_y, odom, logfile);
     act::wait(2000);
-    act::belt(0); // stop belt
 
-    intent!("turn to 30 degrees and then activate belt");
-    act::rotate(30., logfile);
-    act::belt(config::motors::BELT_VOLTS);
-
-    intent!("move backwards by 68cm to collect and score a ring");
-    act::y_coord(5980. + 1700. - 900. - 630. - 680., odom_y, logfile);
-    act::rotate(30., logfile);
+    intent!("move backwards 68cm at an angle of 30 degrees, grab a right and wait for it to score");
+    desired_y -= 680.;
+    act::goto(30., desired_y, odom, logfile);
     act::wait(2000);
-    act::belt(0); // stop belt
 
-    intent!("turn to -25 degrees and then activate belt");
-    act::rotate(-25., logfile);
-    act::belt(config::motors::BELT_VOLTS);
-
-    intent!("move backwards by 69cm to collect and score a ring");
-    act::y_coord(5980. + 1700. - 900. - 630. - 680. - 690., odom_y, logfile);
-    act::rotate(-25., logfile);
+    intent!("move backwards 69cm at an angle of -25 degrees to collect a ring and wait for it to score before stopping the belt");
+    desired_y -= 690.;
+    act::goto(-25., desired_y, odom, logfile);
     act::wait(2000);
     act::belt(0); // stop belt
 
     intent!("turn to -160 degrees and then go forwards for 101cm to push it into the corner");
-    act::rotate(-160., logfile);
-    act::y_coord(4780. + 1010., odom_y, logfile);
-    act::rotate(-160., logfile);
+    desired_y += 1010.;
+    act::goto(-160., desired_y, odom, logfile);
     act::solenoid(false);
 
     intent!("turn to 68 degrees and then go forwards 112cm to grab an empty mogo");
-    act::rotate(68., logfile);
-    act::y_coord(4780. + 1010. + 1120., odom_y, logfile);
-    act::rotate(68., logfile);
+    desired_y += 1120.;
+    act::goto(68., desired_y, odom, logfile);
     act::solenoid(true);
-
+    
     intent!("turn to 180 degrees and then activate belt");
-    act::rotate(179., logfile);
+    act::correct_yaw(179., logfile);
     act::belt(config::motors::BELT_VOLTS);
 
-    intent!("move backwards by 58cm to collect and score a ring");
-    act::y_coord(4780. + 1010. + 1120. - 580., odom_y, logfile);
-    act::rotate(179., logfile);
+    intent!("move backwards by 58cm to collect a ring and wait for it to score");
+    desired_y -= 580.;
+    act::goto(179., desired_y, odom, logfile);
     act::wait(2000);
     act::belt(0); // stop belt
        
