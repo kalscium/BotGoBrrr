@@ -110,12 +110,18 @@ pub mod motors {
         reverse: false,
     };
 
+    /// The MotorConfig of the intake
+    pub const INTAKE: MotorConfig = MotorConfig {
+        port: safe_vex::port::SmartPort::Two,
+        reverse: true,
+    };
+
     /// The belt's speed in voltage
     pub const BELT_VOLTS: i32 = 12000 * 100 / 100;
 
     /// The MotorConfig of the doinker
     pub const DOINKER: MotorConfig = MotorConfig {
-        port: safe_vex::port::SmartPort::Fourteen,
+        port: safe_vex::port::SmartPort::One,
         reverse: false,
     };
 

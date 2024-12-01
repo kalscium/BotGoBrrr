@@ -36,4 +36,13 @@ pub fn inst_control(voltage: i32) {
     ) {
         warn!("`PROSErr` occured while setting motor voltage for belt at port {}: {err:?}", config::motors::BELT.port as u8);
     }
+
+    // also spin the intake motor and log any errors
+    if let Err(err) = motor::move_voltage(
+        config::motors::INTAKE.port,
+        config::motors::INTAKE.reverse,
+        voltage,
+    ) {
+        warn!("`PROSErr` occured while setting motor voltage for belt at port {}: {err:?}", config::motors::INTAKE.port as u8);
+    }
 }
