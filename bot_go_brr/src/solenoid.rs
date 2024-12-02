@@ -35,7 +35,7 @@ pub fn user_control(
 pub fn inst_control(active: bool) {
     info!("solenoid active: {active}");
     unsafe {
-        adi::digital_write(config::solenoid::PORT, active)
+        adi::digital_write(config::solenoid::PORT, !active)
             .expect("solenoid should've been configured long before this point");
     }
 }

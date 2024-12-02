@@ -17,6 +17,12 @@ pub use crate::solenoid::inst_control as solenoid;
 pub use crate::belt::inst_control as belt;
 pub use crate::doinker::inst_control as doinker;
 
+/// Drives the robot's drivetrain at set voltages
+pub fn drive(left: i32, right: i32) {
+    drive::voltage_left(left);
+    drive::voltage_right(right);
+}
+
 /// Corrects to a rotation and location
 pub fn goto(
     yaw: f32,
@@ -58,8 +64,7 @@ pub fn goto(
         let (ldr, rdr) = logic::drive::arcade(0, correct_y as i32);
 
         // drive
-        drive::voltage_left(ldr);
-        drive::voltage_right(rdr);
+        drive(ldr, rdr);
 
         // update odom
         logic::odom::account_for(
@@ -78,6 +83,9 @@ pub fn goto(
     // make sure it still has the right yaw
     correct_yaw(yaw, logfile);
 
+    // make sure the robot's motors have stopped spinning
+    drive(0, 0);
+    
     info!("corrected for a y coord of {y_coord}mm at an angle of {yaw}°");
 }
 
@@ -109,8 +117,7 @@ pub fn correct_yaw(
         let (ldr, rdr) = logic::drive::arcade(correct_x as i32, 0);
 
         // drive
-        drive::voltage_left(ldr);
-        drive::voltage_right(rdr);
+        drive(ldr, rdr);
 
         // add code to update odom if you run into problems
 
@@ -121,6 +128,9 @@ pub fn correct_yaw(
         rtos::task_delay_until(&mut now, config::TICK_SPEED);
     }
 
+    // make sure the robot's motors have stopped spinning
+    drive(0, 0);
+    
     info!("corrected for a yaw of {target}°");
 }
 
@@ -158,8 +168,7 @@ pub fn correct_y_coord(
         let (ldr, rdr) = logic::drive::arcade(0, correct_y as i32);
 
         // drive
-        drive::voltage_left(ldr);
-        drive::voltage_right(rdr);
+        drive(ldr, rdr);
 
         // update odom
         logic::odom::account_for(
@@ -175,5 +184,8 @@ pub fn correct_y_coord(
         rtos::task_delay_until(&mut now, config::TICK_SPEED);
     }
 
+    // make sure the robot's motors have stopped spinning
+    drive(0, 0);
+    
     info!("corrected for a y coord of {target}mm");
 }

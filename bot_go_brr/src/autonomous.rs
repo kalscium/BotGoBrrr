@@ -34,10 +34,26 @@ fn match_auton(
     // to let the program calculate where the robot should relatively be in the y_coord instead of me
     let mut desired_y = 0.;
 
-    intent!("move 100cm into the mogo infront and activate the solenoid");
-    desired_y += 1000.;
+    // setup
+    intent!("open mogo grabber and also drop the intake");
+    act::solenoid(false); // disengage the solenoid
+    act::belt(-4096); // drop the intake
+    act::wait(800);
+    act::belt(0);
+
+    intent!("move 80cm into the mogo infront");
+    desired_y += 800.;
     act::goto(0., desired_y, odom, logfile);
+
+    // slowly drive into the mogo for 1.2 seconds before clamping
+    act::drive(2048, 2048);
+    act::wait(12000); // wait for the thing to settle before
     act::solenoid(true);
+    act::drive(0, 0);
+
+    // correct for any errors that have occured while the robot was clamping down
+    act::wait(600); // wait for the thing to fully clamp down
+    act::goto(0., desired_y, odom, logfile);
 
     intent!("activate the belt and wait for it to score the preload before moving on");
     act::belt(config::motors::BELT_VOLTS);
