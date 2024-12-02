@@ -35,7 +35,7 @@ pub mod solenoid {
     pub const PORT: AdiPort = AdiPort::A;
 
     /// The delay (in ticks) between each solenoid actuation
-    pub const DELAY: u32 = 8;
+    pub const DELAY: u32 = 40;
 }
 
 /// Configurations for autonomous

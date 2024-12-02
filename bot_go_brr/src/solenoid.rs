@@ -22,14 +22,13 @@ pub fn user_control(
         *last_toggled = tick;
         *active = !*active; // toggle the 'active' state
 
+        inst_control(*active); // set update to the solenoid
+
         // rumble the controller if the solenoid is active to alert driver
         if *active {
             let _ = controller::rumble(Controller::Master, "."); // ignore any errors
         }
     }
-
-    // update the solenoid and return it's state
-    inst_control(*active);
 }
 
 /// Activates the solenoid based on provided state
