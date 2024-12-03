@@ -8,6 +8,7 @@
 
 # Rust stuff
 bot_go_brr/
+*/target/
 
 # PROS
 bin/
