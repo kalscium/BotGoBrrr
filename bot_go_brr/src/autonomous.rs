@@ -45,14 +45,14 @@ fn match_auton(
     desired_y += 820.;
     act::goto(0., desired_y, odom, logfile);
 
-    // slowly drive into the mogo for 1.2 seconds before clamping
+    // slowly drive into the mogo for 0.12 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(1200);
+    act::wait(120);
     act::solenoid(true);
     act::drive(0, 0);
 
     // correct for any errors that have occured while the robot was clamping down
-    act::wait(600); // wait for the thing to fully clamp down
+    act::wait(400); // wait for the thing to fully clamp down
     act::goto(0., desired_y, odom, logfile);
 
     intent!("activate the belt and wait for it to score the preload before moving on");
@@ -91,14 +91,14 @@ fn skills_auton(
     desired_y += 300.;
     act::goto(0., desired_y, odom, logfile);
 
-    // slowly drive into the mogo for 1.2 seconds before clamping
+    // slowly drive into the mogo for 0.12 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(1200);
+    act::wait(120);
     act::solenoid(true);
     act::drive(0, 0);
 
     // correct for any errors that have occured while the robot was clamping down
-    act::wait(600); // wait for the thing to fully clamp down
+    act::wait(400); // wait for the thing to fully clamp down
     act::goto(0., desired_y, odom, logfile);
 
     intent!("activate the belt for around 2 seconds to score before moving on");
@@ -138,14 +138,14 @@ fn skills_auton(
     desired_y += 3360.;
     act::goto(-18., desired_y, odom, logfile);
 
-    // slowly drive into the mogo for 1.2 seconds before clamping
+    // slowly drive into the mogo for 0.12 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(1200);
+    act::wait(120);
     act::solenoid(true);
     act::drive(0, 0);
 
     // correct for any errors that have occured while the robot was clamping down
-    act::wait(600); // wait for the thing to fully clamp down
+    act::wait(400); // wait for the thing to fully clamp down
     act::goto(0., desired_y, odom, logfile);
 
     intent!("turn to 80 degrees and then go forwards for 110cm to push the mogo into the corner");
@@ -157,14 +157,14 @@ fn skills_auton(
     desired_y += 2430.;
     act::goto(-95., desired_y, odom, logfile);
 
-    // slowly drive into the mogo for 1.2 seconds before clamping
+    // slowly drive into the mogo for 0.12 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(1200);
+    act::wait(120);
     act::solenoid(true);
     act::drive(0, 0);
 
     // correct for any errors that have occured while the robot was clamping down
-    act::wait(600); // wait for the thing to fully clamp down
+    act::wait(400); // wait for the thing to fully clamp down
     act::goto(0., desired_y, odom, logfile);
 
     intent!("turn to -80 degrees and then go forwards for 80cm to push it into the corner");
@@ -176,14 +176,14 @@ fn skills_auton(
     desired_y += 1800.;
     act::goto(108., desired_y, odom, logfile);
 
-    // slowly drive into the mogo for 1.2 seconds before clamping
+    // slowly drive into the mogo for 0.12 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(1200);
+    act::wait(120);
     act::solenoid(true);
     act::drive(0, 0);
 
     // correct for any errors that have occured while the robot was clamping down
-    act::wait(600); // wait for the thing to fully clamp down
+    act::wait(400); // wait for the thing to fully clamp down
     act::goto(0., desired_y, odom, logfile);
 
     intent!("move backwards 90cm at an angle of 50 degrees to grab a ring and wait for it to score");
@@ -217,14 +217,14 @@ fn skills_auton(
     desired_y += 1120.;
     act::goto(68., desired_y, odom, logfile);
 
-    // slowly drive into the mogo for 1.2 seconds before clamping
+    // slowly drive into the mogo for 0.12 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(1200);
+    act::wait(120);
     act::solenoid(true);
     act::drive(0, 0);
 
     // correct for any errors that have occured while the robot was clamping down
-    act::wait(600); // wait for the thing to fully clamp down
+    act::wait(400); // wait for the thing to fully clamp down
     act::goto(0., desired_y, odom, logfile);
     
     intent!("turn to 180 degrees and then activate belt");
