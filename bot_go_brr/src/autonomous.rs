@@ -47,7 +47,7 @@ fn match_auton(
 
     // slowly drive into the mogo for 1.2 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(12000);
+    act::wait(1200);
     act::solenoid(true);
     act::drive(0, 0);
 
@@ -93,7 +93,7 @@ fn skills_auton(
 
     // slowly drive into the mogo for 1.2 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(12000);
+    act::wait(1200);
     act::solenoid(true);
     act::drive(0, 0);
 
@@ -140,7 +140,7 @@ fn skills_auton(
 
     // slowly drive into the mogo for 1.2 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(12000);
+    act::wait(1200);
     act::solenoid(true);
     act::drive(0, 0);
 
@@ -159,7 +159,7 @@ fn skills_auton(
 
     // slowly drive into the mogo for 1.2 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(12000);
+    act::wait(1200);
     act::solenoid(true);
     act::drive(0, 0);
 
@@ -178,7 +178,7 @@ fn skills_auton(
 
     // slowly drive into the mogo for 1.2 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(12000);
+    act::wait(1200);
     act::solenoid(true);
     act::drive(0, 0);
 
@@ -219,7 +219,7 @@ fn skills_auton(
 
     // slowly drive into the mogo for 1.2 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(12000);
+    act::wait(1200);
     act::solenoid(true);
     act::drive(0, 0);
 
