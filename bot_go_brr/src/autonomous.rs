@@ -41,8 +41,8 @@ fn match_auton(
     act::wait(800);
     act::belt(0);
 
-    intent!("move 80cm into the mogo infront");
-    desired_y += 800.;
+    intent!("move 82cm into the mogo infront");
+    desired_y += 820.;
     act::goto(0., desired_y, odom, logfile);
 
     // slowly drive into the mogo for 1.2 seconds before clamping
@@ -59,20 +59,19 @@ fn match_auton(
     act::belt(config::motors::BELT_VOLTS);
     act::wait(2000); // note that the belt doesn't stop
 
-    intent!("move backwards about 77cm at an angle of -45 degrees to grab another ring and wait for it to score");
-    desired_y -= 770.;
+    intent!("move backwards about 82cm at an angle of -45 degrees to grab another ring and wait for it to score");
+    desired_y -= 82.;
     act::goto(-45., desired_y, odom, logfile);
     act::wait(2000);
 
-    intent!("rotate to face backwards before moving backwards about 54cm to try grab another ring and wait for it to score (then finally stop the belt aswell)");
-    desired_y -= 540.;
+    intent!("rotate to face backwards before moving backwards about 60cm to try grab another ring WITHOUT scoring it as it may be of the other team's colour");
+    desired_y -= 600.;
     act::goto(179., desired_y, odom, logfile);
-    act::wait(2000);
     act::belt(0); // belt stops
 
-    intent!("move forward about 64cm at an angle of -45 degrees to hit the pylons");
-    desired_y += 640.;
-    act::goto(-45., desired_y, odom, logfile);
+    intent!("move forward about 48cm at an angle of -90 degrees to hit the pylons");
+    desired_y += 480.;
+    act::goto(-90., desired_y, odom, logfile);
 
     // flush logs
     log::logic_flush(logfile);
