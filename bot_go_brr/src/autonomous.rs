@@ -37,7 +37,7 @@ fn match_auton(
     intent!("open mogo grabber and also drop the intake");
     act::solenoid(false); // disengage the solenoid
     act::belt(-4096); // drop the intake
-    act::wait(800);
+    act::wait(800, odom);
     act::belt(0);
 
     intent!("move 82cm into the mogo infront");
@@ -46,29 +46,24 @@ fn match_auton(
     
     intent!("do fancy stuff to actually grab the mogo");
 
-    // slowly drive into the mogo for .42 seconds before clamping
+    // slowly drive into the mogo for 1.2 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(420);
+    act::wait(1200, odom);
     act::solenoid(true);
     act::drive(0, 0);
 
-    // wait for the solenoid to clamp and then try counteract the slow drive
-    act::wait(400); // wait for the thing to fully clamp down
-    act::drive(-2048, -2048);
-    act::wait(420);
-    act::drive(0, 0);
-
-    // correct for any remaining errors
+    // wait for the solenoid to clamp and then correct for any errors while grabbing the mogo
+    act::wait(400, odom); // wait for the thing to fully clamp down
     act::goto(0., desired_y, odom, logfile);
 
     intent!("activate the belt and wait for it to score the preload before moving on");
     act::belt(config::motors::BELT_VOLTS);
-    act::wait(2000); // note that the belt doesn't stop
+    act::wait(2000, odom); // note that the belt doesn't stop
 
     intent!("move backwards about 82cm at an angle of -45 degrees to grab another ring and wait for it to score");
     desired_y -= 82.;
     act::goto(-45., desired_y, odom, logfile);
-    act::wait(2000);
+    act::wait(2000, odom);
 
     intent!("rotate to face backwards before moving backwards about 60cm to try grab another ring WITHOUT scoring it as it may be of the other team's colour");
     desired_y -= 600.;
@@ -91,7 +86,7 @@ fn skills_auton(
     // to let the program calculate where the robot should relatively be in the y_coord instead of me
     let mut desired_y = 0.;
 
-    act::wait(5000); // wait 5 seconds to calibrate imu
+    act::wait(5000, odom); // wait 5 seconds to calibrate imu
 
     intent!("move 30cm into the mogo infront and then activate the solenoid");
     desired_y += 300.;
@@ -101,14 +96,14 @@ fn skills_auton(
 
     // slowly drive into the mogo for .24 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(240);
+    act::wait(240, odom);
     act::solenoid(true);
     act::drive(0, 0);
 
     // wait for the solenoid to clamp and then try counteract the slow drive
-    act::wait(400); // wait for the thing to fully clamp down
+    act::wait(400, odom); // wait for the thing to fully clamp down
     act::drive(-2048, -2048);
-    act::wait(240);
+    act::wait(240, odom);
     act::drive(0, 0);
 
     // correct for any remaining errors
@@ -116,12 +111,12 @@ fn skills_auton(
 
     intent!("activate the belt for around 2 seconds to score before moving on");
     act::belt(config::motors::BELT_VOLTS);
-    act::wait(2000); // note how the belt is still spinning
+    act::wait(2000, odom); // note how the belt is still spinning
 
     intent!("go backwards about 54cm while facing backwards to grab and wait for another ring to score");
     desired_y -= 540.;
     act::goto(179., desired_y, odom, logfile);
-    act::wait(2000); // wait for the ring to score
+    act::wait(2000, odom); // wait for the ring to score
 
     intent!("move forwards about 54cm to get back to where you were before");
     desired_y += 540.;
@@ -130,7 +125,7 @@ fn skills_auton(
     intent!("move backwards about 90cm at an angle of -90 degrees to grab another 2 rings and wait for them to score");
     desired_y -= 900.;
     act::goto(-90., desired_y, odom, logfile);
-    act::wait(2000);
+    act::wait(2000, odom);
 
     intent!("move forwards another 30cm to prepare for the next action");
     desired_y += 300.;
@@ -139,7 +134,7 @@ fn skills_auton(
     intent!("move backwards 27cm at an angle of 0 degrees to grab yet another ring and wait for it to score before finally stopping the belt");
     desired_y -= 270.;
     act::goto(0., desired_y, odom, logfile);
-    act::wait(2000);
+    act::wait(2000, odom);
     act::belt(0);
 
     intent!("move forwards 36cm at an angle of 105 degrees to push the mogo into the corner and let go");
@@ -155,14 +150,14 @@ fn skills_auton(
 
     // slowly drive into the mogo for .24 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(240);
+    act::wait(240, odom);
     act::solenoid(true);
     act::drive(0, 0);
 
     // wait for the solenoid to clamp and then try counteract the slow drive
-    act::wait(400); // wait for the thing to fully clamp down
+    act::wait(400, odom); // wait for the thing to fully clamp down
     act::drive(-2048, -2048);
-    act::wait(240);
+    act::wait(240, odom);
     act::drive(0, 0);
 
     // correct for any remaining errors
@@ -181,14 +176,14 @@ fn skills_auton(
 
     // slowly drive into the mogo for .24 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(240);
+    act::wait(240, odom);
     act::solenoid(true);
     act::drive(0, 0);
 
     // wait for the solenoid to clamp and then try counteract the slow drive
-    act::wait(400); // wait for the thing to fully clamp down
+    act::wait(400, odom); // wait for the thing to fully clamp down
     act::drive(-2048, -2048);
-    act::wait(240);
+    act::wait(240, odom);
     act::drive(0, 0);
 
     // correct for any remaining errors
@@ -207,14 +202,14 @@ fn skills_auton(
 
     // slowly drive into the mogo for .24 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(240);
+    act::wait(240, odom);
     act::solenoid(true);
     act::drive(0, 0);
 
     // wait for the solenoid to clamp and then try counteract the slow drive
-    act::wait(400); // wait for the thing to fully clamp down
+    act::wait(400, odom); // wait for the thing to fully clamp down
     act::drive(-2048, -2048);
-    act::wait(240);
+    act::wait(240, odom);
     act::drive(0, 0);
 
     // correct for any remaining errors
@@ -224,22 +219,22 @@ fn skills_auton(
     desired_y -= 900.;
     act::goto(50., desired_y, odom, logfile);
     act::belt(config::motors::BELT_VOLTS);
-    act::wait(2000);
+    act::wait(2000, odom);
 
     intent!("move backwards 63cm at an angle of 90 degrees, grab a ring and wait for it to score");
     desired_y -= 630.;
     act::goto(90., desired_y, odom, logfile);
-    act::wait(2000);
+    act::wait(2000, odom);
 
     intent!("move backwards 68cm at an angle of 30 degrees, grab a right and wait for it to score");
     desired_y -= 680.;
     act::goto(30., desired_y, odom, logfile);
-    act::wait(2000);
+    act::wait(2000, odom);
 
     intent!("move backwards 69cm at an angle of -25 degrees to collect a ring and wait for it to score before stopping the belt");
     desired_y -= 690.;
     act::goto(-25., desired_y, odom, logfile);
-    act::wait(2000);
+    act::wait(2000, odom);
     act::belt(0); // stop belt
 
     intent!("turn to -160 degrees and then go forwards for 101cm to push it into the corner");
@@ -255,14 +250,14 @@ fn skills_auton(
 
     // slowly drive into the mogo for .24 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(240);
+    act::wait(240, odom);
     act::solenoid(true);
     act::drive(0, 0);
 
     // wait for the solenoid to clamp and then try counteract the slow drive
-    act::wait(400); // wait for the thing to fully clamp down
+    act::wait(400, odom); // wait for the thing to fully clamp down
     act::drive(-2048, -2048);
-    act::wait(240);
+    act::wait(240, odom);
     act::drive(0, 0);
 
     // correct for any remaining errors
@@ -275,7 +270,7 @@ fn skills_auton(
     intent!("move backwards by 58cm to collect a ring and wait for it to score");
     desired_y -= 580.;
     act::goto(179., desired_y, odom, logfile);
-    act::wait(2000);
+    act::wait(2000, odom);
     act::belt(0); // stop belt
        
     // flush logs

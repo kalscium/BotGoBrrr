@@ -8,9 +8,20 @@ use crate::log;
 use crate::{drive, config, log::LogFile};
 
 /// Waits for the specified milliseconds
-pub fn wait(ms: u32) {
+pub fn wait(ms: u32, odom: &mut OdomState) {
     info!("routine: waiting {ms}ms");
-    rtos::task_delay(ms);
+
+    let mut now = rtos::millis();
+    for _ in 0..ms/config::TICK_SPEED {
+        // update odometry
+        logic::odom::account_for(
+            drive::get_rotation_angle(config::auton::ODOM_LY_PORT),
+            drive::get_rotation_angle(config::auton::ODOM_RY_PORT),
+            odom,
+        );
+
+        rtos::task_delay_until(&mut now, config::TICK_SPEED);
+    }
 }
 
 pub use crate::solenoid::inst_control as solenoid;
