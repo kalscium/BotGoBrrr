@@ -42,7 +42,8 @@ pub fn goto(
     logfile: &mut LogFile,
 ) {
     info!("going to y coord {y_coord}mm at yaw {yaw}°");
-    let mut pid = PIDState::default();
+    let mut y_pid = PIDState::default();
+    let mut rot_pid = PIDState::default();
     let mut now = rtos::millis();
 
     // update odom
@@ -52,15 +53,21 @@ pub fn goto(
         odom,
     );
 
+    // correct for any angle errors before moving
+    correct_yaw(yaw, logfile);
+
     while
         // the error is larger than the precision limit
         maths::absf(y_coord - odom.y_coord) > config::auton::ODOM_PRECISION
     {
-        // check if the yaw was off while it was correcting for y coord
-        if maths::absf(logic::drive::low_angle_diff(yaw, drive::get_yaw())) > config::auton::ANGLE_PRECISION {
-            // correct for the yaw before continuing to correct for the y coord
-            correct_yaw(yaw, logfile);
-        }
+        // get the correction x value
+        let correct_x = logic::drive::rot_correct(
+            yaw,
+            drive::get_yaw(),
+            config::TICK_SPEED as f32 / 1000., // convert ms to s
+            &config::auton::ROT_PID,
+            &mut rot_pid,
+        );
 
         // get correction y value
         let correct_y = logic::drive::y_coord_correct(
@@ -68,11 +75,11 @@ pub fn goto(
             odom.y_coord,
             config::TICK_SPEED as f32 / 1000., // convert ms to s
             &config::auton::Y_PID,
-            &mut pid,
+            &mut y_pid,
         );
 
         // run it through arcade
-        let (ldr, rdr) = logic::drive::arcade(0, correct_y as i32);
+        let (ldr, rdr) = logic::drive::arcade(correct_x as i32, correct_y as i32);
 
         // drive
         drive(ldr, rdr);

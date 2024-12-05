@@ -47,7 +47,7 @@ pub mod auton {
     pub const IMU_PORT: safe_vex::port::SmartPort = safe_vex::port::SmartPort::Nine;
 
     /// The required minimum precision for the robot's angle during auton (must be within this angle)
-    pub const ANGLE_PRECISION: f32 = 2.5;
+    pub const ANGLE_PRECISION: f32 = 1.;
 
     /// The port of the left odom y rotation sensor
     pub const ODOM_LY_PORT: SmartPort = SmartPort::Eighteen;

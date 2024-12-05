@@ -34,13 +34,16 @@ pub fn user_control(
     j2x: f32,
     j2y: f32,
     yaw: f32,
+    y_coord: f32,
     delta_seconds: f32,
     rot_pid_consts: &PIDConsts,
     rot_pid_state: &mut PIDState,
+    y_pid_consts: &PIDConsts,
+    y_pid_state: &mut PIDState,
 ) -> (i32, i32) {
     // get the initial calculated voltages from the first controller
     let mut xv = magic::exp_daniel(j1x);
-    let yv = magic::exp_daniel(j1y);
+    let mut yv = magic::exp_daniel(j1y);
 
     info!("xv: {xv:08.02}, yv/thrust: {yv:08.02}");
 
@@ -53,6 +56,9 @@ pub fn user_control(
 
         // get correction x from yaw corrections
         xv = pid::update(yaw, target_angle, delta_seconds, rot_pid_state, rot_pid_consts, low_angle_diff);
+
+        // get the correction y from odom corrections
+        yv = pid::update(y_coord, 0., delta_seconds, y_pid_state, y_pid_consts, |target, measure| target - measure);
     }
 
     // pass the ldr and rdr through arcade drive

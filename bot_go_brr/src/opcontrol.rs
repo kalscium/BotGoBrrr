@@ -16,14 +16,15 @@ pub fn opcontrol() {
     let mut solenoid_tick = tick; // the last time the solenoid's activity was changed
 
     // variables for odometry
-    let mut y_odom = OdomState {
+    let mut odom = OdomState {
         prev_ly: drive::get_rotation_angle(config::auton::ODOM_LY_PORT),
         prev_ry: drive::get_rotation_angle(config::auton::ODOM_RY_PORT),
         y_coord: 0.,
     };
 
     // variables for the pid
-    let mut odom_pid = PIDState::default();
+    let mut rot_pid = PIDState::default();
+    let mut y_pid = PIDState::default();
     
     // opcontrol loop
     loop {
@@ -34,7 +35,7 @@ pub fn opcontrol() {
         logic::odom::account_for(
             drive::get_rotation_angle(config::auton::ODOM_LY_PORT),
             drive::get_rotation_angle(config::auton::ODOM_RY_PORT),
-            &mut y_odom,
+            &mut odom,
         );
         
         // execute the belt
@@ -49,8 +50,11 @@ pub fn opcontrol() {
         // execute the drivetrain
         drive::user_control(
             config::TICK_SPEED as f32 / 1000.,
+            odom.y_coord,
             &config::auton::ROT_PID,
-            &mut odom_pid,
+            &mut rot_pid,
+            &config::auton::Y_PID,
+            &mut y_pid,
         );
 
         // log how long the cycle took
