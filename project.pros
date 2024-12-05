@@ -1,7 +1,7 @@
 {
     "py/object": "pros.conductor.project.Project",
     "py/state": {
-        "project_name": "bot_go_brr v1.1.0 C EDITION",
+        "project_name": "bot_go_brr v0.0.0 ARM ASM EDITION",
         "target": "v5",
         "templates": {
             "kernel": {

@@ -14,14 +14,14 @@ opcontrol:
 	mov r1, #7
 	bl printf
 
-	@ spins a motor at 12000 rpm
-	mov r0, #1
+	@ spins motor at port 6 at 12000 rpm
+	mov r0, #6
 	mov r1, #12000
 	bl motor_move_voltage
 	
 	pop {lr}
-	bx lr @ return to to the c function
+	bx lr @ return to the c function
 
 .data
-hw: .asciz "hello, world!"
-random: .asciz "random number: "
+hw: .asciz "hello, world!\n"
+random: .asciz "random number: %d\n"
