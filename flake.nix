@@ -51,6 +51,7 @@
               rust-analyzer
               gcc-arm-embedded-13
               bacon
+              ghc
             ];
 
             env = {

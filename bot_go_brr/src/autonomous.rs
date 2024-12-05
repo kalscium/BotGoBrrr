@@ -40,8 +40,8 @@ fn match_auton(
     act::wait(800, odom);
     act::belt(0);
 
-    intent!("move 120cm into the mogo infront");
-    desired_y += 1200.;
+    intent!("move 64cm into the mogo infront");
+    desired_y += 640.;
     act::goto(0., desired_y, odom, logfile);
 
     // slowly drive into the mogo for 0.72 seconds before clamping
@@ -58,14 +58,14 @@ fn match_auton(
     act::belt(config::motors::BELT_VOLTS);
     act::wait(2000, odom); // note that the belt doesn't stop
 
-    intent!("move 60cm backwards at an angle of -90 degrees to grab another ring and wait for it to score");
-    desired_y -= 600.;
-    act::goto(-90., desired_y, odom, logfile);
+    intent!("move 65cm backwards at an angle of -117° to grab a ring and wait for it to score");
+    desired_y -= 650.;
+    act::goto(-117., desired_y, odom, logfile);
     act::wait(2000, odom);
     act::belt(0); // stop belt
 
-    intent!("move 90cm forwards at an angle of -90 degrees to hit the pylons");
-    desired_y += 900.;
+    intent!("move 82cm forwards at an angle of -90° to hit the pylons");
+    desired_y += 820.;
     act::goto(-90., desired_y, odom, logfile);
 
     // flush logs
@@ -109,7 +109,7 @@ fn skills_auton(
     desired_y += 540.;
     act::goto(179., desired_y, odom, logfile);
 
-    intent!("move backwards about 90cm at an angle of -90 degrees to grab another 2 rings and wait for them to score");
+    intent!("move backwards about 90cm at an angle of -90° to grab another 2 rings and wait for them to score");
     desired_y -= 900.;
     act::goto(-90., desired_y, odom, logfile);
     act::wait(2000, odom);
@@ -118,18 +118,18 @@ fn skills_auton(
     desired_y += 300.;
     act::goto(-90., desired_y, odom, logfile);
 
-    intent!("move backwards 27cm at an angle of 0 degrees to grab yet another ring and wait for it to score before finally stopping the belt");
+    intent!("move backwards 27cm at an angle of 0° to grab yet another ring and wait for it to score before finally stopping the belt");
     desired_y -= 270.;
     act::goto(0., desired_y, odom, logfile);
     act::wait(2000, odom);
     act::belt(0);
 
-    intent!("move forwards 36cm at an angle of 105 degrees to push the mogo into the corner and let go");
+    intent!("move forwards 36cm at an angle of 105° to push the mogo into the corner and let go");
     desired_y += 360.;
     act::goto(105., desired_y, odom, logfile);
     act::solenoid(false);
 
-    intent!("turn to -18 degrees and go forwards 336cm to grab the next blue mogo");
+    intent!("turn to -18° and go forwards 336cm to grab the next blue mogo");
     desired_y += 3360.;
     act::goto(-18., desired_y, odom, logfile);
 
@@ -143,12 +143,12 @@ fn skills_auton(
     act::wait(180, odom); // wait for the thing to fully clamp down
     act::goto(0., desired_y, odom, logfile);
 
-    intent!("turn to 80 degrees and then go forwards for 110cm to push the mogo into the corner");
+    intent!("turn to 80° and then go forwards for 110cm to push the mogo into the corner");
     desired_y += 1100.;
     act::goto(80., desired_y, odom, logfile);
     act::solenoid(false);
 
-    intent!("turn to -95 degrees and then go forwards for 243cm to grab another blue mogo");
+    intent!("turn to -95° and then go forwards for 243cm to grab another blue mogo");
     desired_y += 2430.;
     act::goto(-95., desired_y, odom, logfile);
 
@@ -162,12 +162,12 @@ fn skills_auton(
     act::wait(180, odom); // wait for the thing to fully clamp down
     act::goto(0., desired_y, odom, logfile);
 
-    intent!("turn to -80 degrees and then go forwards for 80cm to push it into the corner");
+    intent!("turn to -80° and then go forwards for 80cm to push it into the corner");
     desired_y += 800.;
     act::goto(-80., desired_y, odom, logfile);
     act::solenoid(false);
 
-    intent!("turn to 108 degrees and then go forwards 180cm to grab an empty mogo");
+    intent!("turn to 108° and then go forwards 180cm to grab an empty mogo");
     desired_y += 1800.;
     act::goto(108., desired_y, odom, logfile);
 
@@ -181,34 +181,34 @@ fn skills_auton(
     act::wait(180, odom); // wait for the thing to fully clamp down
     act::goto(0., desired_y, odom, logfile);
 
-    intent!("move backwards 90cm at an angle of 50 degrees to grab a ring and wait for it to score");
+    intent!("move backwards 90cm at an angle of 50° to grab a ring and wait for it to score");
     desired_y -= 900.;
     act::goto(50., desired_y, odom, logfile);
     act::belt(config::motors::BELT_VOLTS);
     act::wait(2000, odom);
 
-    intent!("move backwards 63cm at an angle of 90 degrees, grab a ring and wait for it to score");
+    intent!("move backwards 63cm at an angle of 90°, grab a ring and wait for it to score");
     desired_y -= 630.;
     act::goto(90., desired_y, odom, logfile);
     act::wait(2000, odom);
 
-    intent!("move backwards 68cm at an angle of 30 degrees, grab a right and wait for it to score");
+    intent!("move backwards 68cm at an angle of 30°, grab a right and wait for it to score");
     desired_y -= 680.;
     act::goto(30., desired_y, odom, logfile);
     act::wait(2000, odom);
 
-    intent!("move backwards 69cm at an angle of -25 degrees to collect a ring and wait for it to score before stopping the belt");
+    intent!("move backwards 69cm at an angle of -25° to collect a ring and wait for it to score before stopping the belt");
     desired_y -= 690.;
     act::goto(-25., desired_y, odom, logfile);
     act::wait(2000, odom);
     act::belt(0); // stop belt
 
-    intent!("turn to -160 degrees and then go forwards for 101cm to push it into the corner");
+    intent!("turn to -160° and then go forwards for 101cm to push it into the corner");
     desired_y += 1010.;
     act::goto(-160., desired_y, odom, logfile);
     act::solenoid(false);
 
-    intent!("turn to 68 degrees and then go forwards 112cm to grab an empty mogo");
+    intent!("turn to 68° and then go forwards 112cm to grab an empty mogo");
     desired_y += 1120.;
     act::goto(68., desired_y, odom, logfile);
 
@@ -222,7 +222,7 @@ fn skills_auton(
     act::wait(180, odom); // wait for the thing to fully clamp down
     act::goto(0., desired_y, odom, logfile);
     
-    intent!("turn to 180 degrees and then activate belt");
+    intent!("turn to 180° and then activate belt");
     act::correct_yaw(179., logfile);
     act::belt(config::motors::BELT_VOLTS);
 
