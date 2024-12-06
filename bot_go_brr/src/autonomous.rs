@@ -40,13 +40,13 @@ fn match_auton(
     act::wait(800, odom);
     act::belt(0);
 
-    intent!("move 64cm into the mogo infront");
-    desired_y += 640.;
+    intent!("move 74.5cm into the mogo infront");
+    desired_y += 745.;
     act::goto(0., desired_y, odom, logfile);
 
-    // slowly drive into the mogo for 0.72 seconds before clamping
+    // slowly drive into the mogo for 0.8 seconds before clamping
     act::drive(2048, 2048);
-    act::wait(720, odom);
+    act::wait(800, odom);
     act::solenoid(true);
     act::drive(0, 0);
 
@@ -58,9 +58,9 @@ fn match_auton(
     act::belt(config::motors::BELT_VOLTS);
     act::wait(2000, odom); // note that the belt doesn't stop
 
-    intent!("move 65cm backwards at an angle of -117° to grab a ring and wait for it to score");
-    desired_y -= 650.;
-    act::goto(-117., desired_y, odom, logfile);
+    intent!("move 64cm backwards at an angle of -164° to grab a ring and wait for it to score");
+    desired_y -= 640.;
+    act::goto(-164., desired_y, odom, logfile);
     act::wait(2000, odom);
     act::belt(0); // stop belt
 
