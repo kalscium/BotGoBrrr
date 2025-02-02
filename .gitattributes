@@ -1,0 +1,6 @@
+* linguist-vendored
+*.zig linguist-vendored=false
+*.nix linguist-vendored=false
+*.zon linguist-vendored=false
+*.s linguist-vendored=false
+Makefile linguist-vendored=false
