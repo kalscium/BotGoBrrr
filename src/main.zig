@@ -1,4 +1,4 @@
-const pros = @import("pros.zig");
+const pros = @import("pros");
 
 /// Gets called upon the initialization of the user-program
 export fn initialize() callconv(.C) void {
