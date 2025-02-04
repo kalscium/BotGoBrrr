@@ -254,7 +254,7 @@
                 "version": "8.3.8"
             },
             "pros-zig-template": {
-                "location": "/home/kalscium/.config/pros/templates/pros-zig-template@1.1.1",
+                "location": "/home/kalscium/.config/pros/templates/pros-zig-template@1.1.2",
                 "metadata": {
                     "origin": "local"
                 },
@@ -262,26 +262,26 @@
                 "py/object": "pros.conductor.templates.local_template.LocalTemplate",
                 "supported_kernels": "^4.1.1",
                 "system_files": [
-                    "include/unistd.h",
                     "build.zig",
-                    "include/stdio.h",
-                    "include/errno.h",
-                    "include/inttypes.h",
-                    "include/stdlib.h",
-                    "include/math.h",
-                    "build.zig.zon",
-                    "include/pros.zig",
-                    "flake.lock",
                     "include/stub.zig",
-                    "zig.mk",
-                    "template-gitignore",
-                    "include/string.h",
                     "firmware/pros-zig-template.a",
-                    "flake.nix"
+                    "flake.lock",
+                    "include/pros.zig",
+                    "build.zig.zon",
+                    "include/errno.h",
+                    "include/unistd.h",
+                    "include/inttypes.h",
+                    "flake.nix",
+                    "include/stdlib.h",
+                    "include/stdio.h",
+                    "zig.mk",
+                    "include/string.h",
+                    "include/math.h",
+                    "template-gitignore"
                 ],
                 "target": "v5",
                 "user_files": [],
-                "version": "1.1.1"
+                "version": "1.1.2"
             }
         },
         "upload_options": {},

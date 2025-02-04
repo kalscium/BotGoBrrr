@@ -34,8 +34,9 @@ pub extern fn fread(ptr: [*]const u8, size: isize, nmemb: isize, stream: *std.c.
 pub extern fn freopen(filename: [*:0]const u8, mode: [*:0]const u8, stream: *std.c.FILE) callconv(.C) ?*std.c.FILE;
 pub extern fn fseek(stream: *std.c.FILE, offset: c_long, whence: c_int) callconv(.C) c_int;
 pub extern fn ftell(stream: *std.c.FILE) callconv(.C) c_long;
-pub extern fn fwrite(ptr: [*]const u8, stream: *std.c.FILE) callconv(.C) c_long;
-pub extern fn remove(stream: *std.c.FILE) callconv(.C) c_int;
+pub extern fn fwrite(ptr: [*]const u8, size: isize, nmemb: isize, stream: *std.c.FILE) callconv(.C) c_long;
+pub extern fn remove(filename: [*:0]const u8) callconv(.C) c_int;
+pub extern fn rename(old_filename: [*:0]const u8, new_filename: [*:0]const u8) callconv(.C) c_int;
 pub extern fn rewind(stream: *std.c.FILE) callconv(.C) void;
 pub extern fn printf(fmt: [*:0]const u8, ...) callconv(.C) c_int;
 pub extern fn fprintf(stream: *std.c.FILE, fmt: [*:0]const u8, ...) callconv(.C) c_int;
