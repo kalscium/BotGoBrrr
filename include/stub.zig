@@ -2,6 +2,7 @@
 
 const std = @import("std");
 
+export fn __errno() callconv(.C) void {}
 export fn fopen() callconv(.C) void {}
 export fn fclose() callconv(.C) void {}
 export fn feof() callconv(.C) void {}

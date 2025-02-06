@@ -3,13 +3,17 @@ const pros = @import("pros");
 pub const motor = @import("motor.zig");
 pub const drive = @import("drive.zig");
 pub const def = @import("def.zig");
+pub const odom = @import("odom.zig");
+pub const port = @import("port.zig");
 
 // prevent lazy loading
 // so that the files are actually included in the outputted binary
 // and so that they are also tested
 comptime {
     _ = @import("opcontrol.zig");
+    _ = odom;
     _ = drive;
+    _ = port;
 }
 
 /// Gets called upon the initialization of the user-program

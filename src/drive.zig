@@ -2,6 +2,7 @@
 
 const std = @import("std");
 const motor = @import("motor.zig");
+const port = @import("port.zig");
 
 /// Daniel's magic number for nice, smooth and exponential controls
 /// 
@@ -40,20 +41,19 @@ pub fn arcadeDrive(x: f32, y: f32) struct { f32, f32 } {
 /// Amounts of drive-motors on each side of the robot
 pub const drive_mtr_side_cnt = 3;
 
-/// Drives the drivetrain side based upon the input voltages
-/// 
-/// Disconnect buffer is a buffer of disconnected motor ports, 0s are ignored
-pub fn driveLeft(voltage: i32, disconnect_buffer: *[drive_mtr_side_cnt]i8) void {
-    motor.setVoltage(drivetrain_ports.l1, voltage, &disconnect_buffer[0]);
-    motor.setVoltage(drivetrain_ports.l2, voltage, &disconnect_buffer[1]);
-    motor.setVoltage(drivetrain_ports.l3, voltage, &disconnect_buffer[2]);
+/// Drives the drivetrain side based upon the input voltages, reports any motor
+/// disconnects to the port buffer
+pub fn driveLeft(voltage: i32, port_buffer: *port.PortBuffer) void {
+    port_buffer.portWrite(drivetrain_ports.l1, motor.setVoltage(drivetrain_ports.l1, voltage));
+    port_buffer.portWrite(drivetrain_ports.l2, motor.setVoltage(drivetrain_ports.l2, voltage));
+    port_buffer.portWrite(drivetrain_ports.l3, motor.setVoltage(drivetrain_ports.l3, voltage));
 }
 
 /// Drives the drivetrain side based upon the input voltages
 /// 
 /// Disconnect buffer is a buffer of disconnected motor ports, 0s are ignored
-pub fn driveRight(voltage: i32, disconnect_buffer: *[drive_mtr_side_cnt]i8) void {
-    motor.setVoltage(drivetrain_ports.r1, voltage, &disconnect_buffer[0]);
-    motor.setVoltage(drivetrain_ports.r2, voltage, &disconnect_buffer[1]);
-    motor.setVoltage(drivetrain_ports.r3, voltage, &disconnect_buffer[2]);
+pub fn driveRight(voltage: i32, port_buffer: *port.PortBuffer) void {
+    port_buffer.portWrite(drivetrain_ports.r1, motor.setVoltage(drivetrain_ports.r1, voltage));
+    port_buffer.portWrite(drivetrain_ports.r2, motor.setVoltage(drivetrain_ports.r2, voltage));
+    port_buffer.portWrite(drivetrain_ports.r3, motor.setVoltage(drivetrain_ports.r3, voltage));
 }

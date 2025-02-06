@@ -1,0 +1,143 @@
+//! Functions & Calculations for the robot's odometry coordinate system
+
+const std = @import("std");
+const pros = @import("pros");
+const port = @import("port.zig");
+const def = @import("def.zig");
+
+/// The current diameter of the robot's odometry wheel in mm
+const wheel_diameter = 101.6;
+
+/// The starting coordinate of the robot
+const start_coord = Coord{ 0, 0 };
+
+/// The port of the left odometry rotation sensor
+const rl_port = 12;
+/// The port of the right odometry rotation sensor
+const rr_port = 12;
+/// The port of the IMU sensor
+const imu_port = 12;
+
+/// A single coordinate/vector
+pub const Coord = @Vector(2, f32);
+
+/// Condenses a vector condition into a single boolean
+pub fn vecCond(cond: @Vector(2, bool)) bool {
+    return cond[0] and cond[1];
+}
+
+/// Convert a direction (in radians) and magnitude to a vector
+pub fn displacementToCoord(mag: f32, dir: f32) Coord {
+    return Coord{
+        @sin(dir) * mag,
+        @cos(dir) * mag,
+    };
+}
+
+test displacementToCoord {
+    // test some conversions
+
+    std.debug.assert(vecCond(Coord{0, 12} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(0)))));
+    std.debug.assert(vecCond(Coord{8, 8} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(45)))));
+    std.debug.assert(vecCond(Coord{12, 0} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(90)))));
+    std.debug.assert(vecCond(Coord{-8, 8} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(-45)))));
+    std.debug.assert(vecCond(Coord{-12, 0} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(-90)))));
+    std.debug.assert(vecCond(Coord{-8, -8} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(-135)))));
+    std.debug.assert(vecCond(Coord{0, -12} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(-180)))));
+}
+
+/// Finds the minimal possible difference in angle between two angles (radians)
+pub fn minimalAngleDiff(x: f32, y: f32) f32 {
+    // should work probably
+    const raw_diff = y - x;
+    return std.math.copysign(@sin(raw_diff), raw_diff);
+}
+
+test minimalAngleDiff {
+    // tests for the imu (0 forwards, positive is right, negative is left)
+    std.debug.assert(std.math.round(comptime std.math.degreesToRadians(45)) == std.math.round(minimalAngleDiff(comptime std.math.degreesToRadians(0), comptime std.math.degreesToRadians(45))));
+    std.debug.assert(std.math.round(comptime std.math.degreesToRadians(-45)) == std.math.round(minimalAngleDiff(comptime std.math.degreesToRadians(90), comptime std.math.degreesToRadians(45))));
+    std.debug.assert(std.math.round(comptime std.math.degreesToRadians(20)) == std.math.round(minimalAngleDiff(comptime std.math.degreesToRadians(170), comptime std.math.degreesToRadians(-170))));
+    std.debug.assert(std.math.round(comptime std.math.degreesToRadians(-20)) == std.math.round(minimalAngleDiff(comptime std.math.degreesToRadians(-170), comptime std.math.degreesToRadians(170))));
+    std.debug.assert(std.math.round(comptime std.math.degreesToRadians(-45)) == std.math.round(minimalAngleDiff(comptime std.math.degreesToRadians(-45), comptime std.math.degreesToRadians(-90))));
+    std.debug.assert(std.math.round(comptime std.math.degreesToRadians(20)) == std.math.round(minimalAngleDiff(comptime std.math.degreesToRadians(-10), comptime std.math.degreesToRadians(10))));
+    std.debug.assert(std.math.round(comptime std.math.degreesToRadians(-20)) == std.math.round(minimalAngleDiff(comptime std.math.degreesToRadians(10), comptime std.math.degreesToRadians(-10))));
+
+    // tests for odom tracking wheels
+    std.debug.assert(std.math.round(comptime std.math.degreesToRadians(20)) == std.math.round(minimalAngleDiff(comptime std.math.degreesToRadians(350), comptime std.math.degreesToRadians(10))));
+    std.debug.assert(std.math.round(comptime std.math.degreesToRadians(-20)) == std.math.round(minimalAngleDiff(comptime std.math.degreesToRadians(10), comptime std.math.degreesToRadians(350))));
+}
+
+/// Calculates the distance travelled in mm based upon odom wheel rotation
+/// angle in radians through circumference calculations
+pub fn odomMagnitude(angle: f32) f32 {
+    const circumference = comptime wheel_diameter * std.math.pi;
+    return angle / 2 / std.math.pi * circumference;
+}
+
+/// Gets the yaw value of an IMU sensor in radians, reports any disconnects
+pub fn getYaw(port_buffer: *port.PortBuffer) f32 {
+    _ = port.checkedPort(imu_port);
+    const result = pros.imu.imu_get_yaw(imu_port);
+
+    // check for errors
+    if (result == def.pros_err_f64) {
+        if (pros.__errno().* == def.pros_error_code.enodev) {
+            port_buffer.portWrite(imu_port, false);
+        }
+    }
+
+    return std.math.degreesToRadians(@as(f32, @floatCast(result)));
+}
+
+/// Gets the rotation value of a rotation sensor, reports any disconnects
+pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) f32 {
+    _ = port.checkedPort(rport);
+    const result = pros.rotation.rotation_get_angle(rport);
+
+    // check for errors
+    if (result == def.pros_err_i32) {
+        if (pros.__errno().* == def.pros_error_code.enodev) {
+            port_buffer.portWrite(rport, false);
+        }
+    }
+
+    return std.math.degreesToRadians(std.math.degreesToRadians(@as(f32, @floatFromInt(result)) / 100));
+}
+
+/// Odometry state variables
+pub const State = struct {
+    /// The previous left rotation sensor reading
+    prev_rl: f32,
+    /// The previous right rotation sensor reading
+    prev_rr: f32,
+    /// The robot's current coordinate
+    coord: Coord,
+
+    /// Initializes the odometry state variables
+    pub fn init(port_buffer: *port.PortBuffer) State {
+        return .{
+            .prev_rl = getRotation(rl_port, port_buffer),
+            .prev_rr = getRotation(rr_port, port_buffer),
+            .coord = start_coord,
+        };
+    }
+};
+
+/// Updates the odometry coordinates based upon previous and current rotation
+/// sensor values (right and left)
+pub fn updateOdom(state: *State, port_buffer: *port.PortBuffer) void {
+    // get the current imu & rotation sensor values
+    const yaw = getYaw(port_buffer);
+    const rl = getRotation(rl_port, port_buffer);
+    const rr = getRotation(rr_port, port_buffer);
+
+    // calculate the distance travelled for each rotation sensor and average them
+    const rl_diff = odomMagnitude(minimalAngleDiff(state.prev_rl, rl));
+    const rr_diff = odomMagnitude(minimalAngleDiff(state.prev_rr, rr));
+    const distance = (rl_diff + rr_diff) / 2;
+
+    // update the current coordinate with the distance moved
+    const moved = displacementToCoord(distance, yaw);
+    state.coord += moved;
+}
