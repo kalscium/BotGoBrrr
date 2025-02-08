@@ -1,5 +1,6 @@
 //! Defines the driver-control routine
 
+const std = @import("std");
 const pros = @import("pros");
 const def = @import("def.zig");
 const drive = @import("drive.zig");
@@ -46,8 +47,21 @@ export fn opcontrol() callconv(.C) void {
     // update odom
     odom.updateOdom(&odom_state, &port_buffer);
 
-    // logs
-    if (port_buffer_file) |file| _ = pros.fwrite(@ptrCast(&port_buffer), @sizeOf(port.PortBuffer), 1, file);
+    // file logs
+    if (port_buffer_file) |file| _ = pros.fwrite(@ptrCast(&port_buffer), comptime @bitSizeOf(port.PortBuffer)/8, 1, file);
+
+    // stdout logs
+    if (!pros.misc.competition_is_connected()) {
+        // print the port buffer if there are disconnects
+        if (@as(u24, @bitCast(port_buffer)) != 0xFFFFFF) {
+            pros.printf("Disconnected Ports:");
+            inline for (1..22) |iport| {
+                const field = std.fmt.comptimePrint("port_{}", .{iport});
+                if (!@field(port_buffer, field))
+                    pros.printf(" %d", iport);
+            } pros.printf("\n");
+        }
+    }
 
     // wait for the next cycle
     pros.rtos.task_delay_until(&now, tick_delay);
