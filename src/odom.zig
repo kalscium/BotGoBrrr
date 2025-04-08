@@ -4,12 +4,13 @@ const std = @import("std");
 const pros = @import("pros");
 const port = @import("port.zig");
 const def = @import("def.zig");
+const vector = @import("vector.zig");
 
 /// The current diameter of the robot's odometry wheel in mm
 const wheel_diameter = 101.6;
 
 /// The starting coordinate of the robot
-const start_coord = Coord{ 0, 0 };
+pub const start_coord = Coord{ 0, 0 };
 
 /// The port of the left odometry rotation sensor
 const rl_port = 12;
@@ -19,38 +20,18 @@ const rr_port = 12;
 const imu_port = 12;
 
 /// A single coordinate/vector
-pub const Coord = @Vector(2, f32);
-
-/// Condenses a vector condition into a single boolean
-pub fn vecCond(cond: @Vector(2, bool)) bool {
-    return cond[0] and cond[1];
-}
-
-/// Convert a direction (in radians) and magnitude to a vector
-pub fn displacementToCoord(mag: f32, dir: f32) Coord {
-    return Coord{
-        @sin(dir) * mag,
-        @cos(dir) * mag,
-    };
-}
-
-test displacementToCoord {
-    // test some conversions
-
-    std.debug.assert(vecCond(Coord{0, 12} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(0)))));
-    std.debug.assert(vecCond(Coord{8, 8} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(45)))));
-    std.debug.assert(vecCond(Coord{12, 0} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(90)))));
-    std.debug.assert(vecCond(Coord{-8, 8} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(-45)))));
-    std.debug.assert(vecCond(Coord{-12, 0} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(-90)))));
-    std.debug.assert(vecCond(Coord{-8, -8} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(-135)))));
-    std.debug.assert(vecCond(Coord{0, -12} == std.math.round(displacementToCoord(12, comptime std.math.degreesToRadians(-180)))));
-}
+pub const Coord = @Vector(2, f64);
 
 /// Finds the minimal possible difference in angle between two angles (radians)
-pub fn minimalAngleDiff(x: f32, y: f32) f32 {
+pub fn minimalAngleDiff(x: f64, y: f64) f64 {
     // should work probably
-    const raw_diff = y - x;
-    return std.math.copysign(@sin(raw_diff), raw_diff);
+    var raw_diff = y - x;
+    if (raw_diff > std.math.pi)
+        raw_diff -= std.math.tau
+    else if (raw_diff < -std.math.pi)
+        raw_diff += std.math.tau;
+
+    return raw_diff;
 }
 
 test minimalAngleDiff {
@@ -70,13 +51,13 @@ test minimalAngleDiff {
 
 /// Calculates the distance travelled in mm based upon odom wheel rotation
 /// angle in radians through circumference calculations
-pub fn odomMagnitude(angle: f32) f32 {
+pub fn odomMagnitude(angle: f64) f64 {
     const circumference = comptime wheel_diameter * std.math.pi;
     return angle / 2 / std.math.pi * circumference;
 }
 
 /// Gets the yaw value of an IMU sensor in radians, reports any disconnects
-pub fn getYaw(port_buffer: *port.PortBuffer) f32 {
+pub fn getYaw(port_buffer: *port.PortBuffer) f64 {
     _ = port.checkedPort(imu_port);
     const result = pros.imu.imu_get_yaw(imu_port);
 
@@ -87,11 +68,11 @@ pub fn getYaw(port_buffer: *port.PortBuffer) f32 {
         }
     }
 
-    return std.math.degreesToRadians(@as(f32, @floatCast(result)));
+    return std.math.degreesToRadians(@as(f64, @floatCast(result)));
 }
 
 /// Gets the rotation value of a rotation sensor, reports any disconnects
-pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) f32 {
+pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) f64 {
     _ = port.checkedPort(rport);
     const result = pros.rotation.rotation_get_angle(rport);
 
@@ -102,15 +83,15 @@ pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) f32 {
         }
     }
 
-    return std.math.degreesToRadians(std.math.degreesToRadians(@as(f32, @floatFromInt(result)) / 100));
+    return std.math.degreesToRadians(std.math.degreesToRadians(@as(f64, @floatFromInt(result)) / 100));
 }
 
 /// Odometry state variables
 pub const State = struct {
     /// The previous left rotation sensor reading
-    prev_rl: f32,
+    prev_rl: f64,
     /// The previous right rotation sensor reading
-    prev_rr: f32,
+    prev_rr: f64,
     /// The robot's current coordinate
     coord: Coord,
 
@@ -138,6 +119,6 @@ pub fn updateOdom(state: *State, port_buffer: *port.PortBuffer) void {
     const distance = (rl_diff + rr_diff) / 2;
 
     // update the current coordinate with the distance moved
-    const moved = displacementToCoord(distance, yaw);
+    const moved = vector.polarToCartesian(distance, yaw);
     state.coord += moved;
 }
