@@ -42,15 +42,12 @@ export fn opcontrol() callconv(.C) void {
     odom.updateOdom(&odom_state, &port_buffer);
 
     // get the normalized main joystick values
-    const j1 = .{
-        .x = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_x)))) / 63.5,
-        .y = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_y)))) / 63.5,
-    };
+    const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_y)))) / 63.5;
+    const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.right_y)))) / 63.5;
     
-    // pass it through arcade drive to get left & right voltages
-    const arcade = drive.arcadeDrive(j1.x, j1.y);
-    const ldr: i32 = @intFromFloat(arcade[0]);
-    const rdr: i32 = @intFromFloat(arcade[1]);
+    // just do a simple tank drive
+    const ldr: i32 = @intFromFloat(j1 * 12000);
+    const rdr: i32 = @intFromFloat(j2 * 12000);
 
     // drive the drivetrain
     drive.driveLeft(ldr, &port_buffer);
