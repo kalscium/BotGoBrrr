@@ -8,7 +8,7 @@ pub fn build(b: *std.Build) void {
     const vex_v5_target = b.resolveTargetQuery(.{
         .cpu_arch = .thumb,
         .os_tag = .freestanding,
-        .abi = .eabi,
+        .abi = .eabihf,
         .cpu_model = .{ .explicit = &std.Target.arm.cpu.cortex_a9 },
         .cpu_features_add = std.Target.arm.featureSet(&.{
             .fp16,
@@ -24,7 +24,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .strip = true,
         .link_libc = false,
-        .unwind_tables = true,
+        .unwind_tables = .sync,
     });
 
     // define the pros module

@@ -17,7 +17,7 @@
             zig
             zls
             lldb
-            gcc-arm-embedded-7
+            gcc-arm-embedded
           ];
         };
       });
