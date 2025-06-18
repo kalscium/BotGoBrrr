@@ -27,6 +27,14 @@ pub fn build(b: *std.Build) void {
         .unwind_tables = .sync,
     });
 
+    // options
+    const asm_opcontrol = b.option(bool, "asm-opcontrol", "Sets whether to use the arm asm version of opcontrol");
+
+    // options set
+    var options = b.addOptions();
+    options.addOption(bool, "asm_opcontrol", asm_opcontrol orelse false);
+    userlib.root_module.addOptions("options", options);
+
     // define the pros module
     const pros_mod = b.createModule(.{
         .root_source_file = b.path("include/pros.zig"),
@@ -49,6 +57,7 @@ pub fn build(b: *std.Build) void {
         .target = local_target,
     });
     test_exe.root_module.addImport("pros", pros_mod);
+    test_exe.root_module.addOptions("options", options);
 
     // add the stub library for the test and link it
     const stubs = b.addStaticLibrary(.{

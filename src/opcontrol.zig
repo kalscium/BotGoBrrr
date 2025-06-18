@@ -17,7 +17,7 @@ const port_buffer_path = "/usd/opctrl_port_buffers.bin";
 const recrded_coords_path = "/usd/recrded_coords.txt";
 
 /// Gets called during the driver-control period
-export fn opcontrol() callconv(.C) void {
+pub fn opcontrol() callconv(.C) void {
     // open the motor disconnect file
     const port_buffer_file = pros.fopen(port_buffer_path, "wb");
     defer if (port_buffer_file) |file| {
