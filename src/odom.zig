@@ -12,10 +12,8 @@ const wheel_diameter = 101.6;
 /// The starting coordinate of the robot
 pub const start_coord = Coord{ 0, 0 };
 
-/// The port of the left odometry rotation sensor
-const rl_port = 12;
-/// The port of the right odometry rotation sensor
-const rr_port = 12;
+/// The port of the odometry rotation sensor
+const rotation_port = 12;
 /// The port of the IMU sensor
 const imu_port = 12;
 
@@ -86,18 +84,15 @@ pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) f64 {
 
 /// Odometry state variables
 pub const State = struct {
-    /// The previous left rotation sensor reading
-    prev_rl: f64,
-    /// The previous right rotation sensor reading
-    prev_rr: f64,
+    /// The previous rotation sensor reading
+    prev_rotation: f64,
     /// The robot's current coordinate
     coord: Coord,
 
     /// Initializes the odometry state variables
     pub fn init(port_buffer: *port.PortBuffer) State {
         return .{
-            .prev_rl = getRotation(rl_port, port_buffer),
-            .prev_rr = getRotation(rr_port, port_buffer),
+            .prev_rotation = getRotation(rotation_port, port_buffer),
             .coord = start_coord,
         };
     }
@@ -108,13 +103,10 @@ pub const State = struct {
 pub fn updateOdom(state: *State, port_buffer: *port.PortBuffer) void {
     // get the current imu & rotation sensor values
     const yaw = getYaw(port_buffer);
-    const rl = getRotation(rl_port, port_buffer);
-    const rr = getRotation(rr_port, port_buffer);
+    const rotation = getRotation(rotation_port, port_buffer);
 
-    // calculate the distance travelled for each rotation sensor and average them
-    const rl_diff = odomMagnitude(minimalAngleDiff(state.prev_rl, rl));
-    const rr_diff = odomMagnitude(minimalAngleDiff(state.prev_rr, rr));
-    const distance = (rl_diff + rr_diff) / 2;
+    // calculate the distance travelled for the rotation sensor
+    const distance = odomMagnitude(minimalAngleDiff(state.prev_rotation, rotation));
 
     // update the current coordinate with the distance moved
     const moved = vector.polarToCartesian(distance, yaw);
