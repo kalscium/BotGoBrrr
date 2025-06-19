@@ -2,16 +2,6 @@
 
 const std = @import("std");
 
-/// Returns a port that's comptime checked (1-21)
-pub fn checkedPort(comptime port: comptime_int) comptime_int {
-    // check if the port is valid
-    if (port < 1 or port > 21) {
-        @compileError("motor port must be within the range 1..=21");
-    }
-
-    return port;
-}
-
 /// The port buffer is a bitfield of ports on the robot brain (like the
 /// name suggests) and whether they are connected/working or not at
 /// this current point in time

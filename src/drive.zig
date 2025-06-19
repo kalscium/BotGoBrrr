@@ -3,21 +3,41 @@
 const std = @import("std");
 const motor = @import("motor.zig");
 const port = @import("port.zig");
+const pros = @import("pros");
 
 /// Daniel's magic number for nice, smooth and exponential controls
 /// 
 /// `f(x) = 1024a**x - 1024`
 pub const DMN: f32 = 12.71875;
 
-/// Drivetrain ports
-pub const drivetrain_ports = struct {
-    const l1 = motor.motorPort(12, true);
-    const l2 = motor.motorPort(12, true);
-    const l3 = motor.motorPort(12, true);
-    const r1 = motor.motorPort(12, true);
-    const r2 = motor.motorPort(12, true);
-    const r3 = motor.motorPort(12, true);
+/// Drivetrain default configs (port is negative for reversed)
+pub fn drivetrainMotor(comptime mport: comptime_int) motor.Config {
+    return motor.Config{
+        .port = mport,
+        .gearset = pros.motors.E_MOTOR_GEAR_BLUE,
+        .encoder_units = pros.motors.E_MOTOR_ENCODER_DEGREES,
+    };
+}
+
+/// Drivetrain motor configs
+pub const drivetrain_motors = struct {
+    const l1 = drivetrainMotor(12);
+    const l2 = drivetrainMotor(12);
+    const l3 = drivetrainMotor(12);
+    const r1 = drivetrainMotor(12);
+    const r2 = drivetrainMotor(12);
+    const r3 = drivetrainMotor(12);
 };
+
+// Initializes the drivetrain (MUST BE RUN AT PROGRAM INIT)
+pub fn init() void {
+    drivetrain_motors.l1.init();
+    drivetrain_motors.l2.init();
+    drivetrain_motors.l3.init();
+    drivetrain_motors.r1.init();
+    drivetrain_motors.r2.init();
+    drivetrain_motors.r3.init();
+}
 
 /// Passes a normalized value through daniel's algorithm to produce an exponential voltage
 pub fn expDaniel(x: f32) f32 {
@@ -44,16 +64,16 @@ pub const drive_mtr_side_cnt = 3;
 /// Drives the drivetrain side based upon the input voltages, reports any motor
 /// disconnects to the port buffer
 pub fn driveLeft(voltage: i32, port_buffer: *port.PortBuffer) void {
-    port_buffer.portWrite(drivetrain_ports.l1, motor.setVoltage(drivetrain_ports.l1, voltage));
-    port_buffer.portWrite(drivetrain_ports.l2, motor.setVoltage(drivetrain_ports.l2, voltage));
-    port_buffer.portWrite(drivetrain_ports.l3, motor.setVoltage(drivetrain_ports.l3, voltage));
+    port_buffer.portWrite(drivetrain_motors.l1.port, motor.setVoltage(drivetrain_motors.l1.port, voltage));
+    port_buffer.portWrite(drivetrain_motors.l2.port, motor.setVoltage(drivetrain_motors.l2.port, voltage));
+    port_buffer.portWrite(drivetrain_motors.l3.port, motor.setVoltage(drivetrain_motors.l3.port, voltage));
 }
 
 /// Drives the drivetrain side based upon the input voltages
 /// 
 /// Disconnect buffer is a buffer of disconnected motor ports, 0s are ignored
 pub fn driveRight(voltage: i32, port_buffer: *port.PortBuffer) void {
-    port_buffer.portWrite(drivetrain_ports.r1, motor.setVoltage(drivetrain_ports.r1, voltage));
-    port_buffer.portWrite(drivetrain_ports.r2, motor.setVoltage(drivetrain_ports.r2, voltage));
-    port_buffer.portWrite(drivetrain_ports.r3, motor.setVoltage(drivetrain_ports.r3, voltage));
+    port_buffer.portWrite(drivetrain_motors.r1.port, motor.setVoltage(drivetrain_motors.r1.port, voltage));
+    port_buffer.portWrite(drivetrain_motors.r2.port, motor.setVoltage(drivetrain_motors.r2.port, voltage));
+    port_buffer.portWrite(drivetrain_motors.r3.port, motor.setVoltage(drivetrain_motors.r3.port, voltage));
 }

@@ -42,8 +42,8 @@ pub fn opcontrol() callconv(.C) void {
     odom.updateOdom(&odom_state, &port_buffer);
 
     // get the normalized main joystick values
-    const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_y)))) / 63.5;
-    const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.right_y)))) / 63.5;
+    const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_y)))) / 127;
+    const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.right_y)))) / 127;
     
     // just do a simple tank drive
     const ldr: i32 = @intFromFloat(j1 * 12000);
@@ -54,12 +54,11 @@ pub fn opcontrol() callconv(.C) void {
     drive.driveRight(rdr, &port_buffer);
 
     // check for the 'record position' button press, print to both file & stdout
-    if (pros.misc.controller_get_digital(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerDigital.x)) > 0) {
+    if (pros.misc.controller_get_digital_new_press(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerDigital.x)) == 1) {
         // super compact and efficient binary files are cool and all but they
         // just aren't worth it for something like this where it'd be written
         // to like 8 times at most instead of EVERY TICK
-        if (!(pros.misc.competition_is_connected() > 0))
-            _ = pros.printf("Recorded Coord at: .{ %f, %f }\n", odom_state.coord[0], odom_state.coord[1]);
+        _ = pros.printf("Recorded Coord at: .{ %f, %f }\n", odom_state.coord[0], odom_state.coord[1]);
         if (recrded_coords_file) |file|
             _ = pros.fprintf(file, "Recorded Coord at: .{ %f, %f }\n", odom_state.coord[0], odom_state.coord[1]);
     }

@@ -35,7 +35,7 @@ export fn opcontrol() callconv(.C) void {
 
 /// Gets called upon the initialization of the user-program
 export fn initialize() callconv(.C) void {
-    _ = pros.printf("hello, world from the initialize function\n");
+    drive.init();
 }
 
 /// Gets called upon the initialization of the user-program during a competition

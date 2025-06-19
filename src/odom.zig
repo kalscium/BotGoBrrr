@@ -58,7 +58,6 @@ pub fn odomMagnitude(angle: f64) f64 {
 
 /// Gets the yaw value of an IMU sensor in radians, reports any disconnects
 pub fn getYaw(port_buffer: *port.PortBuffer) f64 {
-    _ = port.checkedPort(imu_port);
     const result = pros.imu.imu_get_yaw(imu_port);
 
     // check for errors
@@ -73,7 +72,6 @@ pub fn getYaw(port_buffer: *port.PortBuffer) f64 {
 
 /// Gets the rotation value of a rotation sensor, reports any disconnects
 pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) f64 {
-    _ = port.checkedPort(rport);
     const result = pros.rotation.rotation_get_angle(rport);
 
     // check for errors
