@@ -16,6 +16,9 @@ const port_buffer_path = "/usd/opctrl_port_buffers.bin";
 /// The path to the recorded cords file
 const recrded_coords_path = "/usd/recrded_coords.txt";
 
+/// The path to the CSV drive motor temperatures
+const drive_temp_path = "/usd/opctrl_drive_temp.csv";
+
 /// Gets called during the driver-control period
 pub fn opcontrol() callconv(.C) void {
     // open the motor disconnect file
@@ -29,6 +32,17 @@ pub fn opcontrol() callconv(.C) void {
     defer if (recrded_coords_file) |file| {
         _ = pros.fclose(file);
     };
+
+    // open the drive motor temperature file
+    const drive_temp_file = pros.fopen(drive_temp_path, "w");
+    defer if (drive_temp_file) |file| {
+        _ = pros.fclose(file);
+    };
+    if (drive_temp_file) |file| {
+        _ = pros.fprintf(file, drive.csv_header_motor_temp);
+    }
+    // amount of times the drive motor temperatures have been logged
+    var logged_drive_temp: u16 = 0;
 
     // main loop state variables
     var now = pros.rtos.millis();
@@ -61,6 +75,13 @@ pub fn opcontrol() callconv(.C) void {
         _ = pros.printf("Recorded Coord at: .{ %f, %f }\n", odom_state.coord[0], odom_state.coord[1]);
         if (recrded_coords_file) |file|
             _ = pros.fprintf(file, "Recorded Coord at: .{ %f, %f }\n", odom_state.coord[0], odom_state.coord[1]);
+    }
+
+    // log the temperature every 320ms
+    if (logged_drive_temp < now / 320) {
+        logged_drive_temp += 1;
+        if (drive_temp_file) |file|
+            drive.logTemp(now, file);
     }
 
     // write the port buffer to the port_buffer file
