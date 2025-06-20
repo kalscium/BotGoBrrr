@@ -6,6 +6,7 @@ const def = @import("def.zig");
 const drive = @import("drive.zig");
 const port = @import("port.zig");
 const odom = @import("odom.zig");
+const options = @import("options");
 
 /// The delay in ms, between each tick cycle
 const tick_delay = 50;
@@ -18,6 +19,12 @@ const recrded_coords_path = "/usd/recrded_coords.txt";
 
 /// The path to the CSV drive motor temperatures
 const drive_temp_path = "/usd/opctrl_drive_temp.csv";
+
+/// The path to the CSV coordinates of the robot (path taken)
+const coords_path = "/usd/opctrl_coords.csv";
+
+/// The path to the CSV coordinates of the robot (path taken)
+const velocities_path = "/usd/opctrl_velocities.csv";
 
 /// Gets called during the driver-control period
 pub fn opcontrol() callconv(.C) void {
@@ -43,6 +50,26 @@ pub fn opcontrol() callconv(.C) void {
     }
     // amount of times the drive motor temperatures have been logged
     var logged_drive_temp: u16 = 0;
+
+    // open the odom coordinates file
+    const coords_file = pros.fopen(coords_path, "w");
+    defer if (coords_file) |file| {
+        _ = pros.fclose(file);
+    };
+    if (coords_file) |file| {
+        _ = pros.fprintf(file, odom.csv_header_coords);
+    }
+    // amount of times the odom coords have been logged
+    var logged_coords: u16 = 0;
+
+    // open the odom coordinates file
+    const velocities_file = pros.fopen(velocities_path, "w");
+    defer if (velocities_file) |file| {
+        _ = pros.fclose(file);
+    };
+    if (velocities_file) |file| {
+        _ = pros.fprintf(file, odom.csv_header_velocity);
+    }
 
     // main loop state variables
     var now = pros.rtos.millis();
@@ -83,6 +110,18 @@ pub fn opcontrol() callconv(.C) void {
         if (drive_temp_file) |file|
             drive.logTemp(now, file);
     }
+
+    // log odom coordinates every 160ms
+    if (logged_coords < now / 160) {
+        logged_coords += 1;
+        if (drive_temp_file) |file|
+            odom.logCoords(file, odom_state);
+    }
+
+    // log odom velocities every tick
+    if (comptime options.log_velocity)
+    if (drive_temp_file) |file|
+        odom.logVelocity(file, odom_state);
 
     // write the port buffer to the port_buffer file
     if (port_buffer_file)

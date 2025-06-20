@@ -3,7 +3,7 @@
 
 .equ tick_delay, 10
 
-.equ drive_motor_l1, 12
+.equ drive_motor_l1, 1
 .equ drive_motor_l2, 12
 .equ drive_motor_l3, 12
 .equ drive_motor_r1, 12

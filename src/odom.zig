@@ -86,13 +86,25 @@ pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) f64 {
 pub const State = struct {
     /// The previous rotation sensor reading
     prev_rotation: f64,
+    /// The previous imu sensor reading (for yaw)
+    prev_yaw: f64,
+    /// The previous time in ms
+    prev_time: u32,
     /// The robot's current coordinate
     coord: Coord,
+    /// The robot's current movement velocity
+    mov_vel: f64,
+    /// The robot's current rotational velocity
+    rot_vel: f64,
 
     /// Initializes the odometry state variables
     pub fn init(port_buffer: *port.PortBuffer) State {
         return .{
             .prev_rotation = getRotation(rotation_port, port_buffer),
+            .prev_yaw = getYaw(port_buffer),
+            .prev_time = pros.rtos.millis(),
+            .mov_vel = 0,
+            .rot_vel = 0,
             .coord = start_coord,
         };
     }
@@ -101,9 +113,10 @@ pub const State = struct {
 /// Updates the odometry coordinates based upon previous and current rotation
 /// sensor values (right and left)
 pub fn updateOdom(state: *State, port_buffer: *port.PortBuffer) void {
-    // get the current imu & rotation sensor values
+    // get the current sensor readings/values
     const yaw = getYaw(port_buffer);
     const rotation = getRotation(rotation_port, port_buffer);
+    const now = pros.rtos.millis();
 
     // calculate the distance travelled for the rotation sensor
     const distance = odomMagnitude(minimalAngleDiff(state.prev_rotation, rotation));
@@ -111,4 +124,30 @@ pub fn updateOdom(state: *State, port_buffer: *port.PortBuffer) void {
     // update the current coordinate with the distance moved
     const moved = vector.polarToCartesian(distance, yaw);
     state.coord += moved;
+
+    // calculate the velocities
+    const dt: f64 = @floatFromInt(now - state.prev_time);
+    state.mov_vel = distance / dt;
+    state.rot_vel = (yaw - state.prev_yaw) / dt;
+
+    // update the previous values
+    state.prev_rotation = rotation;
+    state.prev_yaw = yaw;
+    state.prev_time = now;
+}
+
+/// The CSV header for the coordinate log
+pub const csv_header_coords = "x (mm),y (mm)\n";
+
+/// Checks and logs the coordinates of the robot from the odom state
+pub fn logCoords(file: *std.c.FILE, state: State) void {
+    _ = pros.fprintf(file, "%lf,%lf\n", state.coord[0], state.coord[1]);
+}
+
+/// The CSV header for the velocity log
+pub const csv_header_velocity = "time (ms),movement (mm/s),rotation (°/s)\n";
+
+/// Checks and logs the movement velocity and rotational velocity of the robot
+pub fn logVelocity(file: *std.c.FILE, state: State) void {
+    _ = pros.fprintf(file, "%d,%lf,%lf\n", state.prev_time, state.mov_vel, state.rot_vel);
 }

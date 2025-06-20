@@ -29,10 +29,12 @@ pub fn build(b: *std.Build) void {
 
     // options
     const asm_opcontrol = b.option(bool, "asm-opcontrol", "Sets whether to use the arm asm version of opcontrol");
+    const log_velocity = b.option(bool, "log-velocity", "Sets whether to log the velocity of the robot every tick");
 
     // options set
     var options = b.addOptions();
     options.addOption(bool, "asm_opcontrol", asm_opcontrol orelse false);
+    options.addOption(bool, "log_velocity", log_velocity orelse false);
     userlib.root_module.addOptions("options", options);
 
     // define the pros module
