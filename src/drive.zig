@@ -52,11 +52,11 @@ test expDaniel {
 }
 
 /// Converts normalized x & y values into left & right voltages
-pub fn arcadeDrive(x: f32, y: f32) struct { f32, f32 } {
+pub fn arcadeDrive(x: f32, y: f32) struct { i32, i32 } {
     const ldr = std.math.clamp(y + x, -1, 1) * 12000;
     const rdr = std.math.clamp(y - x, -1, 1) * 12000;
 
-    return .{ ldr, rdr };
+    return .{ @intFromFloat(ldr), @intFromFloat(rdr) };
 }
 
 /// Amounts of drive-motors on each side of the robot

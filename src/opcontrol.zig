@@ -1,12 +1,14 @@
 //! Defines the driver-control routine
 
 const std = @import("std");
+
+const options = @import("options");
 const pros = @import("pros");
+
 const def = @import("def.zig");
 const drive = @import("drive.zig");
-const port = @import("port.zig");
 const odom = @import("odom.zig");
-const options = @import("options");
+const port = @import("port.zig");
 
 /// The delay in ms, between each tick cycle
 const tick_delay = 50;
@@ -81,14 +83,30 @@ pub fn opcontrol() callconv(.C) void {
 
     // update odom
     odom.updateOdom(&odom_state, &port_buffer);
-
-    // get the normalized main joystick values
-    const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_y)))) / 127;
-    const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.right_y)))) / 127;
     
-    // just do a simple tank drive
-    const ldr: i32 = @intFromFloat(j1 * 12000);
-    const rdr: i32 = @intFromFloat(j2 * 12000);
+    // hopefully gets set by one of the options
+    var ldr: i32 = 0;
+    var rdr: i32 = 0;
+
+    if (options.arcade) {
+        // get the normalized main joystick values
+        const jx = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_x)))) / 127;
+        const jy = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_y)))) / 127;
+        ldr, rdr = drive.arcadeDrive(jx, jy);
+    } else if (options.split_arcade) {
+        // get the normalized main joystick values
+        const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_y)))) / 127;
+        const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.right_x)))) / 127;
+        ldr, rdr = drive.arcadeDrive(j1, j2);
+    } else {
+        // get the normalized main joystick values
+        const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_y)))) / 127;
+        const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.right_y)))) / 127;
+
+        // just do a simple tank drive
+        ldr = @intFromFloat(j1 * 12000);
+        rdr = @intFromFloat(j2 * 12000);
+    }
 
     // drive the drivetrain
     drive.driveLeft(ldr, &port_buffer);
