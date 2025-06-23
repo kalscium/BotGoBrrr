@@ -132,13 +132,13 @@ pub fn opcontrol() callconv(.C) void {
     // log odom coordinates every 160ms
     if (logged_coords < now / 160) {
         logged_coords += 1;
-        if (drive_temp_file) |file|
+        if (coords_file) |file|
             odom.logCoords(file, odom_state);
     }
 
     // log odom velocities every tick
     if (comptime options.log_velocity)
-    if (drive_temp_file) |file|
+    if (velocities_file) |file|
         odom.logVelocity(file, odom_state);
 
     // write the port buffer to the port_buffer file

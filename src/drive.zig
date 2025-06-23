@@ -80,7 +80,7 @@ pub fn driveRight(voltage: i32, port_buffer: *port.PortBuffer) void {
 }
 
 /// The CSV header for the drive motor temperature log
-pub const csv_header_motor_temp = "time (s),l1 (°C),l2 (°C),l3 (°C),r1 (°C),r2 (°C),r3 (°C)\n";
+pub const csv_header_motor_temp = "time (s),l1 (*C),l2 (*C),l3 (*C),r1 (*C),r2 (*C),r3 (*C)\n";
 
 /// Checks and logs the temperatures of the drive motors alongside the tick
 pub fn logTemp(ms: u32, file: *std.c.FILE) void {

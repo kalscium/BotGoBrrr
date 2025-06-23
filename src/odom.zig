@@ -63,6 +63,7 @@ pub fn getYaw(port_buffer: *port.PortBuffer) f64 {
         if (pros.__errno().* == def.pros_error_code.enodev) {
             port_buffer.portWrite(imu_port, false);
         }
+        return 0;
     }
 
     return std.math.degreesToRadians(@as(f64, @floatCast(result)));
@@ -77,6 +78,7 @@ pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) f64 {
         if (pros.__errno().* == def.pros_error_code.enodev) {
             port_buffer.portWrite(rport, false);
         }
+        return 0;
     }
 
     return std.math.degreesToRadians(std.math.degreesToRadians(@as(f64, @floatFromInt(result)) / 100));
@@ -145,7 +147,7 @@ pub fn logCoords(file: *std.c.FILE, state: State) void {
 }
 
 /// The CSV header for the velocity log
-pub const csv_header_velocity = "time (ms),movement (mm/s),rotation (°/s)\n";
+pub const csv_header_velocity = "time (ms),movement (mm/s),rotation (*/s)\n";
 
 /// Checks and logs the movement velocity and rotational velocity of the robot
 pub fn logVelocity(file: *std.c.FILE, state: State) void {
