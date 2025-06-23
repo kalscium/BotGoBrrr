@@ -8,6 +8,7 @@ pub const odom = @import("odom.zig");
 pub const port = @import("port.zig");
 pub const vector = @import("vector.zig");
 pub const mopcontrol = @import("opcontrol.zig");
+pub const pid = @import("pid.zig");
 
 // prevent lazy loading
 // so that the files are actually included in the outputted binary
@@ -19,6 +20,7 @@ comptime {
     _ = vector;
     _ = drive;
     _ = port;
+    _ = pid;
 }
 
 /// Calls either the zig opcontrol, or the arm asm opcontrol
