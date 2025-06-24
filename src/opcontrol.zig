@@ -108,6 +108,13 @@ pub fn opcontrol() callconv(.C) void {
         rdr = @intFromFloat(j2 * 12000);
     }
 
+    if (pros.misc.controller_get_digital(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerDigital.l1)) == 1)
+        _ = pros.motors.motor_move_voltage(15, 12000)
+    else if (pros.misc.controller_get_digital(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerDigital.l2)) == 1)
+        _ = pros.motors.motor_move_voltage(15, -12000)
+    else 
+        _ = pros.motors.motor_move_voltage(15, 0);
+
     // drive the drivetrain
     drive.driveLeft(ldr, &port_buffer);
     drive.driveRight(rdr, &port_buffer);

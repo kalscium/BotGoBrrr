@@ -13,9 +13,9 @@ const wheel_diameter = 101.6;
 pub const start_coord = Coord{ 0, 0 };
 
 /// The port of the odometry rotation sensor
-const rotation_port = 12;
+const rotation_port = 11; // use motor encoders :D
 /// The port of the IMU sensor
-const imu_port = 12;
+const imu_port = 21;
 
 /// A single coordinate/vector
 pub const Coord = @Vector(2, f64);
@@ -71,17 +71,17 @@ pub fn getYaw(port_buffer: *port.PortBuffer) f64 {
 
 /// Gets the rotation value of a rotation sensor, reports any disconnects
 pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) f64 {
-    const result = pros.rotation.rotation_get_angle(rport);
+    const result = pros.motors.motor_get_position(rport);
 
     // check for errors
-    if (result == def.pros_err_i32) {
+    if (result == def.pros_err_f64) {
         if (pros.__errno().* == def.pros_error_code.enodev) {
             port_buffer.portWrite(rport, false);
         }
         return 0;
     }
 
-    return std.math.degreesToRadians(std.math.degreesToRadians(@as(f64, @floatFromInt(result)) / 100));
+    return std.math.degreesToRadians(result);
 }
 
 /// Odometry state variables

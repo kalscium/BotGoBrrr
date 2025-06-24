@@ -22,12 +22,12 @@ pub fn drivetrainMotor(comptime mport: comptime_int) motor.Config {
 
 /// Drivetrain motor configs
 pub const drivetrain_motors = struct {
-    const l1 = drivetrainMotor(12);
-    const l2 = drivetrainMotor(12);
-    const l3 = drivetrainMotor(12);
-    const r1 = drivetrainMotor(12);
-    const r2 = drivetrainMotor(12);
-    const r3 = drivetrainMotor(12);
+    const l1 = drivetrainMotor(11);
+    const l2 = drivetrainMotor(-12);
+    const l3 = drivetrainMotor(13);
+    const r1 = drivetrainMotor(-18);
+    const r2 = drivetrainMotor(19);
+    const r3 = drivetrainMotor(-20);
 };
 
 // Initializes the drivetrain (MUST BE RUN AT PROGRAM INIT)
