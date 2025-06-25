@@ -22,12 +22,12 @@ pub fn drivetrainMotor(comptime mport: comptime_int) motor.Config {
 
 /// Drivetrain motor configs
 pub const drivetrain_motors = struct {
-    const l1 = drivetrainMotor(11);
-    const l2 = drivetrainMotor(-12);
-    const l3 = drivetrainMotor(13);
-    const r1 = drivetrainMotor(-18);
-    const r2 = drivetrainMotor(19);
-    const r3 = drivetrainMotor(-20);
+    pub const l1 = drivetrainMotor(11);
+    pub const l2 = drivetrainMotor(-12);
+    pub const l3 = drivetrainMotor(13);
+    pub const r1 = drivetrainMotor(-18);
+    pub const r2 = drivetrainMotor(19);
+    pub const r3 = drivetrainMotor(-20);
 };
 
 // Initializes the drivetrain (MUST BE RUN AT PROGRAM INIT)
@@ -77,45 +77,4 @@ pub fn driveRight(voltage: i32, port_buffer: *port.PortBuffer) void {
     port_buffer.portWrite(drivetrain_motors.r1.port, motor.setVoltage(drivetrain_motors.r1.port, voltage));
     port_buffer.portWrite(drivetrain_motors.r2.port, motor.setVoltage(drivetrain_motors.r2.port, voltage));
     port_buffer.portWrite(drivetrain_motors.r3.port, motor.setVoltage(drivetrain_motors.r3.port, voltage));
-}
-
-/// The CSV header for the drive motor temperature log
-pub const csv_header_motor_temp = "time (s),l1 (*C),l2 (*C),l3 (*C),r1 (*C),r2 (*C),r3 (*C)\n";
-
-/// Checks and logs the temperatures of the drive motors alongside the tick
-pub fn logTemp(ms: u32, file: *std.c.FILE) void {
-    const time = @as(f64, @floatFromInt(ms)) / 1000;
-
-    var l1_temp = pros.motors.motor_get_temperature(drivetrain_motors.l1.port);
-    if (l1_temp == def.pros_err_f64) // in case it fails
-        l1_temp = 0;
-    var l2_temp = pros.motors.motor_get_temperature(drivetrain_motors.l2.port);
-    if (l2_temp == def.pros_err_f64) // in case it fails
-        l2_temp = 0;
-    var l3_temp = pros.motors.motor_get_temperature(drivetrain_motors.l3.port);
-    if (l3_temp == def.pros_err_f64) // in case it fails
-        l3_temp = 0;
-
-    var r1_temp = pros.motors.motor_get_temperature(drivetrain_motors.r1.port);
-    if (r1_temp == def.pros_err_f64) // in case it fails
-        r1_temp = 0;
-    var r2_temp = pros.motors.motor_get_temperature(drivetrain_motors.r2.port);
-    if (r2_temp == def.pros_err_f64) // in case it fails
-        r2_temp = 0;
-    var r3_temp = pros.motors.motor_get_temperature(drivetrain_motors.r3.port);
-    if (r3_temp == def.pros_err_f64) // in case it fails
-        r3_temp = 0;
-
-    // write it to the logfile
-    _ = pros.fprintf(
-        file,
-        "%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
-        time,
-        l1_temp,
-        l2_temp,
-        l3_temp,
-        r1_temp,
-        r2_temp,
-        r3_temp,
-    );
 }

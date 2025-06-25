@@ -35,7 +35,7 @@ export fn autonomous() callconv(.C) void {
     // main loop
     while (true) {
         // update odom
-        odom.updateOdom(&odom_state, &port_buffer);
+        odom_state.update(&port_buffer);
     
         // if the robot has not reached the current 'goal'
         if (@abs(vector.calMag(f64, odom_state.coord - ppath[ppath_idx])) > pprecision) {

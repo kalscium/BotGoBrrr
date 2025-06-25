@@ -9,6 +9,7 @@ pub const port = @import("port.zig");
 pub const vector = @import("vector.zig");
 pub const mopcontrol = @import("opcontrol.zig");
 pub const pid = @import("pid.zig");
+pub const logging = @import("logging.zig");
 
 // prevent lazy loading
 // so that the files are actually included in the outputted binary
@@ -21,6 +22,7 @@ comptime {
     _ = drive;
     _ = port;
     _ = pid;
+    _ = logging;
 }
 
 /// Calls either the zig opcontrol, or the arm asm opcontrol
