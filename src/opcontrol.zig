@@ -96,8 +96,8 @@ pub fn opcontrol() callconv(.C) void {
         ldr, rdr = drive.arcadeDrive(jx, jy);
     } else if (options.split_arcade) {
         // get the normalized main joystick values
-        const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_y)))) / 127;
-        const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.right_x)))) / 127;
+        const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_x)))) / 127;
+        const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.right_y)))) / 127;
         ldr, rdr = drive.arcadeDrive(j1, j2);
     } else {
         // get the normalized main joystick values
