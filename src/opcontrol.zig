@@ -17,7 +17,7 @@ const tick_delay = 50;
 /// The path to the opcontrol port buffers file
 const port_buffer_path = "/usd/opctrl_port_buffers.bin";
 
-/// The path to the recorded cords file
+/// The path to the recorded coords file
 const recrded_coords_path = "/usd/recrded_coords.txt";
 
 /// The path to the CSV drive motor temperatures
@@ -29,50 +29,52 @@ const coords_path = "/usd/opctrl_coords.csv";
 /// The path to the CSV coordinates of the robot (path taken)
 const velocities_path = "/usd/opctrl_velocities.csv";
 
+/// The path to the CSV battery precentages (of the battery & controller)
+const battery_path = "/usd/opctrl_battery.csv";
+
+/// The path to the CSV benchmark
+const bench_path = "/usd/opctrl_bench.csv";
+
 /// Gets called during the driver-control period
 pub fn opcontrol() callconv(.C) void {
     // open the motor disconnect file
     const port_buffer_file = pros.fopen(port_buffer_path, "wb");
-    defer if (port_buffer_file) |file| {
-        _ = pros.fclose(file);
-    };
+    defer logging.closeFile(port_buffer_file);
 
     // open the recorded coords file
     const recrded_coords_file = pros.fopen(recrded_coords_path, "w");
-    defer if (recrded_coords_file) |file| {
-        _ = pros.fclose(file);
-    };
+    defer logging.closeFile(recrded_coords_file);
 
     // open the drive motor temperature file
     const drive_temp_file = pros.fopen(drive_temp_path, "w");
-    defer if (drive_temp_file) |file| {
-        _ = pros.fclose(file);
-    };
-    if (drive_temp_file) |file| {
-        _ = pros.fprintf(file, logging.csv_header_temp);
-    }
+    defer logging.closeFile(drive_temp_file);
+    logging.writeHeader(drive_temp_file, logging.csv_header_temp);
     // amount of times the drive motor temperatures have been logged
     var logged_drive_temp: u16 = 0;
 
     // open the odom coordinates file
     const coords_file = pros.fopen(coords_path, "w");
-    defer if (coords_file) |file| {
-        _ = pros.fclose(file);
-    };
-    if (coords_file) |file| {
-        _ = pros.fprintf(file, logging.csv_header_coords);
-    }
+    defer logging.closeFile(coords_file);
+    logging.writeHeader(coords_file, logging.csv_header_coords);
     // amount of times the odom coords have been logged
     var logged_coords: u16 = 0;
 
-    // open the odom coordinates file
+    // open the odom velocities file
     const velocities_file = pros.fopen(velocities_path, "w");
-    defer if (velocities_file) |file| {
-        _ = pros.fclose(file);
-    };
-    if (velocities_file) |file| {
-        _ = pros.fprintf(file, logging.csv_header_velocity);
-    }
+    defer logging.closeFile(velocities_file);
+    logging.writeHeader(velocities_file, logging.csv_header_velocity);
+
+    // open the battery percentage file
+    const battery_file = pros.fopen(battery_path, "w");
+    defer logging.closeFile(battery_file);
+    logging.writeHeader(battery_file, logging.csv_header_battery);
+    // the amount of times the battery percentage has been logged
+    var logged_battery: u16 = 0;
+
+    // open the benchmark file
+    const bench_file = pros.fopen(bench_path, "w");
+    defer logging.closeFile(bench_file);
+    logging.writeHeader(bench_file, logging.csv_header_bench);
 
     // main loop state variables
     var now = pros.rtos.millis();
@@ -81,6 +83,7 @@ pub fn opcontrol() callconv(.C) void {
 
     // main loop
     while (true) {
+    const compute_start_time = pros.rtos.millis();
 
     // update odom
     odom_state.update(&port_buffer);
@@ -113,6 +116,8 @@ pub fn opcontrol() callconv(.C) void {
     drive.driveLeft(ldr, &port_buffer);
     drive.driveRight(rdr, &port_buffer);
 
+    const logging_start_time = pros.rtos.millis();
+
     // check for the 'record position' button press, print to both file & stdout
     if (pros.misc.controller_get_digital_new_press(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerDigital.x)) == 1) {
         // super compact and efficient binary files are cool and all but they
@@ -123,24 +128,27 @@ pub fn opcontrol() callconv(.C) void {
             _ = pros.fprintf(file, "Recorded Coord at: .{ %f, %f }\n", odom_state.coord[0], odom_state.coord[1]);
     }
 
+    // log the battery every 500ms
+    if (logged_battery < now / 500) {
+        logged_battery += 1;
+        logging.battery(now, battery_file);
+    }
+
     // log the temperature every 320ms
     if (logged_drive_temp < now / 320) {
         logged_drive_temp += 1;
-        if (drive_temp_file) |file|
-            logging.temp(now, file);
+        logging.temp(now, drive_temp_file);
     }
 
     // log odom coordinates every 160ms
     if (logged_coords < now / 160) {
         logged_coords += 1;
-        if (coords_file) |file|
-            logging.coords(file, odom_state);
+        logging.coords(coords_file, odom_state);
     }
 
     // log odom velocities every tick
     if (comptime options.log_velocity)
-    if (velocities_file) |file|
-        logging.velocity(file, odom_state);
+        logging.velocity(velocities_file, odom_state);
 
     // write the port buffer to the port_buffer file
     if (port_buffer_file)
@@ -158,6 +166,12 @@ pub fn opcontrol() callconv(.C) void {
             } _ = pros.printf("\n");
         }
     }
+
+    const logging_end_time = pros.rtos.millis();
+
+    // log the benchmark (every tick)
+    if (comptime options.benchmark)
+        logging.benchmark(bench_file, logging_start_time - compute_start_time, logging_end_time - logging_start_time, logging_end_time-compute_start_time);
 
     // wait for the next cycle
     pros.rtos.task_delay_until(&now, tick_delay);

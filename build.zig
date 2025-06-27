@@ -30,6 +30,7 @@ pub fn build(b: *std.Build) void {
     // options
     const asm_opcontrol = b.option(bool, "asm-opcontrol", "Sets whether to use the arm asm version of opcontrol");
     const log_velocity = b.option(bool, "log-velocity", "Sets whether to log the velocity of the robot every tick");
+    const log_bench = b.option(bool, "benchmark", "Sets whether to log cycle times for benchmarking");
     const arcade = b.option(bool, "arcade", "Sets whether to use normal arcade drive in opcontrol");
     const split_arcade = b.option(bool, "split-arcade", "Sets whether to use normal split-arcade drive in opcontrol");
 
@@ -37,6 +38,7 @@ pub fn build(b: *std.Build) void {
     var options = b.addOptions();
     options.addOption(bool, "asm_opcontrol", asm_opcontrol orelse false);
     options.addOption(bool, "log_velocity", log_velocity orelse false);
+    options.addOption(bool, "benchmark", log_bench orelse false);
     options.addOption(bool, "arcade", arcade orelse false);
     options.addOption(bool, "split_arcade", split_arcade orelse false);
     userlib.root_module.addOptions("options", options);
