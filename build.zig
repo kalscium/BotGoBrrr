@@ -33,6 +33,7 @@ pub fn build(b: *std.Build) void {
     const log_bench = b.option(bool, "benchmark", "Sets whether to log cycle times for benchmarking");
     const arcade = b.option(bool, "arcade", "Sets whether to use normal arcade drive in opcontrol");
     const split_arcade = b.option(bool, "split-arcade", "Sets whether to use normal split-arcade drive in opcontrol");
+    const DMN = b.option(bool, "DMN", "Sets whether to use daniel's magic number");
 
     // options set
     var options = b.addOptions();
@@ -41,6 +42,7 @@ pub fn build(b: *std.Build) void {
     options.addOption(bool, "benchmark", log_bench orelse false);
     options.addOption(bool, "arcade", arcade orelse false);
     options.addOption(bool, "split_arcade", split_arcade orelse false);
+    options.addOption(bool, "DMN", DMN orelse false);
     userlib.root_module.addOptions("options", options);
 
     // define the pros module

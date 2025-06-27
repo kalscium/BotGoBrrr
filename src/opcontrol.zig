@@ -15,9 +15,6 @@ const tower = @import("tower.zig");
 /// The delay in ms, between each tick cycle
 const tick_delay = 50;
 
-/// The button for recording odom coords
-const record_coord_button: c_int = pros.misc.E_CONTROLLER_DIGITAL_A;
-
 /// The path to the opcontrol port buffers file
 const port_buffer_path = "/usd/opctrl_port_buffers.bin";
 
@@ -84,6 +81,7 @@ pub fn opcontrol() callconv(.C) void {
     var now = pros.rtos.millis();
     var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connected/working initially
     var odom_state = odom.State.init(&port_buffer);
+    var drive_reversed = false;
 
     // main loop
     while (true) {
@@ -93,7 +91,7 @@ pub fn opcontrol() callconv(.C) void {
     odom_state.update(&port_buffer);
 
     // update the drivetrain
-    drive.controllerUpdate(&port_buffer);
+    drive.controllerUpdate(&drive_reversed, &port_buffer);
     // update the tower
     tower.controllerUpdate(&port_buffer);
     // update odom controls
@@ -124,8 +122,8 @@ pub fn opcontrol() callconv(.C) void {
         logging.velocity(velocities_file, odom_state);
 
     // write the port buffer to the port_buffer file
-    if (port_buffer_file)
-        |file| _ = pros.fwrite(@ptrCast(&port_buffer), comptime @bitSizeOf(port.PortBuffer)/8, 1, file);
+    if (port_buffer_file) |file|
+        _ = pros.fwrite(@ptrCast(&port_buffer), comptime @bitSizeOf(port.PortBuffer)/8, 1, file);
 
     // print the port buffer to stdout
     if (!(pros.misc.competition_is_connected() > 0)) {
