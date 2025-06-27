@@ -5,6 +5,7 @@ const pros = @import("pros");
 const drive = @import("drive.zig");
 const def = @import("def.zig");
 const odom = @import("odom.zig");
+const tower = @import("tower.zig");
 
 /// Closes an open *optional* file
 pub fn closeFile(file: ?*std.c.FILE) void {
@@ -67,7 +68,7 @@ pub fn velocity(file: ?*std.c.FILE, state: odom.State) void {
 }
 
 /// The CSV header for the drive motor temperature log
-pub const csv_header_temp = "time (s),battery (*C),l1 (*C),l2 (*C),l3 (*C),r1 (*C),r2 (*C),r3 (*C)\n";
+pub const csv_header_temp = "time (s),battery (*C),tower top(*C),tower bottom(*C),l1 (*C),l2 (*C),l3 (*C),r1 (*C),r2 (*C),r3 (*C)\n";
 
 /// Checks and logs the temperatures of all the motors and battery alongside the tick
 pub fn temp(ms: u32, file: ?*std.c.FILE) void {
@@ -78,6 +79,12 @@ pub fn temp(ms: u32, file: ?*std.c.FILE) void {
     if (battery_temp == def.pros_err_f64) // in case it fails
         battery_temp = 0;
 
+    var tower_top_temp = pros.motors.motor_get_temperature(tower.motors.top.port);
+    if (tower_top_temp == def.pros_err_f64) // in case it fails
+        tower_top_temp = 0;
+    var tower_bottom_temp = pros.motors.motor_get_temperature(tower.motors.bottom.port);
+    if (tower_bottom_temp == def.pros_err_f64) // in case it fails
+        tower_bottom_temp = 0;
     var l1_temp = pros.motors.motor_get_temperature(drive.drivetrain_motors.l1.port);
     if (l1_temp == def.pros_err_f64) // in case it fails
         l1_temp = 0;
@@ -101,9 +108,11 @@ pub fn temp(ms: u32, file: ?*std.c.FILE) void {
     // write it to the logfile
     _ = pros.fprintf(
         f,
-        "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+        "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
         time,
         battery_temp,
+        tower_top_temp,
+        tower_bottom_temp,
         l1_temp,
         l2_temp,
         l3_temp,

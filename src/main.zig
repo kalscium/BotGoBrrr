@@ -10,6 +10,7 @@ pub const vector = @import("vector.zig");
 pub const mopcontrol = @import("opcontrol.zig");
 pub const pid = @import("pid.zig");
 pub const logging = @import("logging.zig");
+pub const tower = @import("tower.zig");
 
 // prevent lazy loading
 // so that the files are actually included in the outputted binary
@@ -41,6 +42,7 @@ export fn opcontrol() callconv(.C) void {
 /// Gets called upon the initialization of the user-program
 export fn initialize() callconv(.C) void {
     drive.init();
+    tower.init();
 }
 
 /// Gets called upon the initialization of the user-program during a competition

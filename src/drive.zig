@@ -5,11 +5,46 @@ const Motor = @import("Motor.zig");
 const port = @import("port.zig");
 const pros = @import("pros");
 const def = @import("def.zig");
+const options = @import("options");
 
 /// Daniel's magic number for nice, smooth and exponential controls
 /// 
 /// `f(x) = 1024a**x - 1024`
 pub const DMN: f32 = 12.71875;
+
+/// Reads the controller and updates the drivetrain accordingly based upon the
+/// enabled build options
+/// 
+/// Updates the port buffer on any motor disconnects
+pub fn controllerUpdate(port_buffer: *port.PortBuffer) void {
+    // hopefully gets set by one of the options
+    var ldr: i32 = 0;
+    var rdr: i32 = 0;
+
+    if (options.arcade) {
+        // get the normalized main joystick values
+        const jx = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
+        const jy = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
+        ldr, rdr = arcadeDrive(jx, jy);
+    } else if (options.split_arcade) {
+        // get the normalized main joystick values
+        const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
+        const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
+        ldr, rdr = arcadeDrive(j1, j2);
+    } else {
+        // get the normalized main joystick values
+        const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
+        const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
+
+        // just do a simple tank drive
+        ldr = @intFromFloat(j1 * 12000);
+        rdr = @intFromFloat(j2 * 12000);
+    }
+
+    // drive the drivetrain
+    driveLeft(ldr, port_buffer);
+    driveRight(rdr, port_buffer);
+}
 
 /// Drivetrain default configs (port is negative for reversed)
 pub fn drivetrainMotor(comptime mport: comptime_int) Motor {

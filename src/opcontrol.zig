@@ -10,9 +10,13 @@ const drive = @import("drive.zig");
 const odom = @import("odom.zig");
 const port = @import("port.zig");
 const logging = @import("logging.zig");
+const tower = @import("tower.zig");
 
 /// The delay in ms, between each tick cycle
 const tick_delay = 50;
+
+/// The button for recording odom coords
+const record_coord_button: c_int = pros.misc.E_CONTROLLER_DIGITAL_A;
 
 /// The path to the opcontrol port buffers file
 const port_buffer_path = "/usd/opctrl_port_buffers.bin";
@@ -87,39 +91,14 @@ pub fn opcontrol() callconv(.C) void {
 
     // update odom
     odom_state.update(&port_buffer);
-    
-    // hopefully gets set by one of the options
-    var ldr: i32 = 0;
-    var rdr: i32 = 0;
 
-    if (options.arcade) {
-        // get the normalized main joystick values
-        const jx = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
-        const jy = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
-        ldr, rdr = drive.arcadeDrive(jx, jy);
-    } else if (options.split_arcade) {
-        // get the normalized main joystick values
-        const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
-        const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
-        ldr, rdr = drive.arcadeDrive(j1, j2);
-    } else {
-        // get the normalized main joystick values
-        const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
-        const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
-
-        // just do a simple tank drive
-        ldr = @intFromFloat(j1 * 12000);
-        rdr = @intFromFloat(j2 * 12000);
-    }
-
-    // drive the drivetrain
-    drive.driveLeft(ldr, &port_buffer);
-    drive.driveRight(rdr, &port_buffer);
-
-    const logging_start_time = pros.rtos.millis();
+    // update the drivetrain
+    drive.controllerUpdate(&port_buffer);
+    // update the tower
+    tower.controllerUpdate(&port_buffer);
 
     // check for the 'record position' button press, print to both file & stdout
-    if (pros.misc.controller_get_digital_new_press(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_DIGITAL_X) == 1) {
+    if (pros.misc.controller_get_digital_new_press(pros.misc.E_CONTROLLER_MASTER, record_coord_button) == 1) {
         // super compact and efficient binary files are cool and all but they
         // just aren't worth it for something like this where it'd be written
         // to like 8 times at most instead of EVERY TICK
@@ -127,6 +106,8 @@ pub fn opcontrol() callconv(.C) void {
         if (recrded_coords_file) |file|
             _ = pros.fprintf(file, "Recorded Coord at: .{ %f, %f }\n", odom_state.coord[0], odom_state.coord[1]);
     }
+
+    const logging_start_time = pros.rtos.millis();
 
     // log the battery every 500ms
     if (logged_battery < now / 500) {
