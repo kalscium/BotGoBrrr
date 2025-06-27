@@ -1,7 +1,7 @@
 const pros = @import("pros");
 const options = @import("options");
 
-pub const motor = @import("motor.zig");
+pub const Motor = @import("Motor.zig");
 pub const drive = @import("drive.zig");
 pub const def = @import("def.zig");
 pub const odom = @import("odom.zig");
@@ -18,6 +18,7 @@ comptime {
     _ = mopcontrol;
     _ = @import("autonomous.zig");
     _ = odom;
+    _ = Motor;
     _ = vector;
     _ = drive;
     _ = port;

@@ -1,7 +1,7 @@
 //! Functions for driving the robot (calculations & drivetrain)
 
 const std = @import("std");
-const motor = @import("motor.zig");
+const Motor = @import("Motor.zig");
 const port = @import("port.zig");
 const pros = @import("pros");
 const def = @import("def.zig");
@@ -12,8 +12,8 @@ const def = @import("def.zig");
 pub const DMN: f32 = 12.71875;
 
 /// Drivetrain default configs (port is negative for reversed)
-pub fn drivetrainMotor(comptime mport: comptime_int) motor.Config {
-    return motor.Config{
+pub fn drivetrainMotor(comptime mport: comptime_int) Motor {
+    return Motor{
         .port = mport,
         .gearset = pros.motors.E_MOTOR_GEAR_BLUE,
         .encoder_units = pros.motors.E_MOTOR_ENCODER_DEGREES,
@@ -65,16 +65,16 @@ pub const drive_mtr_side_cnt = 3;
 /// Drives the drivetrain side based upon the input voltages, reports any motor
 /// disconnects to the port buffer
 pub fn driveLeft(voltage: i32, port_buffer: *port.PortBuffer) void {
-    port_buffer.portWrite(drivetrain_motors.l1.port, motor.setVoltage(drivetrain_motors.l1.port, voltage));
-    port_buffer.portWrite(drivetrain_motors.l2.port, motor.setVoltage(drivetrain_motors.l2.port, voltage));
-    port_buffer.portWrite(drivetrain_motors.l3.port, motor.setVoltage(drivetrain_motors.l3.port, voltage));
+    drivetrain_motors.l1.setVoltage(voltage, port_buffer);
+    drivetrain_motors.l2.setVoltage(voltage, port_buffer);
+    drivetrain_motors.l3.setVoltage(voltage, port_buffer);
 }
 
 /// Drives the drivetrain side based upon the input voltages
 /// 
 /// Disconnect buffer is a buffer of disconnected motor ports, 0s are ignored
 pub fn driveRight(voltage: i32, port_buffer: *port.PortBuffer) void {
-    port_buffer.portWrite(drivetrain_motors.r1.port, motor.setVoltage(drivetrain_motors.r1.port, voltage));
-    port_buffer.portWrite(drivetrain_motors.r2.port, motor.setVoltage(drivetrain_motors.r2.port, voltage));
-    port_buffer.portWrite(drivetrain_motors.r3.port, motor.setVoltage(drivetrain_motors.r3.port, voltage));
+    drivetrain_motors.r1.setVoltage(voltage, port_buffer);
+    drivetrain_motors.r2.setVoltage(voltage, port_buffer);
+    drivetrain_motors.r3.setVoltage(voltage, port_buffer);
 }
