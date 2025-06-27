@@ -6,8 +6,11 @@ const port = @import("port.zig");
 const def = @import("def.zig");
 const vector = @import("vector.zig");
 
+/// The controller button for recording the current odom coordinate
+pub const record_coord_button = pros.misc.E_CONTROLLER_DIGITAL_A;
+
 /// The current diameter of the robot's odometry wheel in mm
-const wheel_diameter = 101.6;
+const wheel_diameter = 69.85;
 
 /// The starting coordinate of the robot
 pub const start_coord = Coord{ 0, 0 };
@@ -135,5 +138,19 @@ pub const State = struct {
         state.prev_rotation = rotation;
         state.prev_yaw = yaw;
         state.prev_time = now;
+    }
+
+    /// Reads the controller and updates the odom state accordingly, or does
+    /// other actions that read the odom state
+    pub fn controllerUpdate(self: State, file: ?*std.c.FILE) void {
+        // check for the 'record position' button press, print to both file & stdout
+        if (pros.misc.controller_get_digital_new_press(pros.misc.E_CONTROLLER_MASTER, record_coord_button) == 1) {
+            // super compact and efficient binary files are cool and all but they
+            // just aren't worth it for something like this where it'd be written
+            // to like 8 times at most instead of EVERY TICK
+            _ = pros.printf("Recorded Coord at: .{ %f, %f }\n", self.coord[0], self.coord[1]);
+            if (file) |f|
+                _ = pros.fprintf(f, "Recorded Coord at: .{ %f, %f }\n", self.coord[0], self.coord[1]);
+        }
     }
 };

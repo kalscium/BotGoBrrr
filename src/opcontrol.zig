@@ -96,16 +96,8 @@ pub fn opcontrol() callconv(.C) void {
     drive.controllerUpdate(&port_buffer);
     // update the tower
     tower.controllerUpdate(&port_buffer);
-
-    // check for the 'record position' button press, print to both file & stdout
-    if (pros.misc.controller_get_digital_new_press(pros.misc.E_CONTROLLER_MASTER, record_coord_button) == 1) {
-        // super compact and efficient binary files are cool and all but they
-        // just aren't worth it for something like this where it'd be written
-        // to like 8 times at most instead of EVERY TICK
-        _ = pros.printf("Recorded Coord at: .{ %f, %f }\n", odom_state.coord[0], odom_state.coord[1]);
-        if (recrded_coords_file) |file|
-            _ = pros.fprintf(file, "Recorded Coord at: .{ %f, %f }\n", odom_state.coord[0], odom_state.coord[1]);
-    }
+    // update odom controls
+    odom_state.controllerUpdate(recrded_coords_file);
 
     const logging_start_time = pros.rtos.millis();
 
