@@ -94,18 +94,18 @@ pub fn opcontrol() callconv(.C) void {
 
     if (options.arcade) {
         // get the normalized main joystick values
-        const jx = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_x)))) / 127;
-        const jy = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_y)))) / 127;
+        const jx = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
+        const jy = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
         ldr, rdr = drive.arcadeDrive(jx, jy);
     } else if (options.split_arcade) {
         // get the normalized main joystick values
-        const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_x)))) / 127;
-        const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.right_y)))) / 127;
+        const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
+        const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
         ldr, rdr = drive.arcadeDrive(j1, j2);
     } else {
         // get the normalized main joystick values
-        const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.left_y)))) / 127;
-        const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerAnalog.right_y)))) / 127;
+        const j1 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
+        const j2 = @as(f32, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
 
         // just do a simple tank drive
         ldr = @intFromFloat(j1 * 12000);
@@ -119,7 +119,7 @@ pub fn opcontrol() callconv(.C) void {
     const logging_start_time = pros.rtos.millis();
 
     // check for the 'record position' button press, print to both file & stdout
-    if (pros.misc.controller_get_digital_new_press(@intFromEnum(def.Controller.master), @intFromEnum(def.ControllerDigital.x)) == 1) {
+    if (pros.misc.controller_get_digital_new_press(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_DIGITAL_X) == 1) {
         // super compact and efficient binary files are cool and all but they
         // just aren't worth it for something like this where it'd be written
         // to like 8 times at most instead of EVERY TICK

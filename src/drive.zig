@@ -59,9 +59,6 @@ pub fn arcadeDrive(x: f32, y: f32) struct { i32, i32 } {
     return .{ @intFromFloat(ldr), @intFromFloat(rdr) };
 }
 
-/// Amounts of drive-motors on each side of the robot
-pub const drive_mtr_side_cnt = 3;
-
 /// Drives the drivetrain side based upon the input voltages, reports any motor
 /// disconnects to the port buffer
 pub fn driveLeft(voltage: i32, port_buffer: *port.PortBuffer) void {

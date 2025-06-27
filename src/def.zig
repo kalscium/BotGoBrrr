@@ -1,36 +1,6 @@
-//! A bunch of PROS definitions/macros
+//! A bunch of PROS definitions/macros that weren't automatically translated
 
 const std = @import("std");
-
-/// The controller you read from
-pub const Controller = enum(c_uint) {
-    master,
-    partner,
-};
-
-/// An analog joystick on the controller
-pub const ControllerAnalog = enum(c_uint) {
-    left_x,
-    left_y,
-    right_x,
-    right_y,
-};
-
-/// A digital button on the controller
-pub const ControllerDigital = enum(c_uint) {
-    l1 = 6,
-    l2,
-    r1,
-    r2,
-    up,
-    down,
-    left,
-    right,
-    x,
-    b,
-    y,
-    a,
-};
 
 /// The PROS i32 error code
 pub const pros_err_i32: i32 = std.math.maxInt(i32);
