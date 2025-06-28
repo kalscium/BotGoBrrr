@@ -1,21 +1,46 @@
 //! Defines the driver-control routine
 
+const std = @import("std");
+
 const pros = @import("pros");
-const port = @import("port.zig");
+
 const odom = @import("odom.zig");
+const pid = @import("pid.zig");
+const port = @import("port.zig");
 const vector = @import("vector.zig");
 
-/// The delay in ms, between each 'cycle' of autonomous (the lower the moreprecise though less stable)
-const tick_delay = 50;
+/// The delay in ms, between each 'cycle' of autonomous (the lower the more precise though less stable)
+pub const tick_delay = 10;
 
 /// The path to the autonomous port buffers file
 const port_buffer_path = "/usd/auton_port_buffers.bin";
 
-/// The path (an array of vector positions the robot must follow)
-const ppath: [1]odom.Coord = .{odom.start_coord};
+/// The 'precision' (in mm) that the robot must achieve before moving onto the next path coordinate
+const precision: f64 = 0;
 
-/// The 'precision' that the robot must achieve before moving onto the next path coordinate
-const pprecision: f64 = 0;
+/// The *tuned* movement (Y) PID controller
+pub const mov_pid_param = pid.Param {
+    // 1 / max_error
+    // max_error = pure pursuit search-radius
+    // 1" as it's half a field tile
+    .kp = 1.0 / 304.8,
+    // arbitrary, before tuning
+    .ki = (1.0 / 304.8) / 100.0,
+    .kd = (1.0 / 304.8) * 5.0,
+    .saturation = 1,
+    .low_pass_a = 0.8,
+};
+
+/// The *tuned* yaw (radians) PID controller
+pub const yaw_pid_param = pid.Param {
+    // 1 / max_error
+    .kp = 1.0 / std.math.degreesToRadians(90.0),
+    // arbitrary, before tuning
+    .ki = (1.0 / std.math.degreesToRadians(90.0)) / 100.0,
+    .kd = (1.0 / std.math.degreesToRadians(90.0)) * 5.0,
+    .saturation = 1,
+    .low_pass_a = 0.8,
+};
 
 export fn autonomous() callconv(.C) void {
     // open the motor disconnect file
@@ -24,41 +49,22 @@ export fn autonomous() callconv(.C) void {
         _ = pros.fclose(file);
     };
 
-    // main loop state variables
-    var now = pros.rtos.millis();
     var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connected/working initially
     var odom_state = odom.State.init(&port_buffer);
 
-    var ppath_idx: usize = 0; // for later, when pure-pursuit is implemented
-    // for actions and states, instead of having loops within loops
+    // wait a long time
+    wait(60000, &odom_state, &port_buffer);
 
-    // main loop
-    while (true) {
-        // update odom
-        odom_state.update(&port_buffer);
-    
-        // if the robot has not reached the current 'goal'
-        if (@abs(vector.calMag(f64, odom_state.coord - ppath[ppath_idx])) > pprecision) {
-            // toto: code to get the robot closer to the current goal
-            continue;
-        }
+    // write the port buffer to the port_buffer file
+    if (port_buffer_file) |file|
+        _ = pros.fwrite(@ptrCast(&port_buffer), comptime @bitSizeOf(port.PortBuffer)/8, 1, file);
+}
 
-        // assume the robot has reached it's current goal
-
-        // toto: put actions that depend on the location of the robot here
-        switch (ppath_idx) {
-            else => {},
-        }
-
-        // write the port buffer to the port_buffer file
-        if (port_buffer_file) |file|
-            _ = pros.fwrite(@ptrCast(&port_buffer), comptime @bitSizeOf(port.PortBuffer)/8, 1, file);
-
-        // either move onto the next goal or break the loop if finished
-        if (ppath_idx == ppath.len) break;
-        ppath_idx += 1;
-
-        // wait for the next cycle
+/// Waits a certain amount of time, whilst still updating odom
+fn wait(delay_ms: u32, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    var now = pros.rtos.millis();
+    while (now / delay_ms < 1) {
+        odom_state.update(port_buffer);
         pros.rtos.task_delay_until(&now, tick_delay);
     }
 }

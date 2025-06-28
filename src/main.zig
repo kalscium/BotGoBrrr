@@ -12,6 +12,7 @@ pub const pid = @import("pid.zig");
 pub const logging = @import("logging.zig");
 pub const tower = @import("tower.zig");
 pub const controller = @import("controller.zig");
+pub const tuner = @import("tuner.zig");
 
 // prevent lazy loading
 // so that the files are actually included in the outputted binary
@@ -27,6 +28,7 @@ comptime {
     _ = pid;
     _ = logging;
     _ = controller;
+    _ = tuner;
 }
 
 /// Calls either the zig opcontrol, or the arm asm opcontrol
@@ -36,6 +38,8 @@ export fn opcontrol() callconv(.C) void {
                  // it's fine cuz it has no runtime cost (aside from this extra function call)
             extern fn asm_opcontrol() callconv(.C) void;
         }.asm_opcontrol();
+    } else if (comptime options.tune) |tune| {
+        tuner.entry(tune);
     } else {
         mopcontrol.opcontrol();
     }
@@ -43,6 +47,7 @@ export fn opcontrol() callconv(.C) void {
 
 /// Gets called upon the initialization of the user-program
 export fn initialize() callconv(.C) void {
+    odom.programInit();
     drive.init();
     tower.init();
 }

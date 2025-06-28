@@ -1,10 +1,12 @@
 //! Functions for using, graphing, and tuning a hand-rolled PID
 
+const math = @import("std").math;
+
 /// The parameters of a PID
 pub const Param = struct {
     kp: f64,
     ki: f64,
-    fd: f64,
+    kd: f64,
     // the max plant output value physically achievable (for motor voltage it's 12000mV)
     saturation: f64,
     // the low pass filter measurement gain (0-1) (higher is lower change in error (stronger filter)) (for the D term) (a good value is 0.8)
@@ -33,6 +35,7 @@ pub const State = struct {
             self.integral += current_err * delta_time;
 
         // compute the PID output
+        // u(t) = kp*e(t) + ki*integral e(t)dt + kd*de/dt
         const output =
             (params.kp * current_err) +
             (params.ki * self.integral) +
@@ -41,6 +44,7 @@ pub const State = struct {
         // update last error
         self.last_err = current_err;
 
-        return @min(output, params.saturation); // clamp it
+        // clamp the output
+        return math.clamp(output, -params.saturation, params.saturation);
     }
 };

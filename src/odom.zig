@@ -10,8 +10,8 @@ const controller = @import("controller.zig");
 /// The controller button for recording the current odom coordinate
 pub const record_coord_button = pros.misc.E_CONTROLLER_DIGITAL_A;
 
-/// The current diameter of the robot's odometry wheel in mm
-const wheel_diameter = 69.85;
+/// The current radius of the robot's odometry wheel in mm
+const wheel_radius = 34.925;
 
 /// The starting coordinate of the robot
 pub const start_coord = Coord{ 0, 0 };
@@ -54,8 +54,10 @@ test minimalAngleDiff {
 /// Calculates the distance travelled in mm based upon odom wheel rotation
 /// angle in radians through circumference calculations
 pub fn odomMagnitude(angle: f64) f64 {
-    const circumference = comptime wheel_diameter * std.math.pi;
-    return angle / 2 / std.math.pi * circumference;
+    // the neat thing about radians, is that they're just steps around a unit-circle
+    // and by simply multiplying by a new radius, the unit circle angle becomes the
+    // segment in the circumference
+    return angle * wheel_radius;
 }
 
 /// Gets the yaw value of an IMU sensor in radians, reports any disconnects
@@ -85,7 +87,14 @@ pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) f64 {
         return 0;
     }
 
-    return std.math.degreesToRadians(std.math.degreesToRadians(@as(f64, @floatFromInt(result)) / 100));
+    return std.math.degreesToRadians(@as(f64, @floatFromInt(result)) / 100.0);
+}
+
+/// # MUST BE RUN AT PROGRAM INIT
+/// 
+/// Necessary initialization code (such as taring/calibrating) required for odom
+pub fn programInit() void {
+    _ = pros.imu.imu_reset(imu_port);
 }
 
 /// Odometry state variables
