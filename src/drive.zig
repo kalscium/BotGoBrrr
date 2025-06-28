@@ -6,6 +6,7 @@ const port = @import("port.zig");
 const pros = @import("pros");
 const def = @import("def.zig");
 const options = @import("options");
+const controller = @import("controller.zig");
 
 /// Driving in reverse toggle button
 pub const reverse_toggle: c_int = pros.misc.E_CONTROLLER_DIGITAL_X;
@@ -40,18 +41,18 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
 
     if (options.arcade) {
         // get the normalized main joystick values
-        const jx = @as(f64, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
-        const jy = @as(f64, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
+        const jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
+        const jy = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
         ldr, rdr = arcadeDrive(jx, jy);
     } else if (options.split_arcade) {
         // get the normalized main joystick values
-        const j1 = @as(f64, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
-        const j2 = @as(f64, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
+        const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
+        const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
         ldr, rdr = arcadeDrive(j1, j2);
     } else {
         // get the normalized main joystick values
-        const j1 = @as(f64, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
-        const j2 = @as(f64, @floatFromInt(pros.misc.controller_get_analog(pros.misc.E_CONTROLLER_MASTER, pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
+        const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
+        const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
 
         // just do a simple tank drive
         ldr = j1;
@@ -59,7 +60,7 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
     }
 
     // check for toggling of the reverse toggle
-    if (pros.misc.controller_get_digital_new_press(pros.misc.E_CONTROLLER_MASTER, reverse_toggle) == 1) {
+    if (controller.get_digital_new_press(reverse_toggle)) {
         reverse.* = !reverse.*;
         // if toggled on, vibrate long, else short
         _ = if (reverse.*)

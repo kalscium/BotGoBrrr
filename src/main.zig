@@ -11,6 +11,7 @@ pub const mopcontrol = @import("opcontrol.zig");
 pub const pid = @import("pid.zig");
 pub const logging = @import("logging.zig");
 pub const tower = @import("tower.zig");
+pub const controller = @import("controller.zig");
 
 // prevent lazy loading
 // so that the files are actually included in the outputted binary
@@ -25,6 +26,7 @@ comptime {
     _ = port;
     _ = pid;
     _ = logging;
+    _ = controller;
 }
 
 /// Calls either the zig opcontrol, or the arm asm opcontrol

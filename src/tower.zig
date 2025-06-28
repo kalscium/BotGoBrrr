@@ -4,6 +4,7 @@ const pros = @import("pros");
 const Motor = @import("Motor.zig");
 const def = @import("def.zig");
 const port = @import("port.zig");
+const controller = @import("controller.zig");
 
 /// The percentage of the tower's velocity (0..=1)
 pub const tower_velocity: f64 = 100 / 100;
@@ -37,9 +38,9 @@ pub fn towerMotor(comptime mport: comptime_int) Motor {
 /// 
 /// Updates the port buffer upon motor disconnects.
 pub fn controllerUpdate(port_buffer: *port.PortBuffer) void {
-    if (pros.misc.controller_get_digital(pros.misc.E_CONTROLLER_MASTER, controls.up) == 1)
+    if (controller.get_digital(controls.up))
         spin(tower_velocity, port_buffer)
-    else if (pros.misc.controller_get_digital(pros.misc.E_CONTROLLER_MASTER, controls.down) == 1)
+    else if (controller.get_digital(controls.down))
         spin(-tower_velocity, port_buffer)
     else
         spin(0, port_buffer);

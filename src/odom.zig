@@ -5,6 +5,7 @@ const pros = @import("pros");
 const port = @import("port.zig");
 const def = @import("def.zig");
 const vector = @import("vector.zig");
+const controller = @import("controller.zig");
 
 /// The controller button for recording the current odom coordinate
 pub const record_coord_button = pros.misc.E_CONTROLLER_DIGITAL_A;
@@ -144,7 +145,7 @@ pub const State = struct {
     /// other actions that read the odom state
     pub fn controllerUpdate(self: State, file: ?*std.c.FILE) void {
         // check for the 'record position' button press, print to both file & stdout
-        if (pros.misc.controller_get_digital_new_press(pros.misc.E_CONTROLLER_MASTER, record_coord_button) == 1) {
+        if (controller.get_digital_new_press(record_coord_button)) {
             // super compact and efficient binary files are cool and all but they
             // just aren't worth it for something like this where it'd be written
             // to like 8 times at most instead of EVERY TICK
