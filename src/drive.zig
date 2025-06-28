@@ -44,6 +44,18 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
         const jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
         const jy = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
         ldr, rdr = arcadeDrive(jx, jy);
+    } else if (options.toggle_arcade) {
+        // get the normalized main joystick values
+        var jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
+        var jy = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
+
+        // check for the toggles
+        if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_R1))
+            jy = 0;
+        if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_R2))
+            jx = 0;
+
+        ldr, rdr = arcadeDrive(jx, jy);
     } else if (options.split_arcade) {
         // get the normalized main joystick values
         const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
