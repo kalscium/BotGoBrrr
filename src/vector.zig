@@ -5,7 +5,7 @@ const odom = @import("odom.zig");
 
 /// Finds the magnitude of a vector
 pub inline fn calMag(comptime T: type, vec: @Vector(2, T)) T {
-    return std.math.sqrt(std.math.pow(T, vec[0], 2) + std.math.pow(T, vec[1], 2));
+    return @sqrt(@exp2(vec[0]) + @exp2(vec[1]));
 }
 
 /// Convert a direction (in radians) and magnitude to a xy vector
@@ -14,6 +14,11 @@ pub fn polarToCartesian(mag: f64, dir: f64) odom.Coord {
         @sin(dir) * mag,
         @cos(dir) * mag,
     };
+}
+
+/// Finds the dotproduct of two vectors
+pub inline fn dotproduct(comptime T: type, a: @Vector(2, T), b: @Vector(2, T)) T {
+    return a[0] * b[0] + a[1] * b[1];
 }
 
 test polarToCartesian {

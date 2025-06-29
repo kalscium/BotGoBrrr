@@ -13,6 +13,7 @@ pub const logging = @import("logging.zig");
 pub const tower = @import("tower.zig");
 pub const controller = @import("controller.zig");
 pub const tuner = @import("tuner.zig");
+pub const major_minor = @import("major_minor.zig");
 
 // prevent lazy loading
 // so that the files are actually included in the outputted binary
@@ -29,6 +30,7 @@ comptime {
     _ = logging;
     _ = controller;
     _ = tuner;
+    _ = major_minor;
 }
 
 /// Calls either the zig opcontrol, or the arm asm opcontrol
