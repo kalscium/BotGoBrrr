@@ -6,8 +6,8 @@ const def = @import("def.zig");
 const port = @import("port.zig");
 const controller = @import("controller.zig");
 
-/// The percentage of the tower's velocity (0..=1)
-pub const tower_velocity: f64 = 100 / 100;
+/// The voltage supplied to the tower
+pub const tower_voltage: i32 = 12000;
 
 /// The motor configs
 pub const motors = struct {
@@ -44,11 +44,11 @@ pub fn towerMotor(comptime mport: comptime_int) Motor {
 pub fn controllerUpdate(port_buffer: *port.PortBuffer) void {
     if (controller.get_digital(controls.up)) {
         if (controller.get_digital(controls.down)) // if both are hit at the same time, score middle
-            spinScoreMiddle(tower_velocity, port_buffer)
+            spinScoreMiddle(tower_voltage, port_buffer)
         else
-            spinScoreHigh(tower_velocity, port_buffer);
+            spinScoreHigh(tower_voltage, port_buffer);
     } else if (controller.get_digital(controls.down))
-        spinScoreHigh(-tower_velocity, port_buffer)
+        spinScoreHigh(-tower_voltage, port_buffer)
     else
         spin(0, port_buffer);
 }
@@ -61,26 +61,26 @@ pub fn init() void {
     motors.d.init();
 }
 
-/// Spins the tower so that it scores the high-goal at an input velocity of `-1..=1`, reporting disconnects to the port buffer
-pub fn spinScoreHigh(velocity: f64, port_buffer: *port.PortBuffer) void {
-    motors.a.setVelocity(velocity, port_buffer);
-    motors.b.setVelocity(-velocity, port_buffer);
-    motors.c.setVelocity(-velocity, port_buffer);
-    motors.d.setVelocity(-velocity, port_buffer);
+/// Spins the tower so that it scores the high-goal at an input voltage of `-12000..=12000`, reporting disconnects to the port buffer
+pub fn spinScoreHigh(voltage: i32, port_buffer: *port.PortBuffer) void {
+    motors.a.setVoltage(voltage, port_buffer);
+    motors.b.setVoltage(-voltage, port_buffer);
+    motors.c.setVoltage(-voltage, port_buffer);
+    motors.d.setVoltage(-voltage, port_buffer);
 }
 
-/// Spins the tower so that it scores the middle-goal at an input velocity of `-1..=1`, reporting disconnects to the port buffer
-pub fn spinScoreMiddle(velocity: f64, port_buffer: *port.PortBuffer) void {
-    motors.a.setVelocity(0, port_buffer);
-    motors.b.setVelocity(velocity, port_buffer);
-    motors.c.setVelocity(-velocity, port_buffer);
-    motors.d.setVelocity(0, port_buffer);
+/// Spins the tower so that it scores the middle-goal at an input voltage of `-12000..=12000`, reporting disconnects to the port buffer
+pub fn spinScoreMiddle(voltage: i32, port_buffer: *port.PortBuffer) void {
+    motors.a.setVoltage(0, port_buffer);
+    motors.b.setVoltage(voltage, port_buffer);
+    motors.c.setVoltage(-voltage, port_buffer);
+    motors.d.setVoltage(0, port_buffer);
 }
 
-/// Spins all the motors of the tower based on an input velocity `(-1..=1)`, reporting disconnects to the port buffer
-pub fn spin(velocity: f64, port_buffer: *port.PortBuffer) void {
-    motors.a.setVelocity(velocity, port_buffer);
-    motors.b.setVelocity(velocity, port_buffer);
-    motors.c.setVelocity(velocity, port_buffer);
-    motors.d.setVelocity(velocity, port_buffer);
+/// Spins all the motors of the tower based on an input voltage `(-12000..=12000)`, reporting disconnects to the port buffer
+pub fn spin(voltage: i32, port_buffer: *port.PortBuffer) void {
+    motors.a.setVoltage(voltage, port_buffer);
+    motors.b.setVoltage(voltage, port_buffer);
+    motors.c.setVoltage(voltage, port_buffer);
+    motors.d.setVoltage(voltage, port_buffer);
 }

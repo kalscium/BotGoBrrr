@@ -59,12 +59,26 @@ pub fn coords(file: ?*std.c.FILE, state: odom.State) void {
 }
 
 /// The CSV header for the velocity log
-pub const csv_header_velocity = "time (ms),movement (mm/s),rotation (*/s)\n";
+pub const csv_header_velocity = "time (ms),movement (mm/s),rotation (*/s),tower motor a (rpm),tower motor b (rpm),tower motor c (rpm),tower motor d (rpm)\n";
 
 /// Checks and logs the movement velocity and rotational velocity of the robot
 pub fn velocity(file: ?*std.c.FILE, state: odom.State) void {
     const f = file orelse return;
-    _ = pros.fprintf(f, "%d,%lf,%lf\n", state.prev_time, state.mov_vel, state.rot_vel);
+
+    var tower_a_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.a.port));
+    if (tower_a_vel == def.pros_err_f64) // in case it fails
+        tower_a_vel = 0;
+    var tower_b_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.b.port));
+    if (tower_b_vel == def.pros_err_f64) // in case it fails
+        tower_b_vel = 0;
+    var tower_c_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.c.port));
+    if (tower_c_vel == def.pros_err_f64) // in case it fails
+        tower_c_vel = 0;
+    var tower_d_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.d.port));
+    if (tower_d_vel == def.pros_err_f64) // in case it fails
+        tower_d_vel = 0;
+
+    _ = pros.fprintf(f, "%d,%lf,%lf,%lf,%lf,%lf,%lf\n", state.prev_time, state.mov_vel, std.math.radiansToDegrees(state.rot_vel), tower_a_vel, tower_b_vel, tower_c_vel, tower_d_vel);
 }
 
 /// The CSV header for the drive motor temperature log
