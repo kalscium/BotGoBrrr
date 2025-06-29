@@ -26,7 +26,7 @@ pub const drivetrain_motors = struct {
     pub const l3 = drivetrainMotor(9);
     pub const r1 = drivetrainMotor(1);
     pub const r2 = drivetrainMotor(10);
-    pub const r3 = drivetrainMotor(-16);
+    pub const r3 = drivetrainMotor(-5);
 };
 
 /// Daniel's Magic Number for nice, smooth and exponential controls
