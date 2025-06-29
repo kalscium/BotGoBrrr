@@ -158,9 +158,9 @@ pub const State = struct {
             // super compact and efficient binary files are cool and all but they
             // just aren't worth it for something like this where it'd be written
             // to like 8 times at most instead of EVERY TICK
-            _ = pros.printf("Recorded Coord at: .{ %f, %f }\n", self.coord[0], self.coord[1]);
+            _ = pros.printf("Recorded Coord at: .{ %lf, %lf }\nCurrent Yaw: %lf\n", self.coord[0], self.coord[1], self.prev_yaw);
             if (file) |f|
-                _ = pros.fprintf(f, "Recorded Coord at: .{ %f, %f }\n", self.coord[0], self.coord[1]);
+                _ = pros.fprintf(f, "Recorded Coord at: .{ %lf, %lf }\nCurrent Yaw: %lf\n", self.coord[0], self.coord[1], self.prev_yaw);
         }
     }
 };

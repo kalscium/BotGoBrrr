@@ -16,7 +16,9 @@ pub const tick_delay = 10;
 const port_buffer_path = "/usd/auton_port_buffers.bin";
 
 /// The 'precision' (in mm) that the robot must achieve before moving onto the next path coordinate
-const precision: f64 = 0;
+pub const precision_mm: f64 = 5;
+/// The 'precision' (in radians) that the robot must achieve before moving onto the next path coordinate
+pub const precision_rad: f64 = std.math.degreesToRadians(1);
 
 /// The *tuned* movement (Y) PID controller
 pub const mov_pid_param = pid.Param {

@@ -73,7 +73,7 @@ pub fn tuneMovPID() void {
 
 /// Tune a yaw PID by graphing a step response
 pub fn tuneYawPID() void {
-    // we'll ignore the x value, as this is only tuning the movement (Y) PID
+    // we'll ignore the y value, as this is only tuning the movement (X) PID
 
     // how long to wait before the step (in ms)
     const grace_period = 200;

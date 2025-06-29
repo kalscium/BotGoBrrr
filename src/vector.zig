@@ -17,7 +17,7 @@ pub fn polarToCartesian(mag: f64, dir: f64) odom.Coord {
 }
 
 /// Finds the dotproduct of two vectors
-pub inline fn dotproduct(comptime T: type, a: @Vector(2, T), b: @Vector(2, T)) T {
+pub inline fn dotProduct(comptime T: type, a: @Vector(2, T), b: @Vector(2, T)) T {
     return a[0] * b[0] + a[1] * b[1];
 }
 

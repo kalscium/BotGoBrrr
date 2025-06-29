@@ -2,6 +2,14 @@
 
 const math = @import("std").math;
 
+const pros = @import("pros");
+
+const auton = @import("autonomous.zig");
+const odom = @import("odom.zig");
+const port = @import("port.zig");
+const vector = @import("vector.zig");
+const drive = @import("drive.zig");
+
 /// The parameters of a PID
 pub const Param = struct {
     kp: f64,
@@ -48,3 +56,65 @@ pub const State = struct {
         return math.clamp(output, -params.saturation, params.saturation);
     }
 };
+
+/// State-machine for moving towards a movement goal until a precision threshold is met (auton) with a PID
+pub fn move(desired_coord: odom.Coord, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    // state machine state
+    var now = pros.rtos.millis();
+    var pid = State{};
+    while (true) {
+        // update odom
+        odom_state.update(port_buffer);
+
+        // get the yaw
+        const yaw = odom.getYaw(port_buffer);
+
+        // get the current reachable distance (through dotproduct)
+        const displacement = desired_coord - odom.coord;
+        const distance = vector.dotProduct(f64, displacement, vector.polarToCartesian(1, yaw));
+
+        // if it's within precision, break
+        if (distance < auton.precision_mm)
+            break;
+
+        // get controls from pid
+        const y = pid.update(auton.mov_pid_param, distance, auton.tick_delay);
+
+        // drive it
+        drive.driveLeft(y, port_buffer);
+        drive.driveRight(y, port_buffer);
+
+        // wait for the next cycle
+        pros.rtos.task_delay_until(&now, auton.tick_delay);
+    }
+}
+
+/// State-machine for rotating towards a yaw goal until a precision threshold is met (auton) with a PID
+pub fn rotate(desired_yaw: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    // state machine state
+    var now = pros.rtos.millis();
+    var pid = State{};
+    while (true) {
+        // update odom
+        odom_state.update(port_buffer);
+
+        // get the yaw and current angle error
+        const yaw = odom.getYaw(port_buffer);
+        const err = odom.minimalAngleDiff(yaw, desired_yaw);
+
+        // if it's within precision, break
+        if (err < auton.precision_rad)
+            break;
+
+        // get controls from pid
+        const x = pid.update(auton.yaw_pid_param, yaw, auton.tick_delay);
+
+        // drive it
+        const ldr, const rdr = drive.arcadeDrive(x, 0);
+        drive.driveLeft(ldr, port_buffer);
+        drive.driveRight(rdr, port_buffer);
+
+        // wait for the next cycle
+        pros.rtos.task_delay_until(&now, auton.tick_delay);
+    }
+}

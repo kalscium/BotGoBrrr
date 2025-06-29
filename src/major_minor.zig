@@ -40,6 +40,11 @@ pub const integrals = struct{
     pub const yaw = 0;
 };
 
+test "no lazy" {
+    move(undefined, undefined, undefined, undefined, undefined);
+    rotate(undefined, undefined, undefined, undefined, undefined);
+}
+
 /// Does a major movement whilst correcting for a minor yaw error
 pub fn move(desired_coord: odom.Coord, desired_yaw: f64, reverse: bool, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
     // state machine state
@@ -53,7 +58,8 @@ pub fn move(desired_coord: odom.Coord, desired_yaw: f64, reverse: bool, odom_sta
         const yaw = odom.getYaw(port_buffer);
 
         // calculate coasting distance
-        const distance = vector.dotproduct(f64, desired_coord, vector.polarToCartesian(1, yaw));
+        const displacement = desired_coord - odom_state.coord;
+        const distance = vector.dotProduct(f64, displacement, vector.polarToCartesian(1, yaw));
         // calculate coast distance `s = (v^2 - u^2)/(2a)`
         const coast_displacement = -@exp2(odom_state.mov_vel) / (2 * coast_rate.mov);
         const coasting_distance = distance - coast_displacement;
@@ -103,7 +109,8 @@ pub fn rotate(desired_yaw: f64, desired_coord: odom.Coord, reverse: bool, odom_s
         const coasting_distance = odom.minimalAngleDiff(coast_displacement, distance);
 
         // calculate movement error
-        const mov_err = vector.dotproduct(f64, desired_coord, vector.polarToCartesian(1, yaw));
+        const displacement = desired_coord - odom_state.coord;
+        const mov_err = vector.dotProduct(f64, displacement, vector.polarToCartesian(1, yaw));
         // calculate the integral (with anti-windup)
         if (@abs(integral * integrals.mov) <= 1)
             integral += mov_err * auton.tick_delay;
