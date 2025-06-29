@@ -16,13 +16,43 @@ const wheel_radius = 34.925;
 /// The starting coordinate of the robot
 pub const start_coord = Coord{ 0, 0 };
 
-/// The port of the odometry rotation sensor
-const rotation_port = 6;
+/// The port of the vertical odometry rotation sensor
+const rotation_port_vertical = 6;
+/// The port of the lateral odometry rotation sensor
+const rotation_port_lateral = 12;
+/// The offset from the midde (in mm), along the vertical axis of the lateral rotation sensor
+const rot_lateral_offset = -1;
 /// The port of the IMU sensor
 const imu_port = 7;
 
 /// A single coordinate/vector
 pub const Coord = @Vector(2, f64);
+
+/// Undoes a lateral sensor offset in the perpendicular (Y) axis.
+/// 
+/// Takes in the delta distance (in mm), delta yaw (in radians) and
+/// also the y offset (in mm) and returns the new corrected delta distance
+pub inline fn undoLatOffset(delta_distance: f64, delta_yaw: f64, offset: f64) f64 {
+    //   Δyaw(Δdistance/Δyaw + offset)
+    // = Δdistance + offsetΔyaw
+    // 
+    // as the radian is just a step around a unit circle,
+    // and a the angle times the radius is the segment of the circumference
+    // that angle makes up.
+    // 
+    // first, find the radius of the arc (ICR), then add the offset to it,
+    // and find the new arc from the new radius.
+
+    return delta_distance + delta_yaw * offset;
+}
+
+test undoLatOffset {
+    const offset = -20;
+    const delta_yaw = std.math.degreesToRadians(10);
+    const delta_distance = 16 - offset * delta_yaw;
+    const true_distance = undoLatOffset(delta_distance, delta_yaw, offset);
+    std.debug.assert(true_distance == 16);
+}
 
 /// Finds the minimal possible difference in angle between two angles (radians)
 pub fn minimalAngleDiff(x: f64, y: f64) f64 {
@@ -61,7 +91,7 @@ pub fn odomMagnitude(angle: f64) f64 {
 }
 
 /// Gets the yaw value of an IMU sensor in radians, reports any disconnects
-pub fn getYaw(port_buffer: *port.PortBuffer) f64 {
+pub fn getYaw(port_buffer: *port.PortBuffer) ?f64 {
     const result = pros.imu.imu_get_yaw(imu_port);
 
     // check for errors
@@ -69,14 +99,14 @@ pub fn getYaw(port_buffer: *port.PortBuffer) f64 {
         if (pros.__errno().* == def.pros_error_code.enodev) {
             port_buffer.portWrite(imu_port, false);
         }
-        return 0;
+        return null;
     }
 
     return std.math.degreesToRadians(@as(f64, @floatCast(result)));
 }
 
 /// Gets the rotation value of a rotation sensor, reports any disconnects
-pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) f64 {
+pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) ?f64 {
     const result = pros.rotation.rotation_get_angle(rport);
 
     // check for errors
@@ -84,7 +114,7 @@ pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) f64 {
         if (pros.__errno().* == def.pros_error_code.enodev) {
             port_buffer.portWrite(rport, false);
         }
-        return 0;
+        return null;
     }
 
     return std.math.degreesToRadians(@as(f64, @floatFromInt(result)) / 100.0);
@@ -99,26 +129,32 @@ pub fn programInit() void {
 
 /// Odometry state variables
 pub const State = struct {
-    /// The previous rotation sensor reading
-    prev_rotation: f64,
+    /// The previous vertical rotation sensor reading
+    prev_ver_rotation: f64,
+    /// The previous lateral rotation sensor reading
+    prev_lat_rotation: f64,
     /// The previous imu sensor reading (for yaw)
     prev_yaw: f64,
     /// The previous time in ms
     prev_time: u32,
     /// The robot's current coordinate
     coord: Coord,
-    /// The robot's current movement velocity
-    mov_vel: f64,
+    /// The robot's current vertical movement velocity
+    mov_ver_vel: f64,
+    /// The robot's current lateral movement velocity
+    mov_lat_vel: f64,
     /// The robot's current rotational velocity
     rot_vel: f64,
 
     /// Initializes the odometry state variables
     pub fn init(port_buffer: *port.PortBuffer) State {
         return .{
-            .prev_rotation = getRotation(rotation_port, port_buffer),
-            .prev_yaw = getYaw(port_buffer),
+            .prev_ver_rotation = getRotation(rotation_port_vertical, port_buffer) orelse 0,
+            .prev_lat_rotation = getRotation(rotation_port_lateral, port_buffer) orelse 0,
+            .prev_yaw = getYaw(port_buffer) orelse 0,
             .prev_time = pros.rtos.millis(),
-            .mov_vel = 0,
+            .mov_ver_vel = 0,
+            .mov_lat_vel = 0,
             .rot_vel = 0,
             .coord = start_coord,
         };
@@ -128,24 +164,34 @@ pub const State = struct {
     /// sensor values (right and left)
     pub fn update(state: *State, port_buffer: *port.PortBuffer) void {
         // get the current sensor readings/values
-        const yaw = getYaw(port_buffer);
-        const rotation = getRotation(rotation_port, port_buffer);
+        const yaw = getYaw(port_buffer) orelse 0;
+        const ver_rotation = getRotation(rotation_port_vertical, port_buffer) orelse 0;
+        const lat_rotation = getRotation(rotation_port_lateral, port_buffer);
         const now = pros.rtos.millis();
 
-        // calculate the distance travelled for the rotation sensor
-        const distance = odomMagnitude(minimalAngleDiff(state.prev_rotation, rotation));
+        // calculate the distance travelled for the rotation sensors
+        const ver_distance = odomMagnitude(minimalAngleDiff(state.prev_ver_rotation, ver_rotation));
+        const lat_distance = if (lat_rotation) |rotation| distance: {
+            const raw_distance = odomMagnitude(minimalAngleDiff(state.prev_lat_rotation, rotation));
+            const true_distance = undoLatOffset(raw_distance, yaw - state.prev_yaw, rot_lateral_offset);
+            break :distance true_distance;
+        } else 0; // so calculations are correct
 
         // update the current coordinate with the distance moved
-        const moved = vector.polarToCartesian(distance, yaw);
-        state.coord += moved;
+        const moved_ver = vector.polarToCartesian(ver_distance, yaw);
+        const moved_lat = vector.polarToCartesian(lat_distance, yaw + comptime std.math.degreesToRadians(90)); // perpendicular
+        state.coord += moved_ver;
+        state.coord += moved_lat;
 
         // calculate the velocities
         const dt: f64 = @floatFromInt(now - state.prev_time);
-        state.mov_vel = distance / dt;
+        state.mov_ver_vel = ver_distance / dt;
+        state.mov_lat_vel = lat_distance / dt;
         state.rot_vel = (yaw - state.prev_yaw) / dt;
 
         // update the previous values
-        state.prev_rotation = rotation;
+        state.prev_ver_rotation = ver_rotation;
+        state.prev_lat_rotation = lat_rotation orelse 0;
         state.prev_yaw = yaw;
         state.prev_time = now;
     }

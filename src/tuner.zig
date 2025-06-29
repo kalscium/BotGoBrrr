@@ -93,7 +93,7 @@ pub fn tuneYawPID() void {
 
     while (true) {
         const desired_yaw: f64 = if ((now - start) / grace_period > 0) step else 0;
-        const yaw = odom.getYaw(&port_buffer);
+        const yaw = odom.getYaw(&port_buffer) orelse 0;
 
         // log data
         if (file) |f|

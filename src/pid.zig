@@ -67,7 +67,7 @@ pub fn move(desired_coord: odom.Coord, odom_state: *odom.State, port_buffer: *po
         odom_state.update(port_buffer);
 
         // get the yaw
-        const yaw = odom.getYaw(port_buffer);
+        const yaw = odom.getYaw(port_buffer) orelse 0;
 
         // get the current reachable distance (through dotproduct)
         const displacement = desired_coord - odom.coord;
@@ -99,7 +99,7 @@ pub fn rotate(desired_yaw: f64, odom_state: *odom.State, port_buffer: *port.Port
         odom_state.update(port_buffer);
 
         // get the yaw and current angle error
-        const yaw = odom.getYaw(port_buffer);
+        const yaw = odom.getYaw(port_buffer) orelse 0;
         const err = odom.minimalAngleDiff(yaw, desired_yaw);
 
         // if it's within precision, break

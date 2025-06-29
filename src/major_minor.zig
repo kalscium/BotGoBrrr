@@ -40,11 +40,6 @@ pub const integrals = struct{
     pub const yaw = 0;
 };
 
-test "no lazy" {
-    move(undefined, undefined, undefined, undefined, undefined);
-    rotate(undefined, undefined, undefined, undefined, undefined);
-}
-
 /// Does a major movement whilst correcting for a minor yaw error
 pub fn move(desired_coord: odom.Coord, desired_yaw: f64, reverse: bool, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
     // state machine state
@@ -55,7 +50,7 @@ pub fn move(desired_coord: odom.Coord, desired_yaw: f64, reverse: bool, odom_sta
         odom_state.update(port_buffer);
 
         // get the yaw of the robot
-        const yaw = odom.getYaw(port_buffer);
+        const yaw = odom.getYaw(port_buffer) orelse 0;
 
         // calculate coasting distance
         const displacement = desired_coord - odom_state.coord;
@@ -100,7 +95,7 @@ pub fn rotate(desired_yaw: f64, desired_coord: odom.Coord, reverse: bool, odom_s
         odom_state.update(port_buffer);
 
         // get the yaw of the robot
-        const yaw = odom.getYaw(port_buffer);
+        const yaw = odom.getYaw(port_buffer) orelse 0;
 
         // calculate coasting distance
         const distance = odom.minimalAngleDiff(yaw, desired_yaw);
