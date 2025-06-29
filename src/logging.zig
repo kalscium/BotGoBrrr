@@ -25,9 +25,9 @@ pub const csv_header_bench = "compute time (ms),logging time (ms),total time (ms
 /// Logs the benchmark times
 /// 
 /// note: the logging of the benchmark itself is not included in these calculations
-pub fn benchmark(file: ?*std.c.FILE, compute_time: f64, log_time: f64, total_time: f64) void {
+pub fn benchmark(file: ?*std.c.FILE, compute_time: u32, log_time: u32, total_time: u32) void {
     const f = file orelse return;
-    _ = pros.fprintf(f, "%lf,%lf,%lf\n", compute_time, log_time, total_time);
+    _ = pros.fprintf(f, "%lu,%lu,%lu\n", compute_time, log_time, total_time);
 }
 
 /// The CSV header for the battery percentage (battery & controller)
@@ -68,7 +68,7 @@ pub fn velocity(file: ?*std.c.FILE, state: odom.State) void {
 }
 
 /// The CSV header for the drive motor temperature log
-pub const csv_header_temp = "time (s),battery (*C),tower top(*C),tower bottom(*C),l1 (*C),l2 (*C),l3 (*C),r1 (*C),r2 (*C),r3 (*C)\n";
+pub const csv_header_temp = "time (s),battery (*C),tower a (*C),tower b (*C),tower c (*C),tower d (*C),l1 (*C),l2 (*C),l3 (*C),r1 (*C),r2 (*C),r3 (*C)\n";
 
 /// Checks and logs the temperatures of all the motors and battery alongside the tick
 pub fn temp(ms: u32, file: ?*std.c.FILE) void {
@@ -79,12 +79,19 @@ pub fn temp(ms: u32, file: ?*std.c.FILE) void {
     if (battery_temp == def.pros_err_f64) // in case it fails
         battery_temp = 0;
 
-    var tower_top_temp = pros.motors.motor_get_temperature(tower.motors.top.port);
-    if (tower_top_temp == def.pros_err_f64) // in case it fails
-        tower_top_temp = 0;
-    var tower_bottom_temp = pros.motors.motor_get_temperature(tower.motors.bottom.port);
-    if (tower_bottom_temp == def.pros_err_f64) // in case it fails
-        tower_bottom_temp = 0;
+    var tower_a_temp = pros.motors.motor_get_temperature(tower.motors.a.port);
+    if (tower_a_temp == def.pros_err_f64) // in case it fails
+        tower_a_temp = 0;
+    var tower_b_temp = pros.motors.motor_get_temperature(tower.motors.b.port);
+    if (tower_b_temp == def.pros_err_f64) // in case it fails
+        tower_b_temp = 0;
+    var tower_c_temp = pros.motors.motor_get_temperature(tower.motors.c.port);
+    if (tower_c_temp == def.pros_err_f64) // in case it fails
+        tower_c_temp = 0;
+    var tower_d_temp = pros.motors.motor_get_temperature(tower.motors.d.port);
+    if (tower_d_temp == def.pros_err_f64) // in case it fails
+        tower_d_temp = 0;
+
     var l1_temp = pros.motors.motor_get_temperature(drive.drivetrain_motors.l1.port);
     if (l1_temp == def.pros_err_f64) // in case it fails
         l1_temp = 0;
@@ -108,11 +115,13 @@ pub fn temp(ms: u32, file: ?*std.c.FILE) void {
     // write it to the logfile
     _ = pros.fprintf(
         f,
-        "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+        "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
         time,
         battery_temp,
-        tower_top_temp,
-        tower_bottom_temp,
+        tower_a_temp,
+        tower_b_temp,
+        tower_c_temp,
+        tower_d_temp,
         l1_temp,
         l2_temp,
         l3_temp,

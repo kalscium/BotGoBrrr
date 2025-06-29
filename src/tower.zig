@@ -11,8 +11,12 @@ pub const tower_velocity: f64 = 100 / 100;
 
 /// The motor configs
 pub const motors = struct {
-    pub const top = towerMotor(9);
-    pub const bottom = towerMotor(10);
+    // The A B C motors of the tower are ordered from top to bottom
+    // as they appear on the robot, while D is the motor that's in the back.
+    pub const a = towerMotor(20);
+    pub const b = towerMotor(18);
+    pub const c = towerMotor(17);
+    pub const d = towerMotor(11);
 };
 
 /// The tower controller controls
@@ -38,22 +42,45 @@ pub fn towerMotor(comptime mport: comptime_int) Motor {
 /// 
 /// Updates the port buffer upon motor disconnects.
 pub fn controllerUpdate(port_buffer: *port.PortBuffer) void {
-    if (controller.get_digital(controls.up))
-        spin(tower_velocity, port_buffer)
-    else if (controller.get_digital(controls.down))
-        spin(-tower_velocity, port_buffer)
+    if (controller.get_digital(controls.up)) {
+        if (controller.get_digital(controls.down)) // if both are hit at the same time, score middle
+            spinScoreMiddle(tower_velocity, port_buffer)
+        else
+            spinScoreHigh(tower_velocity, port_buffer);
+    } else if (controller.get_digital(controls.down))
+        spinScoreHigh(-tower_velocity, port_buffer)
     else
         spin(0, port_buffer);
 }
 
 /// Initializes the tower
 pub fn init() void {
-    motors.top.init();
-    motors.bottom.init();
+    motors.a.init();
+    motors.b.init();
+    motors.c.init();
+    motors.d.init();
 }
 
-/// Spins the tower based on an input velocity `(-1..=1)`, reporting disconnects to the port buffer
+/// Spins the tower so that it scores the high-goal at an input velocity of `-1..=1`, reporting disconnects to the port buffer
+pub fn spinScoreHigh(velocity: f64, port_buffer: *port.PortBuffer) void {
+    motors.a.setVelocity(velocity, port_buffer);
+    motors.b.setVelocity(-velocity, port_buffer);
+    motors.c.setVelocity(-velocity, port_buffer);
+    motors.d.setVelocity(-velocity, port_buffer);
+}
+
+/// Spins the tower so that it scores the middle-goal at an input velocity of `-1..=1`, reporting disconnects to the port buffer
+pub fn spinScoreMiddle(velocity: f64, port_buffer: *port.PortBuffer) void {
+    motors.a.setVelocity(0, port_buffer);
+    motors.b.setVelocity(velocity, port_buffer);
+    motors.c.setVelocity(-velocity, port_buffer);
+    motors.d.setVelocity(0, port_buffer);
+}
+
+/// Spins all the motors of the tower based on an input velocity `(-1..=1)`, reporting disconnects to the port buffer
 pub fn spin(velocity: f64, port_buffer: *port.PortBuffer) void {
-    motors.top.setVelocity(velocity, port_buffer);
-    motors.bottom.setVelocity(velocity, port_buffer);
+    motors.a.setVelocity(velocity, port_buffer);
+    motors.b.setVelocity(velocity, port_buffer);
+    motors.c.setVelocity(velocity, port_buffer);
+    motors.d.setVelocity(velocity, port_buffer);
 }

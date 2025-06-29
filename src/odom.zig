@@ -17,9 +17,9 @@ const wheel_radius = 34.925;
 pub const start_coord = Coord{ 0, 0 };
 
 /// The port of the odometry rotation sensor
-const rotation_port = 12;
+const rotation_port = 6;
 /// The port of the IMU sensor
-const imu_port = 12;
+const imu_port = 7;
 
 /// A single coordinate/vector
 pub const Coord = @Vector(2, f64);

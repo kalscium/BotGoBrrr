@@ -11,6 +11,24 @@ const controller = @import("controller.zig");
 /// Driving in reverse toggle button
 pub const reverse_toggle: c_int = pros.misc.E_CONTROLLER_DIGITAL_X;
 
+/// Drivetrain motor configs
+pub const drivetrain_motors = struct {
+    // The order for drivetrain motors is as follows,
+    // l0 are the motors of the left side of the drivetrain.
+    // r0 are the motors of the right side of the drivetrain.
+    // x1 are the front motors of the drivetrain
+    // x2 are the back motors of the drivetrain
+    // x3 are the top motors of the drivetrain
+    // 
+    // Also, the tower is at the **FRONT** of the robot
+    pub const l1 = drivetrainMotor(-14);
+    pub const l2 = drivetrainMotor(-8);
+    pub const l3 = drivetrainMotor(9);
+    pub const r1 = drivetrainMotor(1);
+    pub const r2 = drivetrainMotor(10);
+    pub const r3 = drivetrainMotor(-16);
+};
+
 /// Daniel's Magic Number for nice, smooth and exponential controls
 /// 
 /// *`a` is Daniel's Magic Number*
@@ -39,12 +57,12 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
     var ldr: f64 = 0;
     var rdr: f64 = 0;
 
-    if (options.arcade) {
+    if (comptime options.arcade) {
         // get the normalized main joystick values
         const jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
         const jy = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
         ldr, rdr = userArcadeDrive(jx, jy);
-    } else if (options.toggle_arcade) {
+    } else if (comptime options.toggle_arcade) {
         // get the normalized main joystick values
         var jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
         var jy = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
@@ -56,7 +74,7 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
             jx = 0;
 
         ldr, rdr = userArcadeDrive(jx, jy);
-    } else if (options.split_arcade) {
+    } else if (comptime options.split_arcade) {
         // get the normalized main joystick values
         const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
         const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
@@ -102,16 +120,6 @@ pub fn drivetrainMotor(comptime mport: comptime_int) Motor {
         .encoder_units = pros.motors.E_MOTOR_ENCODER_DEGREES,
     };
 }
-
-/// Drivetrain motor configs
-pub const drivetrain_motors = struct {
-    pub const l1 = drivetrainMotor(12);
-    pub const l2 = drivetrainMotor(-12);
-    pub const l3 = drivetrainMotor(12);
-    pub const r1 = drivetrainMotor(-12);
-    pub const r2 = drivetrainMotor(12);
-    pub const r3 = drivetrainMotor(-12);
-};
 
 // Initializes the drivetrain (MUST BE RUN AT PROGRAM INIT)
 pub fn init() void {

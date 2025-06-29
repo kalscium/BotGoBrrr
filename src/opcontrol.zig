@@ -21,8 +21,8 @@ const port_buffer_path = "/usd/opctrl_port_buffers.bin";
 /// The path to the recorded coords file
 const recrded_coords_path = "/usd/recrded_coords.txt";
 
-/// The path to the CSV drive motor temperatures
-const drive_temp_path = "/usd/opctrl_drive_temp.csv";
+/// The path to the CSV temperatures
+const drive_temp_path = "/usd/opctrl_temps.csv";
 
 /// The path to the CSV coordinates of the robot (path taken)
 const coords_path = "/usd/opctrl_coords.csv";
