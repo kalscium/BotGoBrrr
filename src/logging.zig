@@ -55,19 +55,16 @@ pub const csv_header_coords = "time (ms), x (mm),y (mm)\n";
 /// Checks and logs the coordinates of the robot from the odom state
 pub fn coords(file: ?*std.c.FILE, state: odom.State) void {
     const f = file orelse return;
-    _ = pros.fprintf(f, "%d,%lf,%lf\n", state.prev_time, state.coord[0], state.coord[1]);
+    _ = pros.fprintf(f, "%lu,%lf,%lf\n", state.prev_time, state.coord[0], state.coord[1]);
 }
 
 /// The CSV header for the velocity log
-pub const csv_header_velocity = "time (ms),vertical movement (mm/s),lateral movement (mm/s),rotation (*/s),tower motor a (rpm),tower motor b (rpm),tower motor c (rpm),tower motor d (rpm)\n";
+pub const csv_header_velocity = "time (ms),vertical movement (mm/s),lateral movement (mm/s),rotation (*/s),tower motor b (rpm),tower motor c (rpm),tower motor d (rpm)\n";
 
 /// Checks and logs the movement velocity and rotational velocity of the robot
 pub fn velocity(file: ?*std.c.FILE, state: odom.State) void {
     const f = file orelse return;
 
-    var tower_a_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.a.port));
-    if (tower_a_vel == def.pros_err_f64) // in case it fails
-        tower_a_vel = 0;
     var tower_b_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.b.port));
     if (tower_b_vel == def.pros_err_f64) // in case it fails
         tower_b_vel = 0;
@@ -78,11 +75,11 @@ pub fn velocity(file: ?*std.c.FILE, state: odom.State) void {
     if (tower_d_vel == def.pros_err_f64) // in case it fails
         tower_d_vel = 0;
 
-    _ = pros.fprintf(f, "%d,%lf,%lf,%lf,%lf,%lf,%lf\n", state.prev_time, state.mov_ver_vel, state.mov_lat_vel, std.math.radiansToDegrees(state.rot_vel), tower_a_vel, tower_b_vel, tower_c_vel, tower_d_vel);
+    _ = pros.fprintf(f, "%lu,%lf,%lf,%lf,%lf,%lf,%lf\n", state.prev_time, state.mov_ver_vel, state.mov_lat_vel, std.math.radiansToDegrees(state.rot_vel), tower_b_vel, tower_c_vel, tower_d_vel);
 }
 
 /// The CSV header for the drive motor temperature log
-pub const csv_header_temp = "time (s),battery (*C),tower a (*C),tower b (*C),tower c (*C),tower d (*C),l1 (*C),l2 (*C),l3 (*C),r1 (*C),r2 (*C),r3 (*C)\n";
+pub const csv_header_temp = "time (s),battery (*C),tower b (*C),tower c (*C),tower d (*C),l1 (*C),l2 (*C),l3 (*C),r1 (*C),r2 (*C),r3 (*C)\n";
 
 /// Checks and logs the temperatures of all the motors and battery alongside the tick
 pub fn temp(ms: u32, file: ?*std.c.FILE) void {
@@ -93,9 +90,6 @@ pub fn temp(ms: u32, file: ?*std.c.FILE) void {
     if (battery_temp == def.pros_err_f64) // in case it fails
         battery_temp = 0;
 
-    var tower_a_temp = pros.motors.motor_get_temperature(tower.motors.a.port);
-    if (tower_a_temp == def.pros_err_f64) // in case it fails
-        tower_a_temp = 0;
     var tower_b_temp = pros.motors.motor_get_temperature(tower.motors.b.port);
     if (tower_b_temp == def.pros_err_f64) // in case it fails
         tower_b_temp = 0;
@@ -129,10 +123,9 @@ pub fn temp(ms: u32, file: ?*std.c.FILE) void {
     // write it to the logfile
     _ = pros.fprintf(
         f,
-        "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+        "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
         time,
         battery_temp,
-        tower_a_temp,
         tower_b_temp,
         tower_c_temp,
         tower_d_temp,
