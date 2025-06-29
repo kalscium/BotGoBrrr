@@ -70,7 +70,7 @@ pub fn move(desired_coord: odom.Coord, odom_state: *odom.State, port_buffer: *po
         const yaw = odom.getYaw(port_buffer) orelse 0;
 
         // get the current reachable distance (through dotproduct)
-        const displacement = desired_coord - odom.coord;
+        const displacement = desired_coord - odom_state.coord;
         const distance = vector.dotProduct(f64, displacement, vector.polarToCartesian(1, yaw));
 
         // if it's within precision, break

@@ -56,7 +56,7 @@ pub fn move(desired_coord: odom.Coord, desired_yaw: f64, reverse: bool, odom_sta
         const displacement = desired_coord - odom_state.coord;
         const distance = vector.dotProduct(f64, displacement, vector.polarToCartesian(1, yaw));
         // calculate coast distance `s = (v^2 - u^2)/(2a)`
-        const coast_displacement = -@exp2(odom_state.mov_vel) / (2 * coast_rate.mov);
+        const coast_displacement = -@exp2(odom_state.mov_ver_vel) / (2 * coast_rate.mov);
         const coasting_distance = distance - coast_displacement;
 
         // calculate yaw error
@@ -77,7 +77,7 @@ pub fn move(desired_coord: odom.Coord, desired_yaw: f64, reverse: bool, odom_sta
         drive.driveRight(rdr, port_buffer);
 
         // if the robot has stopped moving and the distance has coasted break
-        if (odom_state.mov_vel == 0 and std.math.signbit(coasting_distance) != reverse) // note: the XOR checks for overshoot
+        if (odom_state.mov_ver_vel == 0 and std.math.signbit(coasting_distance) != reverse) // note: the XOR checks for overshoot
             break;
 
         // wait for next cycle
@@ -86,7 +86,7 @@ pub fn move(desired_coord: odom.Coord, desired_yaw: f64, reverse: bool, odom_sta
 }
 
 /// Does a major movement whilst correcting for a minor yaw error
-pub fn rotate(desired_yaw: f64, desired_coord: odom.Coord, reverse: bool, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+pub fn rotate(desired_yaw: f64, desired_coord: odom.Coord, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
     // state machine state
     var now = pros.rtos.millis();
     var integral: f64 = 0;
@@ -111,9 +111,7 @@ pub fn rotate(desired_yaw: f64, desired_coord: odom.Coord, reverse: bool, odom_s
             integral += mov_err * auton.tick_delay;
 
         // get the x (yaw) & y (movement) values
-        var x: f64 = if (std.math.signbit(coasting_distance) != reverse) 0 else 1; // note: the XOR checks for overshoot
-        if (reverse)
-            x *= -1;
+        const x: f64 = if (std.math.signbit(coasting_distance) != std.math.signbit(coast_displacement)) 0 else 1; // note: the XOR checks for overshoot
         const y: f64 = integral * integrals.yaw;
         const ldr, const rdr = drive.arcadeDrive(std.math.clamp(x, -1, 1), std.math.clamp(y, -1, 1));
         
@@ -122,7 +120,7 @@ pub fn rotate(desired_yaw: f64, desired_coord: odom.Coord, reverse: bool, odom_s
         drive.driveRight(rdr, port_buffer);
 
         // if the robot has stopped rotating and the distance has coasted, break
-        if (odom_state.rot_vel == 0 and std.math.signbit(coasting_distance) != reverse) // note: the XOR checks for overshoot
+        if (odom_state.rot_vel == 0 and std.math.signbit(coasting_distance) != std.math.signbit(coast_displacement)) // note: the XOR checks for overshoot
             break;
 
         // wait for next cycle

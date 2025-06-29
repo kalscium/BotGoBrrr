@@ -9,6 +9,7 @@ const port = @import("port.zig");
 const logging = @import("logging.zig");
 const pid = @import("pid.zig");
 const drive = @import("drive.zig");
+const major_minor = @import("major_minor.zig");
 
 /// the CSV movement pid log file path
 const mov_pid_path = "tuner_mov_pid.csv";
@@ -22,6 +23,10 @@ pub fn entry(comptime tune: []const u8) void {
         tuneMovPID()
     else if (comptime std.mem.eql(u8, tune, "yaw-pid"))
         tuneYawPID()
+    else if (comptime std.mem.eql(u8, tune, "mov-min"))
+        tuneMinorMov()
+    else if (comptime std.mem.eql(u8, tune, "yaw-min"))
+        tuneMinorYaw()
     else @compileError("invalid tuning option");
 }
 
@@ -113,4 +118,32 @@ pub fn tuneYawPID() void {
         // wait till next cycle
         pros.rtos.task_delay_until(&now, auton.tick_delay);
     }
+}
+
+/// Tune a minor yaw integral correction by correcting a 20° error while moving
+/// a single tile
+pub fn tuneMinorYaw() void {
+    // no proper logging as this is all done by eye
+
+    var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF));
+    var odom_state = odom.State.init(&port_buffer);
+
+    // rotate to 20 degrees
+    pid.rotate(std.math.degreesToRadians(20), &odom_state, &port_buffer);
+    // move one field tile whilst correcting the error
+    major_minor.move(.{ 0, 609.6 }, 0, false, &odom_state, &port_buffer);
+}
+
+/// Tune a minor movement integral correction by correcting a 10cm error while
+/// turning 45°
+pub fn tuneMinorMov() void {
+    // no proper logging as this is all done by eye
+
+    var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF));
+    var odom_state = odom.State.init(&port_buffer);
+
+    // move backwards 10cm
+    pid.move(.{ 0, -10 * 10 }, &odom_state, &port_buffer);
+    // rotate 45 degrees whilst correcting the error
+    major_minor.rotate(std.math.degreesToRadians(45), .{ 0, 0 }, &odom_state, &port_buffer);
 }
