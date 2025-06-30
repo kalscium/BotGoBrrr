@@ -11,11 +11,10 @@ pub const tower_voltage: i32 = 12000;
 
 /// The motor configs
 pub const motors = struct {
-    // The B C motors of the tower are ordered from top to bottom
+    // The A B C motors of the tower are ordered from top to bottom
     // as they appear on the robot, while D is the motor that's in the back.
-    // 
-    // No A motor as that's been removed.
-    pub const b = towerMotor(18);
+    pub const a = towerMotor(18);
+    pub const b = towerMotor(16);
     pub const c = towerMotor(17);
     pub const d = towerMotor(11);
 };
@@ -56,6 +55,7 @@ pub fn controllerUpdate(port_buffer: *port.PortBuffer) void {
 
 /// Initializes the tower
 pub fn init() void {
+    motors.a.init();
     motors.b.init();
     motors.c.init();
     motors.d.init();
@@ -63,6 +63,7 @@ pub fn init() void {
 
 /// Spins the tower so that it scores the high-goal at an input voltage of `-12000..=12000`, reporting disconnects to the port buffer
 pub fn spinScoreHigh(voltage: i32, port_buffer: *port.PortBuffer) void {
+    motors.a.setVoltage(-voltage, port_buffer);
     motors.b.setVoltage(-voltage, port_buffer);
     motors.c.setVoltage(-voltage, port_buffer);
     motors.d.setVoltage(-voltage, port_buffer);
@@ -70,6 +71,7 @@ pub fn spinScoreHigh(voltage: i32, port_buffer: *port.PortBuffer) void {
 
 /// Spins the tower so that it scores the middle-goal at an input voltage of `-12000..=12000`, reporting disconnects to the port buffer
 pub fn spinScoreMiddle(voltage: i32, port_buffer: *port.PortBuffer) void {
+    motors.a.setVoltage(voltage, port_buffer);
     motors.b.setVoltage(voltage, port_buffer);
     motors.c.setVoltage(-voltage, port_buffer);
     motors.d.setVoltage(0, port_buffer);
@@ -77,6 +79,7 @@ pub fn spinScoreMiddle(voltage: i32, port_buffer: *port.PortBuffer) void {
 
 /// Spins all the motors of the tower based on an input voltage `(-12000..=12000)`, reporting disconnects to the port buffer
 pub fn spin(voltage: i32, port_buffer: *port.PortBuffer) void {
+    motors.a.setVoltage(voltage, port_buffer);
     motors.b.setVoltage(voltage, port_buffer);
     motors.c.setVoltage(voltage, port_buffer);
     motors.d.setVoltage(voltage, port_buffer);
