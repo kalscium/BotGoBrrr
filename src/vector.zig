@@ -5,7 +5,7 @@ const odom = @import("odom.zig");
 
 /// Finds the magnitude of a vector
 pub inline fn calMag(comptime T: type, vec: @Vector(2, T)) T {
-    return @sqrt(@exp2(vec[0]) + @exp2(vec[1]));
+    return @sqrt(std.math.pow(f64, vec[0], 2) + std.math.pow(f64, vec[1], 2));
 }
 
 /// Convert a direction (in radians) and magnitude to a xy vector

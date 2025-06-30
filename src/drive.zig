@@ -156,8 +156,8 @@ pub fn userArcadeDrive(x: f64, y: f64) struct { f64, f64 } {
     // turning multipliers are applied after DMN, to preserve the full curve
     nx *= turning_multiplier;
 
-    const ldr = std.math.clamp(y + x, -1, 1);
-    const rdr = std.math.clamp(y - x, -1, 1);
+    const ldr = std.math.clamp(ny + nx, -1, 1);
+    const rdr = std.math.clamp(ny - nx, -1, 1);
 
     return .{ ldr, rdr };
 }
