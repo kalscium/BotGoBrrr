@@ -22,9 +22,9 @@ pub const motors = struct {
 /// The tower controller controls
 pub const controls = struct {
     /// The button for spinning the tower up
-    pub const up: c_int = pros.misc.E_CONTROLLER_DIGITAL_L1;
+    pub const up: c_int = pros.misc.E_CONTROLLER_DIGITAL_L2;
     /// The button for spinning the tower up
-    pub const down: c_int = pros.misc.E_CONTROLLER_DIGITAL_L2;
+    pub const down: c_int = pros.misc.E_CONTROLLER_DIGITAL_L1;
 };
 
 /// Tower motor default configs (port is negative for reversed)

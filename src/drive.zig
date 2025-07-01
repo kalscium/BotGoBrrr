@@ -40,11 +40,11 @@ pub const drivetrain_motors = struct {
 /// ```
 pub const DMN = struct {
     pub const a = 1 + @as(comptime_float, 1) / b;
-    pub const b = 0.05;
+    pub const b = 0.275;
 };
 
 /// The multiplier applied to the robot's turning
-pub const turning_multiplier = 0.64;
+pub const turning_multiplier = 0.16;
 
 /// Reads the controller and updates the drivetrain accordingly based upon the
 /// enabled build options
@@ -164,18 +164,6 @@ pub fn userArcadeDrive(x: f64, y: f64) struct { f64, f64 } {
 
 /// Converts -1..=1 x & y values into left & right drive velocities
 pub fn arcadeDrive(x: f64, y: f64) struct { f64, f64 } {
-    var nx = x;
-    var ny = y;
-
-    // applies Daniel's Magic Number if enabled
-    if (comptime options.DMN) {
-        nx = expDaniel(x);
-        ny = expDaniel(y);
-    }
-
-    // turning multipliers are applied after DMN, to preserve the full curve
-    nx *= turning_multiplier;
-
     const ldr = std.math.clamp(y + x, -1, 1);
     const rdr = std.math.clamp(y - x, -1, 1);
 

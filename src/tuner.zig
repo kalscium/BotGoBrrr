@@ -19,6 +19,7 @@ const yaw_pid_path = "tuner_yaw_pid.csv";
 
 /// Tuning entrypoint
 pub fn entry(comptime tune: []const u8) void {
+    pros.rtos.delay(2500);
     if (comptime std.mem.eql(u8, tune, "mov-pid"))
         tuneMovPID()
     else if (comptime std.mem.eql(u8, tune, "yaw-pid"))
