@@ -9,6 +9,7 @@ const pid = @import("pid.zig");
 const port = @import("port.zig");
 const vector = @import("vector.zig");
 const drive = @import("drive.zig");
+const tower = @import("tower.zig");
 
 /// The delay in ms, between each 'cycle' of autonomous (the lower the more precise though less stable)
 pub const tick_delay = 10;
@@ -55,16 +56,18 @@ export fn autonomous() callconv(.C) void {
     var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connected/working initially
     var odom_state = odom.State.init(&port_buffer);
 
-    // last ditch in case I can't get auton working before first comp
-    drive.driveLeft(1, &port_buffer);
-    drive.driveRight(1, &port_buffer);
-
-    // wait a while time
-    wait(200, &odom_state, &port_buffer);
-
-    drive.driveLeft(0, &port_buffer);
-    drive.driveRight(0, &port_buffer);
-
+    pid.rotate(55.44, &odom_state, &port_buffer);
+    tower.spinScoreHigh(12000, &port_buffer);
+    pid.move(.{ 369.8, 537 }, &odom_state, &port_buffer);
+    tower.spinScoreHigh(0, &port_buffer);
+    pid.rotate(135, &odom_state, port_buffer);
+    pid.move(.{ 1011, 0 });
+    pid.rotate(0, &odom_state, port_buffer);
+    pid.move(.{ 1011, 600 });
+    tower.spinScoreHigh(12000, &port_buffer);
+    wait(2000, &odom_state, port_buffer);
+    tower.spinScoreHigh(0, &port_buffer);
+    
     // write the port buffer to the port_buffer file
     if (port_buffer_file) |file|
         _ = pros.fwrite(@ptrCast(&port_buffer), comptime @bitSizeOf(port.PortBuffer)/8, 1, file);
