@@ -29,20 +29,6 @@ pub const drivetrain_motors = struct {
     pub const r3 = drivetrainMotor(-5);
 };
 
-/// Daniel's Magic Number for nice, smooth and exponential controls
-/// 
-/// *`a` is Daniel's Magic Number*
-/// ```
-/// $$
-/// f(x) = ba^x - b
-/// a = 1 + \frac{1}{b}
-/// $$
-/// ```
-pub const DMN = struct {
-    pub const a = 1 + @as(comptime_float, 1) / b;
-    pub const b = 0.275;
-};
-
 /// The multiplier applied to the robot's turning
 pub const turning_multiplier = 0.16;
 
@@ -61,7 +47,7 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
         // get the normalized main joystick values
         const jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
         const jy = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
-        ldr, rdr = userArcadeDrive(jx, jy);
+        ldr, rdr = arcadeDrive(jx * turning_multiplier, jy);
     } else if (comptime options.toggle_arcade) {
         // get the normalized main joystick values
         var jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
@@ -73,12 +59,12 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
         if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_R2))
             jx = 0;
 
-        ldr, rdr = userArcadeDrive(jx, jy);
+        ldr, rdr = arcadeDrive(jx * turning_multiplier, jy);
     } else if (comptime options.split_arcade) {
         // get the normalized main joystick values
         const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
         const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
-        ldr, rdr = userArcadeDrive(j1, j2);
+        ldr, rdr = arcadeDrive(j1 * turning_multiplier, j2);
     } else {
         // get the normalized main joystick values
         const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
@@ -129,37 +115,6 @@ pub fn init() void {
     drivetrain_motors.r1.init();
     drivetrain_motors.r2.init();
     drivetrain_motors.r3.init();
-}
-
-/// Passes a normalized value through daniel's algorithm to produce an exponential voltage
-pub fn expDaniel(x: f64) f64 {
-    return std.math.copysign(DMN.b * std.math.pow(f64, DMN.a, @abs(x)) - DMN.b, x);
-}
-
-test expDaniel {
-    std.debug.assert(expDaniel(1) == 1);
-    std.debug.assert(expDaniel(0) == 0);
-    std.debug.assert(expDaniel(-1) == -1);
-}
-
-/// Converts user joystick x & y values into left & right drive velocities
-pub fn userArcadeDrive(x: f64, y: f64) struct { f64, f64 } {
-    var nx = x;
-    var ny = y;
-
-    // applies Daniel's Magic Number if enabled
-    if (comptime options.DMN) {
-        nx = expDaniel(x);
-        ny = expDaniel(y);
-    }
-
-    // turning multipliers are applied after DMN, to preserve the full curve
-    nx *= turning_multiplier;
-
-    const ldr = std.math.clamp(ny + nx, -1, 1);
-    const rdr = std.math.clamp(ny - nx, -1, 1);
-
-    return .{ ldr, rdr };
 }
 
 /// Converts -1..=1 x & y values into left & right drive velocities
