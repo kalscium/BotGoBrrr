@@ -29,8 +29,11 @@ pub const drivetrain_motors = struct {
     pub const r3 = drivetrainMotor(-5);
 };
 
-/// The multiplier applied to the robot's turning
+/// The multiplier applied to the robot's turning normally
 pub const turning_multiplier = 0.16;
+
+/// The multiplier applied to the robot's forwards movement normally
+pub const movement_multiplier = 0.32;
 
 /// Reads the controller and updates the drivetrain accordingly based upon the
 /// enabled build options
@@ -47,24 +50,14 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
         // get the normalized main joystick values
         const jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
         const jy = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
-        ldr, rdr = arcadeDrive(jx * turning_multiplier, jy);
+        ldr, rdr = arcadeDrive(jx * turning_multiplier, jy * movement_multiplier);
     } else if (comptime options.toggle_arcade) {
-        // get the normalized main joystick values
-        var jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
-        var jy = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
-
-        // check for the toggles
-        if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_R1))
-            jy = 0;
-        if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_R2))
-            jx = 0;
-
-        ldr, rdr = arcadeDrive(jx * turning_multiplier, jy);
+        ldr, rdr = toggleArcade();
     } else if (comptime options.split_arcade) {
         // get the normalized main joystick values
         const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
         const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
-        ldr, rdr = arcadeDrive(j1 * turning_multiplier, j2);
+        ldr, rdr = arcadeDrive(j1 * turning_multiplier, j2 * movement_multiplier);
     } else {
         // get the normalized main joystick values
         const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
@@ -115,6 +108,35 @@ pub fn init() void {
     drivetrain_motors.r1.init();
     drivetrain_motors.r2.init();
     drivetrain_motors.r3.init();
+}
+
+/// Returns the desired left and right drive velocities based on the controller.
+/// For 'Toggle Arcade'
+pub fn toggleArcade() struct { f64, f64 } {
+    // gets the normalized x and y from the left joystick
+    var x = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127.0;
+    var y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
+
+    // apply the rotation and movement multipliers
+    x *= turning_multiplier;
+    y *= movement_multiplier;
+
+    // if R1 is hit, lock to rotation
+    if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_R1)) {
+        y = 0;
+        // turning should be 'slower' when locking to rotation
+        x *= movement_multiplier; // turning slowdown should be proportional to the movement speedup
+    }
+
+    // if R2 is hit, lock to movement
+    if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_R2)) {
+        x = 0;
+        // movement should be 'faster' when locking to movement
+        y /= movement_multiplier; // to undo the movement movement multiplier
+    }
+
+    // rest is just normal arcade drive
+    return arcadeDrive(x, y);
 }
 
 /// Converts -1..=1 x & y values into left & right drive velocities
