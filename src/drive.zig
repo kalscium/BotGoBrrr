@@ -29,11 +29,8 @@ pub const drivetrain_motors = struct {
     pub const r3 = drivetrainMotor(-5);
 };
 
-/// The multiplier applied to the robot's turning normally
-pub const turning_multiplier = 0.16;
-
-/// The multiplier applied to the robot's forwards movement normally
-pub const movement_multiplier = 0.32;
+/// The multiplier applied to the robot's turning & movement speed normally
+pub const speed_multiplier = 0.32;
 
 /// Reads the controller and updates the drivetrain accordingly based upon the
 /// enabled build options
@@ -50,14 +47,14 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
         // get the normalized main joystick values
         const jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
         const jy = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
-        ldr, rdr = arcadeDrive(jx * turning_multiplier, jy * movement_multiplier);
+        ldr, rdr = arcadeDrive(jx * speed_multiplier, jy * speed_multiplier);
     } else if (comptime options.toggle_arcade) {
         ldr, rdr = toggleArcade();
     } else if (comptime options.split_arcade) {
         // get the normalized main joystick values
         const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
         const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
-        ldr, rdr = arcadeDrive(j1 * turning_multiplier, j2 * movement_multiplier);
+        ldr, rdr = arcadeDrive(j1 * speed_multiplier, j2 * speed_multiplier);
     } else {
         // get the normalized main joystick values
         const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
@@ -118,21 +115,21 @@ pub fn toggleArcade() struct { f64, f64 } {
     var y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
 
     // apply the rotation and movement multipliers
-    x *= turning_multiplier;
-    y *= movement_multiplier;
+    x *= speed_multiplier;
+    y *= speed_multiplier;
 
     // if R1 is hit, lock to rotation
     if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_R1)) {
         y = 0;
         // turning should be 'slower' when locking to rotation
-        x *= movement_multiplier; // turning slowdown should be proportional to the movement speedup
+        x *= speed_multiplier; // turning slowdown should be proportional to the movement speedup
     }
 
     // if R2 is hit, lock to movement
     if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_R2)) {
         x = 0;
         // movement should be 'faster' when locking to movement
-        y /= movement_multiplier; // to undo the movement movement multiplier
+        y /= speed_multiplier; // to undo the speed multiplier
     }
 
     // rest is just normal arcade drive
