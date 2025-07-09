@@ -5,11 +5,20 @@ const odom = @import("odom.zig");
 
 /// Finds the magnitude of a vector
 pub inline fn calMag(comptime T: type, vec: @Vector(2, T)) T {
-    return @sqrt(std.math.pow(f64, vec[0], 2) + std.math.pow(f64, vec[1], 2));
+    return @sqrt(vec[0] * vec[0] + vec[1] * vec[1]);
 }
 
-/// Convert a direction (in radians) and magnitude to a xy vector
-pub fn polarToCartesian(mag: f64, dir: f64) odom.Coord {
+/// Finds the left-handed y-based direction of a vector
+pub inline fn calDir(comptime T: type, vec: @Vector(2, T)) T {
+    // get the standard right handed x-based angle
+    const right_x = std.math.atan2(vec[1], vec[0]);
+    // convert it to a y-based angle by subtracting 90 degrees
+    // convert it to a left-handed angle by negating
+    return -(right_x - comptime std.math.degreesToRadians(90));
+}
+
+/// Convert a direction (left-handed y-based in radians) and magnitude to a xy vector
+pub inline fn polarToCartesian(mag: f64, dir: f64) odom.Coord {
     return odom.Coord{
         @sin(dir) * mag,
         @cos(dir) * mag,

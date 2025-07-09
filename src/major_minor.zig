@@ -56,7 +56,7 @@ pub fn move(desired_coord: odom.Coord, desired_yaw: f64, reverse: bool, odom_sta
         const displacement = desired_coord - odom_state.coord;
         const distance = vector.dotProduct(f64, displacement, vector.polarToCartesian(1, yaw));
         // calculate coast distance `s = (v^2 - u^2)/(2a)`
-        const coast_displacement = -std.math.pow(f64, odom_state.mov_ver_vel, 2) / (2 * coast_rate.mov);
+        const coast_displacement = -(odom_state.mov_ver_vel * odom_state.mov_ver_vel) / (2 * coast_rate.mov);
         const coasting_distance = distance - coast_displacement;
 
         // calculate yaw error
@@ -100,7 +100,7 @@ pub fn rotate(desired_yaw: f64, desired_coord: odom.Coord, odom_state: *odom.Sta
         // calculate coasting distance
         const distance = odom.minimalAngleDiff(yaw, desired_yaw);
         // calculate coast distance `s = (v^2 - u^2)/(2a)`
-        const coast_displacement = -std.math.pow(f64, odom_state.rot_vel, 2) / (2 * coast_rate.yaw);
+        const coast_displacement = -(odom_state.rot_vel * odom_state.rot_vel) / (2 * coast_rate.yaw);
         const coasting_distance = odom.minimalAngleDiff(coast_displacement, distance);
 
         // calculate movement error

@@ -139,11 +139,11 @@ pub const State = struct {
     prev_time: u32,
     /// The robot's current coordinate
     coord: Coord,
-    /// The robot's current vertical movement velocity
+    /// The robot's current vertical movement velocity in mm/ms
     mov_ver_vel: f64,
-    /// The robot's current lateral movement velocity
+    /// The robot's current lateral movement velocity in mm/ms
     mov_lat_vel: f64,
-    /// The robot's current rotational velocity
+    /// The robot's current rotational velocity in rad/ms
     rot_vel: f64,
 
     /// Initializes the odometry state variables
@@ -173,7 +173,7 @@ pub const State = struct {
         const ver_distance = odomMagnitude(minimalAngleDiff(state.prev_ver_rotation, ver_rotation));
         const lat_distance = if (lat_rotation) |rotation| distance: {
             const raw_distance = odomMagnitude(minimalAngleDiff(state.prev_lat_rotation, rotation));
-            const true_distance = undoLatOffset(raw_distance, yaw - state.prev_yaw, rot_lateral_offset);
+            const true_distance = undoLatOffset(raw_distance, minimalAngleDiff(state.prev_yaw, yaw), rot_lateral_offset);
             break :distance true_distance;
         } else 0; // so calculations are correct
 
@@ -187,7 +187,7 @@ pub const State = struct {
         const dt: f64 = @floatFromInt(now - state.prev_time);
         state.mov_ver_vel = ver_distance / dt;
         state.mov_lat_vel = lat_distance / dt;
-        state.rot_vel = (yaw - state.prev_yaw) / dt;
+        state.rot_vel = minimalAngleDiff(state.prev_yaw, yaw) / dt;
 
         // update the previous values
         state.prev_ver_rotation = ver_rotation;

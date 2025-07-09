@@ -59,7 +59,7 @@ pub fn coords(file: ?*std.c.FILE, state: odom.State) void {
 }
 
 /// The CSV header for the velocity log
-pub const csv_header_velocity = "time (ms),vertical movement (mm/s),lateral movement (mm/s),rotation (*/s),tower motor a (rpm),tower motor b (rpm),tower motor c (rpm),tower motor d (rpm)\n";
+pub const csv_header_velocity = "time (ms),vertical movement (m/s),lateral movement (m/s),rotation (*/s),tower motor a (rpm),tower motor b (rpm),tower motor c (rpm),tower motor d (rpm)\n";
 
 /// Checks and logs the movement velocity and rotational velocity of the robot
 pub fn velocity(file: ?*std.c.FILE, state: odom.State) void {
