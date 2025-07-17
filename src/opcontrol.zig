@@ -13,7 +13,7 @@ const logging = @import("logging.zig");
 const tower = @import("tower.zig");
 
 /// The delay in ms, between each tick cycle
-const tick_delay = 50;
+const cycle_delay = 50;
 
 /// The path to the opcontrol port buffers file
 const port_buffer_path = "/usd/opctrl_port_buffers.bin";
@@ -52,15 +52,11 @@ pub fn opcontrol() callconv(.C) void {
     const drive_temp_file = pros.fopen(drive_temp_path, "w");
     defer logging.closeFile(drive_temp_file);
     logging.writeHeader(drive_temp_file, logging.csv_header_temp);
-    // amount of times the drive motor temperatures have been logged
-    var logged_drive_temp: u16 = 0;
 
     // open the odom coordinates file
     const coords_file = pros.fopen(coords_path, "w");
     defer logging.closeFile(coords_file);
     logging.writeHeader(coords_file, logging.csv_header_coords);
-    // amount of times the odom coords have been logged
-    var logged_coords: u16 = 0;
 
     // open the odom velocities file
     const velocities_file = pros.fopen(velocities_path, "w");
@@ -71,8 +67,6 @@ pub fn opcontrol() callconv(.C) void {
     const battery_file = pros.fopen(battery_path, "w");
     defer logging.closeFile(battery_file);
     logging.writeHeader(battery_file, logging.csv_header_battery);
-    // the amount of times the battery percentage has been logged
-    var logged_battery: u16 = 0;
 
     // open the benchmark file
     const bench_file = pros.fopen(bench_path, "w");
@@ -84,9 +78,10 @@ pub fn opcontrol() callconv(.C) void {
     var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connected/working initially
     var odom_state = odom.State.init(&port_buffer);
     var drive_reversed = false;
+    var cycles: u32 = 0;
 
     // main loop
-    while (true) {
+    while (true) : (cycles += 1) {
     const compute_start_time = pros.rtos.millis();
 
     // update odom
@@ -101,23 +96,17 @@ pub fn opcontrol() callconv(.C) void {
 
     const logging_start_time = pros.rtos.millis();
 
-    // log the battery every 500ms
-    if (logged_battery < now / 500) {
-        logged_battery += 1;
+    // log the battery every 50 cycles
+    if (cycles / 50 == 0)
         logging.battery(now, battery_file);
-    }
 
-    // log the temperature every 320ms
-    if (logged_drive_temp < now / 320) {
-        logged_drive_temp += 1;
+    // log the temperature every 32 cycles
+    if (cycles / 32 == 0)
         logging.temp(now, drive_temp_file);
-    }
 
-    // log odom coordinates every 160ms
-    if (logged_coords < now / 160) {
-        logged_coords += 1;
+    // log odom coordinates every 16 cycles
+    if (cycles / 16 == 0)
         logging.coords(coords_file, odom_state);
-    }
 
     // log odom velocities every tick
     if (comptime options.log_velocity)
@@ -147,7 +136,7 @@ pub fn opcontrol() callconv(.C) void {
         logging.benchmark(bench_file, logging_start_time - compute_start_time, logging_end_time - logging_start_time, logging_end_time-compute_start_time);
 
     // wait for the next cycle
-    pros.rtos.task_delay_until(&now, tick_delay);
+    pros.rtos.task_delay_until(&now, cycle_delay);
 
     }
 }
