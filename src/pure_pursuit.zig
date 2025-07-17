@@ -139,6 +139,98 @@ test followArc {
     std.debug.assert(ldr == 1 and rdr == 1);
 }
 
+/// Calculates the robot's predicted location & yaw based upon the lookahead
+/// window and also odom state
+pub fn predictCoordYaw(odom_state: odom.State, lookahead_window: f64) struct{ coord: odom.Coord, yaw: f64 } {
+    // calculate the predicted robot location (from velocity & SUVATs)
+    const predicted_yaw = odom_state.prev_yaw + odom_state.rot_vel * lookahead_window;
+    const predicted_coord =
+        odom_state.coord + // current location
+        vector.polarToCartesian(odom_state.mov_ver_vel * lookahead_window, predicted_yaw) + // predicted vertical movement
+        vector.polarToCartesian(odom_state.mov_lat_vel * lookahead_window, predicted_yaw + comptime std.math.degreesToRadians(90)) // predicted lateral movement
+    ;
+
+    return .{ .coord = predicted_coord, .yaw = predicted_yaw };
+}
+
+test predictCoordYaw {
+    // example odom state
+    var state: odom.State = undefined;
+    state.mov_ver_vel = 1;
+    state.mov_lat_vel = 0.5;
+    state.coord = .{ 10, 10 };
+    state.rot_vel = std.math.degreesToRadians(10);
+
+    // predict the new coord
+    const new = predictCoordYaw(state, 3); // 3 ms into the future
+    // std.debug.print("new coord: {d}\nnew_yaw: {d}\n", .{ new.coord, std.math.radiansToDegrees(new.yaw) });
+    std.debug.assert(@reduce(.And, @round(new.coord) == @as(odom.Coord, .{ 13, 12 })));
+    std.debug.assert(@round(std.math.radiansToDegrees(new.yaw)) == 30);
+}
+
+/// Calculates the velocity multiplier (from 0..=1) for pure pursuit
+/// from the robot's coord & yaw, goal positions, and tuned parameters
+pub fn speedController(coord: f64, yaw: f64, goal: odom.Coord, params: Parameters) f64 {
+    // calculate the distance & yaw errors between the coord and goal
+    const rel_goal = goal - coord;
+    const distance_err = vector.calMag(rel_goal); // distance will always be less or equal to the search radius
+    const rel_goal_angle = vector.calDir(f64, rel_goal);
+    const yaw_err = odom.minimalAngleDiff(yaw, rel_goal_angle);
+
+    // calculate the proportional term of the controller
+    const prop = distance_err / params.search_radius * params.kp;
+
+    // calculate the turning speed 'multiplier' (actually a lerp so that the
+    // robot turns at the specified 180 degree turning speed)
+    const turn_t = yaw_err / 180.0;
+    const turning_mul = std.math.lerp(1.0, params.turn_speed_180, turn_t);
+
+    // calculate the final turning speed by multiplying together the multipliers
+    return prop * turning_mul;
+}
+
+/// The tune-able parameters for pure pursuit, all in one place for convenience
+pub const Parameters = struct {
+    /// The most blatant and obvious thing you need to tune in the pure pursuit
+    /// controller, is the search radius
+    /// (aka the lookahead distance (in mm) for the path).
+    ///
+    /// Start off with the distance between the middle and front of the robot,
+    /// then keep either increasing or decreasing so that it does a 90 degree
+    /// turn (ignoring overshoot & speed) with a tight-enough or loose-enough
+    /// turn circle (good balance between accuracy and smoothness).
+    search_radius: f64,
+
+    /// The proportional distance error speed multiplier for the robot (0..=1).
+    /// 
+    /// Or in other words, the speed the robot travels at normally, unless
+    /// stopping or turning.
+    ///
+    /// Tune by getting the robot to drive in a straight line and decrease it
+    /// from 1 until it's a reasonable speed.
+    kp: f64,
+
+    /// The prediction window (in ms) for the robot
+    /// (should be a multiplier of the cycle time)
+    /// 
+    /// How far into the future the robot will predict and act upon.
+    /// 
+    /// Let it be the last thing you tune, and just keep increasing from zero
+    /// until most of the overshoot due to inertia is gone, but not too much as
+    /// to make the robot jitter
+    /// (where it fights itself and goes forwards and backwards really quickly)
+    lookahead_window: f64,
+
+    /// The minimum turning speed multiplier (from 0..=1)
+    /// 
+    /// The speed multiplier that is applied (through a lerp) to the robot when
+    /// it's doing a 180 degree turn.
+    /// 
+    /// Tune by having the robot make a 180 degree turn, and decrease from 1
+    /// until the turn doesn't drift too much (due turning circle too large, NOT inertia).
+    turn_speed_180: f64,
+};
+
 test "robot forwards kinematics simulation" {
     // so far, no physics in this simulation, which also means no PID & curvature
     // speed controller either (no physically accurate stopping lol)
