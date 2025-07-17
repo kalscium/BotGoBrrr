@@ -10,6 +10,7 @@ const port = @import("port.zig");
 const vector = @import("vector.zig");
 const drive = @import("drive.zig");
 const tower = @import("tower.zig");
+const pure_pursuit = @import("pure_pursuit.zig");
 
 /// The delay in ms, between each 'cycle' of autonomous (the lower the more precise though less stable)
 pub const tick_delay = 10;
@@ -47,6 +48,15 @@ pub const yaw_pid_param = pid.Param {
     .kd = 0,
     .saturation = 1,
     .low_pass_a = 0.8,
+};
+
+/// The *tuned* pure pursuit parameters
+pub const pure_pursuit_params = pure_pursuit.Parameters{
+    // tune later
+    .search_radius = 190.5, // set it to half the length of the robot for now
+    .kp = 1.0,
+    .lookahead_window = 20.0,
+    .turn_speed_180 = 1.0,
 };
 
 export fn autonomous() callconv(.C) void {

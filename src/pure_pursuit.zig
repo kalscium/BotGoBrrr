@@ -3,6 +3,10 @@
 const std = @import("std");
 const odom = @import("odom.zig");
 const vector = @import("vector.zig");
+const pros = @import("pros");
+const port = @import("port.zig");
+const auton = @import("autonomous.zig");
+const drive = @import("drive.zig");
 
 /// The width of the robot in mm
 pub const robot_width: comptime_float = 4.0; // placeholder
@@ -11,6 +15,79 @@ pub const robot_width: comptime_float = 4.0; // placeholder
 /// So, this will be automatically removed/lost if added to a value
 /// that isn't 0 (evil bithack)
 const smallest_f64: f64 = 1e-20;
+
+/// A convenience state machine for following a path until the end of a path is
+/// reached and within a precision threshold (auton).
+/// 
+/// Uses the auton cycle speed and other sensor info, auton pure_pursuit
+/// parameters, and odom state to do calculations.
+/// 
+/// Also, runs 'in_reverse' in that it follows the path with the back of the robot.
+pub fn autonFollowPath(path: []const odom.Coord, in_reverse: bool, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    // state machine state
+    var now = pros.rtos.millis();
+    var last_end: usize = 0;
+    while (true) {
+        // update odom
+        odom_state.update(port_buffer);
+
+        // we make a copy of the odom state so the changes made by driving in
+        // reverse don't mess up the actual odom calculations.
+        // 
+        // odom is calculated normally, and then acted upon as if it were in
+        // reverse
+        var odom_copy = odom_state.*;
+        if (in_reverse) {
+            // we need to make the robot think the back is the front
+            // the actual turning velocities and coordinates are unaffected
+            // just the yaw itself must change by subtracting 180 degrees
+            // also, the vertical and lateral velocities and values must be
+            // inverted
+            odom_copy.prev_yaw = odom.minimalAngleDiff(std.math.pi, odom_copy.prev_yaw);
+            odom_copy.mov_ver_vel = -odom_copy.mov_ver_vel;
+            odom_copy.mov_lat_vel = -odom_copy.mov_lat_vel;
+        }
+
+        // if it's within precision, break
+        if (vector.calMag(f64, path[last_end] - odom_copy.coord) < auton.precision_mm)
+            break;
+
+        const params = auton.pure_pursuit_params;
+
+        // calculate the robot's predicted location and base all future calculations off of it
+        const predicted = predictCoordYaw(odom_copy, params.lookahead_window);
+
+        // pick the next path points
+        const path_seg_start = pickPathPoints(predicted.coord, params.search_radius, path, &last_end);
+
+        // interpolate the goal point
+        const goal_point = interpolateGoal(predicted.coord, params.search_radius, path_seg_start, path[last_end]);
+
+        // calculate the left and right drive ratios
+        const ratios = followArc(predicted.coord, goal_point, predicted.yaw);
+
+        // calculate the speed for the robot
+        const speed = speedController(predicted.coord, predicted.yaw, goal_point, params);
+
+        // find the left and right drive velocities from combining the speed and ratios
+        // and then drive the robot at those values
+        var ldr, var rdr = ratios * @as(@Vector(2, f64), @splat(speed));
+
+        // if driving in reverse, then switch the left and right and invert them
+        if (in_reverse) {
+            const ldr_tmp = ldr;
+            ldr = -rdr;
+            rdr = -ldr_tmp;
+        }
+
+        // drive the changes made
+        drive.driveLeft(rdr, port_buffer);
+        drive.driveRight(ldr, port_buffer);
+
+        // wait for the next cycle
+        pros.rtos.task_delay_until(&now, auton.tick_delay);
+    }
+}
 
 /// Picks the end point based on the last end point (index into the
 /// path array), search radius (in mm), robot coordinate and path
@@ -94,7 +171,7 @@ test interpolateGoal {
 /// Sets the drivetrain ratio to drive in an arc that connects the
 /// current coordinate and goal coordinate, whilst keeping a constant
 /// angular velocity (robot yaw as tangent line).
-pub fn followArc(coord: odom.Coord, goal: odom.Coord, yaw: f64) struct{ f64, f64 } {
+pub fn followArc(coord: odom.Coord, goal: odom.Coord, yaw: f64) @Vector(2, f64) {
     // get the goal vector relative to the robot's current coordinate
     const rel_goal = goal - coord;
 
@@ -170,10 +247,10 @@ test predictCoordYaw {
 
 /// Calculates the velocity multiplier (from 0..=1) for pure pursuit
 /// from the robot's coord & yaw, goal positions, and tuned parameters
-pub fn speedController(coord: f64, yaw: f64, goal: odom.Coord, params: Parameters) f64 {
+pub fn speedController(coord: odom.Coord, yaw: f64, goal: odom.Coord, params: Parameters) f64 {
     // calculate the distance & yaw errors between the coord and goal
     const rel_goal = goal - coord;
-    const distance_err = vector.calMag(rel_goal); // distance will always be less or equal to the search radius
+    const distance_err = vector.calMag(f64, rel_goal); // distance will always be less or equal to the search radius
     const rel_goal_angle = vector.calDir(f64, rel_goal);
     const yaw_err = odom.minimalAngleDiff(yaw, rel_goal_angle);
 
@@ -182,7 +259,7 @@ pub fn speedController(coord: f64, yaw: f64, goal: odom.Coord, params: Parameter
 
     // calculate the turning speed 'multiplier' (actually a lerp so that the
     // robot turns at the specified 180 degree turning speed)
-    const turn_t = yaw_err / 180.0;
+    const turn_t = yaw_err / std.math.pi;
     const turning_mul = std.math.lerp(1.0, params.turn_speed_180, turn_t);
 
     // calculate the final turning speed by multiplying together the multipliers
@@ -237,7 +314,13 @@ test "robot forwards kinematics simulation" {
 
     // simulation configs
     const max_cycle = 10000; // simulation force quits after this many iterations (gives up)
-    const search_radius = 20; // the search radius for the robot
+    // the parameters for pure pursuit
+    const params = Parameters{
+        .search_radius = 20,
+        .kp = 1.0,
+        .turn_speed_180 = 0.4,
+        .lookahead_window = 0.0,
+    };
     const path: []const odom.Coord = &.{
         .{ 40, 40 },
         .{ 40, 120 },
@@ -253,7 +336,7 @@ test "robot forwards kinematics simulation" {
     // open output file
     var file = try std.fs.cwd().createFile("pp_forward_kinematic_sim.csv", .{});
     defer file.close();
-    try file.writer().writeAll("yaw,x,y,goal_x,goal_y,true_path_x,true_path_y,ldr,rdr\n");
+    try file.writer().writeAll("yaw,x,y,goal_x,goal_y,true_path_x,true_path_y,ldr,rdr,speed_mul\n");
 
     var now: usize = 0;
     var coord: odom.Coord = .{ 0, 0 };
@@ -261,13 +344,14 @@ test "robot forwards kinematics simulation" {
     var last_end: usize = 0;
     while (now < max_cycle) : (now += 1) {
         // get the ldr & rdr from pure pursuit
-        const path_start = pickPathPoints(coord, search_radius, path, &last_end);
+        const path_start = pickPathPoints(coord, params.search_radius, path, &last_end);
         const path_end = path[last_end];
-        const goal_coord = interpolateGoal(coord, search_radius, path_start, path_end);
+        const goal_coord = interpolateGoal(coord, params.search_radius, path_start, path_end);
+        const speed = speedController(coord, yaw, goal_coord, params);
         const ldr, const rdr = followArc(coord, goal_coord, yaw);
 
         // log the logs
-        try file.writer().print("{d},{d},{d},{d},{d},{d},{d},{d},{d}\n", .{
+        try file.writer().print("{d},{d},{d},{d},{d},{d},{d},{d},{d},{d}\n", .{
             std.math.radiansToDegrees(yaw),
             coord[0],
             coord[1],
@@ -277,6 +361,7 @@ test "robot forwards kinematics simulation" {
             path[@min(path.len-1,now)][1],
             ldr,
             rdr,
+            speed,
         });
 
         // if the goal is reached, break
