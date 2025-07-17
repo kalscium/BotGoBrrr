@@ -78,14 +78,14 @@ pub fn move(desired_coord: odom.Coord, odom_state: *odom.State, port_buffer: *po
             break;
 
         // get controls from pid
-        const y = pid.update(auton.mov_pid_param, distance, auton.tick_delay);
+        const y = pid.update(auton.mov_pid_param, distance, auton.cycle_delay);
 
         // drive it
         drive.driveLeft(y, port_buffer);
         drive.driveRight(y, port_buffer);
 
         // wait for the next cycle
-        pros.rtos.task_delay_until(&now, auton.tick_delay);
+        pros.rtos.task_delay_until(&now, auton.cycle_delay);
     }
 }
 
@@ -107,7 +107,7 @@ pub fn rotate(desired_yaw: f64, odom_state: *odom.State, port_buffer: *port.Port
             break;
 
         // get controls from pid
-        const x = pid.update(auton.yaw_pid_param, yaw, auton.tick_delay);
+        const x = pid.update(auton.yaw_pid_param, yaw, auton.cycle_delay);
 
         // drive it
         const ldr, const rdr = drive.arcadeDrive(x, 0);
@@ -115,6 +115,6 @@ pub fn rotate(desired_yaw: f64, odom_state: *odom.State, port_buffer: *port.Port
         drive.driveRight(rdr, port_buffer);
 
         // wait for the next cycle
-        pros.rtos.task_delay_until(&now, auton.tick_delay);
+        pros.rtos.task_delay_until(&now, auton.cycle_delay);
     }
 }

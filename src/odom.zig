@@ -23,7 +23,7 @@ const rotation_port_lateral = 12;
 /// The offset from the midde (in mm), along the vertical axis of the lateral rotation sensor
 const rot_lateral_offset = -1;
 /// The port of the IMU sensor
-const imu_port = 7;
+pub const imu_port = 7;
 
 /// A single coordinate/vector
 pub const Coord = @Vector(2, f64);

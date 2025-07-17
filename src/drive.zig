@@ -45,20 +45,20 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
 
     if (comptime options.arcade) {
         // get the normalized main joystick values
-        const jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
-        const jy = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
+        const jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127.0;
+        const jy = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
         ldr, rdr = arcadeDrive(jx * speed_multiplier, jy * speed_multiplier);
     } else if (comptime options.toggle_arcade) {
         ldr, rdr = toggleArcade();
     } else if (comptime options.split_arcade) {
         // get the normalized main joystick values
-        const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127;
-        const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
+        const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127.0;
+        const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127.0;
         ldr, rdr = arcadeDrive(j1 * speed_multiplier, j2 * speed_multiplier);
     } else {
         // get the normalized main joystick values
-        const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127;
-        const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127;
+        const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
+        const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127.0;
 
         // just do a simple tank drive
         ldr = j1;

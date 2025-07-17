@@ -13,7 +13,7 @@ const tower = @import("tower.zig");
 const pure_pursuit = @import("pure_pursuit.zig");
 
 /// The delay in ms, between each 'cycle' of autonomous (the lower the more precise though less stable)
-pub const tick_delay = 10;
+pub const cycle_delay = 10;
 
 /// The path to the autonomous port buffers file
 const port_buffer_path = "/usd/auton_port_buffers.bin";
@@ -102,6 +102,6 @@ fn wait(delay_ms: u32, odom_state: *odom.State, port_buffer: *port.PortBuffer) v
     var now = pros.rtos.millis();
     while (now / delay_ms < 1) {
         odom_state.update(port_buffer);
-        pros.rtos.task_delay_until(&now, tick_delay);
+        pros.rtos.task_delay_until(&now, cycle_delay);
     }
 }
