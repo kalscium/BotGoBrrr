@@ -55,6 +55,7 @@ export fn opcontrol() callconv(.C) void {
 
 /// Gets called upon the initialization of the user-program
 export fn initialize() callconv(.C) void {
+    _ = pros.printf("hello, world from the initialization function\n");
     odom.programInit();
     drive.init();
     tower.init();

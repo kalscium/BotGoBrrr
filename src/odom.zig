@@ -17,9 +17,9 @@ const wheel_radius = 34.925;
 pub const start_coord = Coord{ 0, 0 };
 
 /// The port of the vertical odometry rotation sensor
-const rotation_port_vertical = 6;
+pub const rotation_port_vertical = 6;
 /// The port of the lateral odometry rotation sensor
-const rotation_port_lateral = 12;
+pub const rotation_port_lateral = 12;
 /// The offset from the midde (in mm), along the vertical axis of the lateral rotation sensor
 const rot_lateral_offset = -1;
 /// The port of the IMU sensor
@@ -125,6 +125,7 @@ pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) ?f64 {
 /// Necessary initialization code (such as taring/calibrating) required for odom
 pub fn programInit() void {
     _ = pros.imu.imu_reset(imu_port);
+    _ = pros.rotation.rotation_set_reversed(rotation_port_vertical, true); // vertical rotation sensor is physically reversed from the robot's movements, remove this if it's fixed
 }
 
 /// Odometry state variables

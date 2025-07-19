@@ -38,7 +38,7 @@ const bench_path = "/usd/opctrl_bench.csv";
 
 /// Gets called during the driver-control period
 pub fn opcontrol() callconv(.C) void {
-    _ = pros.printf("hello, world from opcontrol!");
+    _ = pros.printf("hello, world from opcontrol!\n");
 
     // open the motor disconnect file
     const port_buffer_file = pros.fopen(port_buffer_path, "wb");

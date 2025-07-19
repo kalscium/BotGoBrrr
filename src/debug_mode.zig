@@ -59,7 +59,7 @@ pub fn entry() void {
     var cycles: u32 = 0;
     var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connnected/working initially
     var odom_state = odom.State.init(&port_buffer);
-    var auton_paused = false; // if the auton is currently paused (not running)
+    var auton_paused = true; // if the auton is currently paused (not running)
 
     // the path point stack, last_end & tuned pure pursuit parameters
     var path_stack = std.BoundedArray(odom.Coord, 32).init(0) catch unreachable; // 32 is a reasonable amount
@@ -67,6 +67,7 @@ pub fn entry() void {
     var params: pure_pursuit.Parameters = auton.pure_pursuit_params;
     var incr_order_of_mag: f64 = 0; // the order of magnitude of the parameter increments
     var tuned_param = TunedParameter.search_radius; // the current auton paramter getting tuned
+    var rumble: enum { none, short, long } = .none; // concurrent queuing for the controller rumble (50ms speed limit)
 
     // main loop
     while (true) : (cycles += 1) {
@@ -86,31 +87,32 @@ pub fn entry() void {
         } else {
             // run auton based upon the path stack
 
-            // if it's within precision, rumble and pause
-            if (vector.calMag(f64, path_stack.slice()[last_end] - odom_state.coord) < auton.precision_mm) {
-                _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, "-");
-                auton_paused = !auton_paused;
-            }
-
             // otherwise calculate pure pursuit and follow it
             // calculate the robot's predicted location and base all future calculations off of it
-            const path_seg_start = pure_pursuit.pickPathPoints(odom_state.coord, params.search_radius, path_stack.slice(), &last_end);
-            const goal_point = pure_pursuit.interpolateGoal(odom_state.coord, params.search_radius, path_seg_start, path_stack.slice()[last_end]);
-            const ratios = pure_pursuit.followArc(odom_state.coord, goal_point, odom_state.prev_yaw);
-            const speed = pure_pursuit.speedController(odom_state.coord, odom_state.prev_yaw, goal_point, params);
+            const predicted = pure_pursuit.predictCoordYaw(odom_state, params.lookahead_window);
+            const path_seg_start = pure_pursuit.pickPathPoints(predicted.coord, params.search_radius, path_stack.slice(), &last_end);
+            const goal_point = pure_pursuit.interpolateGoal(predicted.coord, params.search_radius, path_seg_start, path_stack.slice()[last_end]);
+            const ratios = pure_pursuit.followArc(predicted.coord, goal_point, predicted.yaw);
+            const speed = pure_pursuit.speedController(predicted.coord, predicted.yaw, goal_point, params);
 
             const ldr, const rdr = ratios * @as(@Vector(2, f64), @splat(speed));
             drive.driveLeft(ldr, &port_buffer);
             drive.driveRight(rdr, &port_buffer);
+
+            // if it's within precision, rumble and pause
+            if (vector.calMag(f64, path_stack.slice()[last_end] - odom_state.coord) < auton.precision_mm) {
+                rumble = .long;
+                auton_paused = !auton_paused;
+            }
         }
 
         // if A is hit, push to the stack (checking for overflow)
         if (controller.get_digital_new_press(pros.misc.E_CONTROLLER_DIGITAL_A)) {
             if (path_stack.append(odom_state.coord)) {
-                _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, ".");
+                rumble = .short;
             } else |_| {
                 // long rumble controller on overflow
-                _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, "-");
+                rumble = .long;
             }
         }
 
@@ -118,16 +120,16 @@ pub fn entry() void {
         if (controller.get_digital_new_press(pros.misc.E_CONTROLLER_DIGITAL_B)) {
             if (path_stack.pop() == null) {
                 // long rumble controller on underflow
-                _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, "-");
+                rumble = .long;
             } else {
-                _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, ".");
+                rumble = .short;
             }
         }
 
         // if Y is hit, log then reset all values
         if (controller.get_digital_new_press(pros.misc.E_CONTROLLER_DIGITAL_Y)) {
             // long rumble
-            _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, "-");
+            rumble = .long;
 
             // log the info
             if (log_file) |file| {
@@ -135,8 +137,8 @@ pub fn entry() void {
                 // print the path point stack
                 _ = pros.fprintf(file, "path_point_stack: .{ ");
                 for (path_stack.slice()) |point|
-                    _ = pros.fprintf(file, ".{ %lf, %lf }", point[0], point[1]);
-                _ = pros.fprintf(file, " }\n");
+                    _ = pros.fprintf(file, ".{ %lf, %lf }, ", point[0], point[1]);
+                _ = pros.fprintf(file, "}\n");
 
                 // print the parameters
                 _ = pros.fprintf(file, "pure pursuit parameters:\n");
@@ -157,6 +159,8 @@ pub fn entry() void {
             // reset everything that's not the path or parameters
             odom_state = odom.State.init(&port_buffer);
             _ = pros.imu.imu_tare_yaw(odom.imu_port);
+            _ = pros.rotation.rotation_reset_position(odom.rotation_port_vertical);
+            _ = pros.rotation.rotation_reset_position(odom.rotation_port_lateral);
             last_end = 0;
         }
 
@@ -180,13 +184,13 @@ pub fn entry() void {
             incr_order_of_mag -= 1;
 
         // R2 increments, R1 decrements (by the order of magnitude)
-        if (controller.get_digital_new_press(pros.misc.E_CONTROLLER_DIGITAL_LEFT))
+        if (controller.get_digital_new_press(pros.misc.E_CONTROLLER_DIGITAL_R2))
             tuned_param.set(&params, tuned_param.get(params) + std.math.pow(f64, 10.0, incr_order_of_mag))
-        else if (controller.get_digital_new_press(pros.misc.E_CONTROLLER_DIGITAL_RIGHT))
+        else if (controller.get_digital_new_press(pros.misc.E_CONTROLLER_DIGITAL_R1))
             tuned_param.set(&params, tuned_param.get(params) - std.math.pow(f64, 10.0, incr_order_of_mag));
 
         // display the parameter tuning menu on the controller
-        if (cycles % 15 == 0) { // every 150ms
+        if (cycles % 20 == 0) { // every 150ms
             // reports the current auton parameter getting tuned
             // list goes as follows:
             //   * search_radius
@@ -201,12 +205,19 @@ pub fn entry() void {
                 .turn_speed_180   => "180degturnmul",
             };
             _ = pros.misc.controller_print(pros.misc.E_CONTROLLER_MASTER, 0, 0, ">%s", @as([*:0]const c_char, @ptrCast(label)));
-        } else if (cycles % 15 == 5) {
+        } else if (cycles % 20 == 5) {
             // reports the current order of magnitude of the increments
             _ = pros.misc.controller_print(pros.misc.E_CONTROLLER_MASTER, 1, 0, "10^%lf = %lf", incr_order_of_mag, std.math.pow(f64, 10, incr_order_of_mag));
-        } else if (cycles % 15 == 10) {
+        } else if (cycles % 20 == 10) {
             // reports the current value of the tuned parameter
             _ = pros.misc.controller_print(pros.misc.E_CONTROLLER_MASTER, 2, 0, "$ %lf", tuned_param.get(params));
+        } else if (cycles % 20 == 15) {
+            // rumbles if the controller needs rumbling
+            if (rumble == .short)
+                _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, ".")
+            else if (rumble == .long) 
+                _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, "-");
+            rumble = .none;
         }
 
         // wait for the next cycle

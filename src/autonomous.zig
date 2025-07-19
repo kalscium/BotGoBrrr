@@ -19,7 +19,7 @@ pub const cycle_delay = 10;
 const port_buffer_path = "/usd/auton_port_buffers.bin";
 
 /// The 'precision' (in mm) that the robot must achieve before moving onto the next path coordinate
-pub const precision_mm: f64 = 5;
+pub const precision_mm: f64 = 10; // try 5
 /// The 'precision' (in radians) that the robot must achieve before moving onto the next path coordinate
 pub const precision_rad: f64 = std.math.degreesToRadians(1);
 
@@ -41,9 +41,8 @@ pub const mov_pid_param = pid.Param {
 /// The *tuned* yaw (radians) PID controller
 pub const yaw_pid_param = pid.Param {
     // 1 / max_error
-    .kp = 1.0 / std.math.degreesToRadians(90.0) / 4.0, // arbitrary, before tuning
-    // .ki = (1.0 / std.math.degreesToRadians(90.0) / 4.0) * tick_delay / 2.0,
-    // .kd = (1.0 / std.math.degreesToRadians(90.0) / 4.0) * 5.0 / 2.0,
+    .kp = 1.0 / std.math.degreesToRadians(90.0) / 3.0, // seems to work perfectly
+    // proportional alone is enough, due to us setting velocity instead of voltage
     .ki = 0,
     .kd = 0,
     .saturation = 1,
@@ -52,15 +51,14 @@ pub const yaw_pid_param = pid.Param {
 
 /// The *tuned* pure pursuit parameters
 pub const pure_pursuit_params = pure_pursuit.Parameters{
-    // tune later
-    .search_radius = 190.5, // set it to half the length of the robot for now
-    .kp = 1.0,
-    .lookahead_window = 20.0,
-    .turn_speed_180 = 1.0,
+    .search_radius = 240.0, // works well enough, but robot osccilates a bit, so try 300 if it's not too inaccurate
+    .kp = 0.4, // reasonable speed (accurate and fast enough), try 0.5 if you want it to be faster
+    .lookahead_window = 20.0, // works as is, might be too high as robot is pre-maturely stopping
+    .turn_speed_180 = 1.0, // turn speed is jank, doesn't work (inverted?), and doesn't seem to help, also speed decrease is not smooth
 };
 
 export fn autonomous() callconv(.C) void {
-    _ = pros.printf("hello, world from autonomous!");
+    _ = pros.printf("hello, world from autonomous!\n");
     // open the motor disconnect file
     const port_buffer_file = pros.fopen(port_buffer_path, "wb");
     defer if (port_buffer_file) |file| {
@@ -100,7 +98,8 @@ export fn autonomous() callconv(.C) void {
 /// Waits a certain amount of time, whilst still updating odom
 fn wait(delay_ms: u32, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
     var now = pros.rtos.millis();
-    while (now / delay_ms < 1) {
+    const start = now;
+    while ((now - start) / delay_ms < 1) {
         odom_state.update(port_buffer);
         pros.rtos.task_delay_until(&now, cycle_delay);
     }

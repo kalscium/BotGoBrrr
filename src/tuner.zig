@@ -66,14 +66,14 @@ pub fn tuneMovPID() void {
         const err = desired_y - odom_state.coord[1];
 
         // get the drive controls from the PID
-        const pv = pid_state.update(auton.mov_pid_param, err, auton.tick_delay);
+        const pv = pid_state.update(auton.mov_pid_param, err, auton.cycle_delay);
 
         // drive it
         drive.driveLeft(pv, &port_buffer);
         drive.driveRight(pv, &port_buffer);
 
         // wait till next cycle
-        pros.rtos.task_delay_until(&now, auton.tick_delay);
+        pros.rtos.task_delay_until(&now, auton.cycle_delay);
     }
 }
 
@@ -109,7 +109,7 @@ pub fn tuneYawPID() void {
         const err = odom.minimalAngleDiff(yaw, desired_yaw);
 
         // get the drive controls from the PID
-        const pv = pid_state.update(auton.yaw_pid_param, err, auton.tick_delay);
+        const pv = pid_state.update(auton.yaw_pid_param, err, auton.cycle_delay);
 
         // drive it
         const ldr, const rdr = drive.arcadeDrive(pv, 0);
@@ -117,7 +117,7 @@ pub fn tuneYawPID() void {
         drive.driveRight(rdr, &port_buffer);
 
         // wait till next cycle
-        pros.rtos.task_delay_until(&now, auton.tick_delay);
+        pros.rtos.task_delay_until(&now, auton.cycle_delay);
     }
 }
 
