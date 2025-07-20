@@ -64,14 +64,7 @@ pub fn autonFollowPath(path: []const odom.Coord, in_reverse: bool, odom_state: *
         const goal_point = interpolateGoal(predicted.coord, params.search_radius, path_seg_start, path[last_end]);
 
         // calculate the left and right drive ratios
-        const ratios = followArc(predicted.coord, goal_point, predicted.yaw);
-
-        // calculate the speed for the robot
-        const speed = speedController(predicted.coord, predicted.yaw, goal_point, params);
-
-        // find the left and right drive velocities from combining the speed and ratios
-        // and then drive the robot at those values
-        var ldr, var rdr = ratios * @as(@Vector(2, f64), @splat(speed));
+        const ldr, const rdr = followArc(predicted.coord, goal_point, predicted.yaw);
 
         // if driving in reverse, then switch the left and right and invert them
         if (in_reverse) {
@@ -245,27 +238,6 @@ test predictCoordYaw {
     std.debug.assert(@round(std.math.radiansToDegrees(new.yaw)) == 30);
 }
 
-/// Calculates the velocity multiplier (from 0..=1) for pure pursuit
-/// from the robot's coord & yaw, goal positions, and tuned parameters
-pub fn speedController(coord: odom.Coord, yaw: f64, goal: odom.Coord, params: Parameters) f64 {
-    // calculate the distance & yaw errors between the coord and goal
-    const rel_goal = goal - coord;
-    const distance_err = vector.calMag(f64, rel_goal); // distance will always be less or equal to the search radius
-    const rel_goal_angle = vector.calDir(f64, rel_goal);
-    const yaw_err = odom.minimalAngleDiff(yaw, rel_goal_angle);
-
-    // calculate the proportional term of the controller
-    const prop = distance_err / params.search_radius * params.kp;
-
-    // calculate the turning speed 'multiplier' (actually a lerp so that the
-    // robot turns at the specified 180 degree turning speed)
-    const turn_t = yaw_err / std.math.pi;
-    const turning_mul = std.math.lerp(1.0, params.turn_speed_180, turn_t);
-
-    // calculate the final turning speed by multiplying together the multipliers
-    return prop * turning_mul;
-}
-
 /// The tune-able parameters for pure pursuit, all in one place for convenience
 pub const Parameters = struct {
     /// The most blatant and obvious thing you need to tune in the pure pursuit
@@ -297,15 +269,6 @@ pub const Parameters = struct {
     /// to make the robot jitter
     /// (where it fights itself and goes forwards and backwards really quickly)
     lookahead_window: f64,
-
-    /// The minimum turning speed multiplier (from 0..=1)
-    /// 
-    /// The speed multiplier that is applied (through a lerp) to the robot when
-    /// it's doing a 180 degree turn.
-    /// 
-    /// Tune by having the robot make a 180 degree turn, and decrease from 1
-    /// until the turn doesn't drift too much (due turning circle too large, NOT inertia).
-    turn_speed_180: f64,
 };
 
 test "robot forwards kinematics simulation" {
@@ -318,7 +281,6 @@ test "robot forwards kinematics simulation" {
     const params = Parameters{
         .search_radius = 20,
         .kp = 1.0,
-        .turn_speed_180 = 0.4,
         .lookahead_window = 0.0,
     };
     const path: []const odom.Coord = &.{
@@ -336,7 +298,7 @@ test "robot forwards kinematics simulation" {
     // open output file
     var file = try std.fs.cwd().createFile("pp_forward_kinematic_sim.csv", .{});
     defer file.close();
-    try file.writer().writeAll("yaw,x,y,goal_x,goal_y,true_path_x,true_path_y,ldr,rdr,speed_mul\n");
+    try file.writer().writeAll("yaw,x,y,goal_x,goal_y,true_path_x,true_path_y,ldr,rdr\n");
 
     var now: usize = 0;
     var coord: odom.Coord = .{ 0, 0 };
@@ -347,11 +309,10 @@ test "robot forwards kinematics simulation" {
         const path_start = pickPathPoints(coord, params.search_radius, path, &last_end);
         const path_end = path[last_end];
         const goal_coord = interpolateGoal(coord, params.search_radius, path_start, path_end);
-        const speed = speedController(coord, yaw, goal_coord, params);
         const ldr, const rdr = followArc(coord, goal_coord, yaw);
 
         // log the logs
-        try file.writer().print("{d},{d},{d},{d},{d},{d},{d},{d},{d},{d}\n", .{
+        try file.writer().print("{d},{d},{d},{d},{d},{d},{d},{d},{d}\n", .{
             std.math.radiansToDegrees(yaw),
             coord[0],
             coord[1],
@@ -361,7 +322,6 @@ test "robot forwards kinematics simulation" {
             path[@min(path.len-1,now)][1],
             ldr,
             rdr,
-            speed,
         });
 
         // if the goal is reached, break

@@ -21,11 +21,10 @@ const TunedParameter = enum(i8) {
     search_radius = 0,
     proportional = 1,
     lookahead_window = 2,
-    turn_speed_180 = 3,
 
     pub fn cycle(self: *TunedParameter, amount: i8) void {
         const raw = @as(i8, @intFromEnum(self.*)) + amount;
-        const wrapped = @mod(raw, 4);
+        const wrapped = @mod(raw, 3);
         self.* = @enumFromInt(wrapped);
     }
 
@@ -34,7 +33,6 @@ const TunedParameter = enum(i8) {
             .search_radius => params.search_radius = val,
             .proportional => params.kp = val,
             .lookahead_window => params.lookahead_window = val,
-            .turn_speed_180 => params.turn_speed_180 = val,
         }
     }
 
@@ -43,7 +41,6 @@ const TunedParameter = enum(i8) {
             .search_radius => params.search_radius,
             .proportional => params.kp,
             .lookahead_window => params.lookahead_window,
-            .turn_speed_180 => params.turn_speed_180,
         };
     }
 };
@@ -92,10 +89,8 @@ pub fn entry() void {
             const predicted = pure_pursuit.predictCoordYaw(odom_state, params.lookahead_window);
             const path_seg_start = pure_pursuit.pickPathPoints(predicted.coord, params.search_radius, path_stack.slice(), &last_end);
             const goal_point = pure_pursuit.interpolateGoal(predicted.coord, params.search_radius, path_seg_start, path_stack.slice()[last_end]);
-            const ratios = pure_pursuit.followArc(predicted.coord, goal_point, predicted.yaw);
-            const speed = pure_pursuit.speedController(predicted.coord, predicted.yaw, goal_point, params);
 
-            const ldr, const rdr = ratios * @as(@Vector(2, f64), @splat(speed));
+            const ldr, const rdr = pure_pursuit.followArc(predicted.coord, goal_point, predicted.yaw);
             drive.driveLeft(ldr, &port_buffer);
             drive.driveRight(rdr, &port_buffer);
 
@@ -202,7 +197,6 @@ pub fn entry() void {
                 .search_radius    => "search_radius",
                 .proportional     => "proportional",
                 .lookahead_window => "lookahead_win",
-                .turn_speed_180   => "180degturnmul",
             };
             _ = pros.misc.controller_print(pros.misc.E_CONTROLLER_MASTER, 0, 0, ">%s", @as([*:0]const c_char, @ptrCast(label)));
         } else if (cycles % 20 == 5) {

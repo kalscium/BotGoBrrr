@@ -54,7 +54,6 @@ pub const pure_pursuit_params = pure_pursuit.Parameters{
     .search_radius = 240.0, // works well enough, but robot osccilates a bit, so try 300 if it's not too inaccurate
     .kp = 0.4, // reasonable speed (accurate and fast enough), try 0.5 if you want it to be faster
     .lookahead_window = 20.0, // works as is, might be too high as robot is pre-maturely stopping
-    .turn_speed_180 = 1.0, // turn speed is jank, doesn't work (inverted?), and doesn't seem to help, also speed decrease is not smooth
 };
 
 export fn autonomous() callconv(.C) void {
