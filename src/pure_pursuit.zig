@@ -58,10 +58,13 @@ pub fn autonFollowPath(path: []const odom.Coord, in_reverse: bool, odom_state: *
         const predicted = predictCoordYaw(odom_copy, params.lookahead_window);
 
         // pick the next path points
-        const path_seg_start = pickPathPoints(predicted.coord, params.search_radius, path, &last_end);
+        const path_seg_start = pickPathPoints(predicted.coord, params.search_ceiling, path, &last_end);
+
+        // calculate the search radius
+        const search_radius = calSearchRadius(predicted.coord, path_seg_start, params);
 
         // interpolate the goal point
-        const goal_point = interpolateGoal(predicted.coord, params.search_radius, path_seg_start, path[last_end]);
+        const goal_point = interpolateGoal(predicted.coord, search_radius, path_seg_start, path[last_end]);
 
         // calculate the left and right drive ratios
         const ldr, const rdr = followArc(predicted.coord, goal_point, predicted.yaw);
@@ -119,6 +122,14 @@ test pickPathPoints {
     coord = path[last_end];
     std.debug.assert(@reduce(.And, pickPathPoints(coord, search_radius, path, &last_end) == odom.Coord{ 5, 1 }));
     std.debug.assert(last_end == 5);
+}
+
+/// Calculates the search radius from the pure pursuit parameters, the robot coord, and the path start point
+pub fn calSearchRadius(coord: odom.Coord, start_point: odom.Coord, params: Parameters) f64 {
+    // calculate the distance from the start point
+    const distance = vector.calMag(f64, coord - start_point);
+    // clamps the distance within the search ceiling and floor, to find the search radius we'll use
+    return std.math.clamp(distance, params.search_floor, params.search_ceiling);
 }
 
 /// Interpolates a goal coordinate from the path start point and end
@@ -240,15 +251,34 @@ test predictCoordYaw {
 
 /// The tune-able parameters for pure pursuit, all in one place for convenience
 pub const Parameters = struct {
-    /// The most blatant and obvious thing you need to tune in the pure pursuit
-    /// controller, is the search radius
-    /// (aka the lookahead distance (in mm) for the path).
+    /// The ceiling of the search radius, in that the largest value the search
+    /// radius (usually based upon the distance from the path segment start) can
+    /// be.
+    /// 
+    /// This is the search radius, that is used to drive the robot across long
+    /// straight paths without turns.
+    /// 
+    /// Also, this is used to pick the start and end points of the path.
+    /// (Think of this as the simulation distance, and the search radius as the
+    ///  render distance).
     ///
-    /// Start off with the distance between the middle and front of the robot,
-    /// then keep either increasing or decreasing so that it does a 90 degree
-    /// turn (ignoring overshoot & speed) with a tight-enough or loose-enough
-    /// turn circle (good balance between accuracy and smoothness).
-    search_radius: f64,
+    /// Start off with a small search ceiling, and keep increasing until it
+    /// stops osccilating left and right when travelling in a long straight line.
+    search_ceiling: f64,
+
+    /// The floor of the search radius, in that the smallest value the search
+    /// radius (usually based upon the distance from the path segment start) can
+    /// be.
+    /// 
+    /// This is the search radius that is used when the robot is making a turn
+    /// or traversing between path segments.
+    /// 
+    /// This is necessary, as to keep the robot continuing to move forwards.
+    /// 
+    /// Start off with a small value, and keep increasing until the robot's
+    /// osccilations are just small enough to complete a 90 degree turn without
+    /// issue.
+    search_floor: f64,
 
     /// The proportional distance error speed multiplier for the robot (0..=1).
     /// 
@@ -279,7 +309,8 @@ test "robot forwards kinematics simulation" {
     const max_cycle = 10000; // simulation force quits after this many iterations (gives up)
     // the parameters for pure pursuit
     const params = Parameters{
-        .search_radius = 20,
+        .search_ceiling = 20,
+        .search_floor = 16,
         .kp = 1.0,
         .lookahead_window = 0.0,
     };
@@ -298,7 +329,7 @@ test "robot forwards kinematics simulation" {
     // open output file
     var file = try std.fs.cwd().createFile("pp_forward_kinematic_sim.csv", .{});
     defer file.close();
-    try file.writer().writeAll("yaw,x,y,goal_x,goal_y,true_path_x,true_path_y,ldr,rdr\n");
+    try file.writer().writeAll("yaw,x,y,goal_x,goal_y,true_path_x,true_path_y,ldr,rdr,search_radius\n");
 
     var now: usize = 0;
     var coord: odom.Coord = .{ 0, 0 };
@@ -306,13 +337,14 @@ test "robot forwards kinematics simulation" {
     var last_end: usize = 0;
     while (now < max_cycle) : (now += 1) {
         // get the ldr & rdr from pure pursuit
-        const path_start = pickPathPoints(coord, params.search_radius, path, &last_end);
+        const path_start = pickPathPoints(coord, params.search_ceiling, path, &last_end);
         const path_end = path[last_end];
-        const goal_coord = interpolateGoal(coord, params.search_radius, path_start, path_end);
+        const search_radius = calSearchRadius(coord, path_start, params);
+        const goal_coord = interpolateGoal(coord, search_radius, path_start, path_end);
         const ldr, const rdr = followArc(coord, goal_coord, yaw);
 
         // log the logs
-        try file.writer().print("{d},{d},{d},{d},{d},{d},{d},{d},{d}\n", .{
+        try file.writer().print("{d},{d},{d},{d},{d},{d},{d},{d},{d},{d}\n", .{
             std.math.radiansToDegrees(yaw),
             coord[0],
             coord[1],
@@ -322,6 +354,7 @@ test "robot forwards kinematics simulation" {
             path[@min(path.len-1,now)][1],
             ldr,
             rdr,
+            search_radius,
         });
 
         // if the goal is reached, break

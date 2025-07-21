@@ -51,7 +51,8 @@ pub const yaw_pid_param = pid.Param {
 
 /// The *tuned* pure pursuit parameters
 pub const pure_pursuit_params = pure_pursuit.Parameters{
-    .search_radius = 240.0, // works well enough, but robot osccilates a bit, so try 300 if it's not too inaccurate
+    .search_ceiling = 300.0, // keep increasing until osccilations are gone
+    .search_floor = 190.5, // keep increasing until it's able to make 90 degree turn successfully
     .kp = 0.4, // reasonable speed (accurate and fast enough), try 0.5 if you want it to be faster
     .lookahead_window = 20.0, // works as is, might be too high as robot is pre-maturely stopping
 };
