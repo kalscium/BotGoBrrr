@@ -64,7 +64,14 @@ pub fn autonFollowPath(path: []const odom.Coord, in_reverse: bool, odom_state: *
         const goal_point = interpolateGoal(predicted.coord, params.search_radius, path_seg_start, path[last_end]);
 
         // calculate the left and right drive ratios
-        const ldr, const rdr = followArc(predicted.coord, goal_point, predicted.yaw);
+        const ratios = followArc(predicted.coord, goal_point, predicted.yaw);
+
+        // calculate the speed for the robot
+        const speed = speedController(predicted.coord, goal_point, params);
+
+        // find the left and right drive velocities from combining the speed and ratios
+        // and then drive the robot at those values
+        var ldr, var rdr = ratios * @as(@Vector(2, f64), @splat(speed));
 
         // if driving in reverse, then switch the left and right and invert them
         if (in_reverse) {
@@ -78,7 +85,7 @@ pub fn autonFollowPath(path: []const odom.Coord, in_reverse: bool, odom_state: *
         drive.driveRight(ldr, port_buffer);
 
         // wait for the next cycle
-        pros.rtos.task_delay_until(&now, auton.tick_delay);
+        pros.rtos.task_delay_until(&now, auton.cycle_delay);
     }
 }
 
@@ -238,6 +245,20 @@ test predictCoordYaw {
     std.debug.assert(@round(std.math.radiansToDegrees(new.yaw)) == 30);
 }
 
+/// Calculates the velocity multiplier (from 0..=1) for pure pursuit
+/// from the robot's coord & yaw, goal positions, and tuned parameters
+pub fn speedController(coord: odom.Coord, goal: odom.Coord, params: Parameters) f64 {
+    // calculate the distance & yaw errors between the coord and goal
+    const rel_goal = goal - coord;
+    const distance_err = vector.calMag(f64, rel_goal); // distance will always be less or equal to the search radius
+
+    // calculate the proportional term of the controller
+    const prop = distance_err / params.search_radius * params.kp;
+
+    // calculate the final turning speed by multiplying together the multipliers
+    return prop;
+}
+
 /// The tune-able parameters for pure pursuit, all in one place for convenience
 pub const Parameters = struct {
     /// The most blatant and obvious thing you need to tune in the pure pursuit
@@ -298,7 +319,7 @@ test "robot forwards kinematics simulation" {
     // open output file
     var file = try std.fs.cwd().createFile("pp_forward_kinematic_sim.csv", .{});
     defer file.close();
-    try file.writer().writeAll("yaw,x,y,goal_x,goal_y,true_path_x,true_path_y,ldr,rdr\n");
+    try file.writer().writeAll("yaw,x,y,goal_x,goal_y,true_path_x,true_path_y,ldr,rdr,speed_mul\n");
 
     var now: usize = 0;
     var coord: odom.Coord = .{ 0, 0 };
@@ -309,10 +330,11 @@ test "robot forwards kinematics simulation" {
         const path_start = pickPathPoints(coord, params.search_radius, path, &last_end);
         const path_end = path[last_end];
         const goal_coord = interpolateGoal(coord, params.search_radius, path_start, path_end);
+        const speed = speedController(coord, goal_coord, params);
         const ldr, const rdr = followArc(coord, goal_coord, yaw);
 
         // log the logs
-        try file.writer().print("{d},{d},{d},{d},{d},{d},{d},{d},{d}\n", .{
+        try file.writer().print("{d},{d},{d},{d},{d},{d},{d},{d},{d},{d}\n", .{
             std.math.radiansToDegrees(yaw),
             coord[0],
             coord[1],
@@ -322,6 +344,7 @@ test "robot forwards kinematics simulation" {
             path[@min(path.len-1,now)][1],
             ldr,
             rdr,
+            speed,
         });
 
         // if the goal is reached, break

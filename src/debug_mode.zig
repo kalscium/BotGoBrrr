@@ -89,8 +89,10 @@ pub fn entry() void {
             const predicted = pure_pursuit.predictCoordYaw(odom_state, params.lookahead_window);
             const path_seg_start = pure_pursuit.pickPathPoints(predicted.coord, params.search_radius, path_stack.slice(), &last_end);
             const goal_point = pure_pursuit.interpolateGoal(predicted.coord, params.search_radius, path_seg_start, path_stack.slice()[last_end]);
+            const ratios = pure_pursuit.followArc(predicted.coord, goal_point, predicted.yaw);
+            const speed = pure_pursuit.speedController(predicted.coord, goal_point, params);
 
-            const ldr, const rdr = pure_pursuit.followArc(predicted.coord, goal_point, predicted.yaw);
+            const ldr, const rdr = ratios * @as(@Vector(2, f64), @splat(speed));
             drive.driveLeft(ldr, &port_buffer);
             drive.driveRight(rdr, &port_buffer);
 
