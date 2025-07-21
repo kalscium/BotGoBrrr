@@ -18,19 +18,21 @@ const tank_vel: f64 = 0.2;
 const log_path = "/usd/dbgmode.log";
 
 const TunedParameter = enum(i8) {
-    search_radius = 0,
-    proportional = 1,
-    lookahead_window = 2,
+    search_ceiling = 0,
+    search_floor = 1,
+    proportional = 2,
+    lookahead_window = 3,
 
     pub fn cycle(self: *TunedParameter, amount: i8) void {
         const raw = @as(i8, @intFromEnum(self.*)) + amount;
-        const wrapped = @mod(raw, 3);
+        const wrapped = @mod(raw, 4);
         self.* = @enumFromInt(wrapped);
     }
 
     pub fn set(self: TunedParameter, params: *pure_pursuit.Parameters, val: f64) void {
         switch (self) {
-            .search_radius => params.search_radius = val,
+            .search_ceiling => params.search_ceiling = val,
+            .search_floor => params.search_floor = val,
             .proportional => params.kp = val,
             .lookahead_window => params.lookahead_window = val,
         }
@@ -38,7 +40,8 @@ const TunedParameter = enum(i8) {
 
     pub fn get(self: TunedParameter, params: pure_pursuit.Parameters) f64 {
         return switch (self) {
-            .search_radius => params.search_radius,
+            .search_ceiling => params.search_ceiling,
+            .search_floor => params.search_floor,
             .proportional => params.kp,
             .lookahead_window => params.lookahead_window,
         };
@@ -63,7 +66,7 @@ pub fn entry() void {
     var last_end: usize = 0;
     var params: pure_pursuit.Parameters = auton.pure_pursuit_params;
     var incr_order_of_mag: f64 = 0; // the order of magnitude of the parameter increments
-    var tuned_param = TunedParameter.search_radius; // the current auton paramter getting tuned
+    var tuned_param = TunedParameter.search_ceiling; // the current auton paramter getting tuned
     var rumble: enum { none, short, long } = .none; // concurrent queuing for the controller rumble (50ms speed limit)
 
     // main loop
@@ -87,10 +90,11 @@ pub fn entry() void {
             // otherwise calculate pure pursuit and follow it
             // calculate the robot's predicted location and base all future calculations off of it
             const predicted = pure_pursuit.predictCoordYaw(odom_state, params.lookahead_window);
-            const path_seg_start = pure_pursuit.pickPathPoints(predicted.coord, params.search_radius, path_stack.slice(), &last_end);
-            const goal_point = pure_pursuit.interpolateGoal(predicted.coord, params.search_radius, path_seg_start, path_stack.slice()[last_end]);
+            const path_seg_start = pure_pursuit.pickPathPoints(predicted.coord, params.search_ceiling, path_stack.slice(), &last_end);
+            const search_radius = pure_pursuit.calSearchRadius(predicted.coord, path_seg_start, params);
+            const goal_point = pure_pursuit.interpolateGoal(predicted.coord, search_radius, path_seg_start, path_stack.slice()[last_end]);
             const ratios = pure_pursuit.followArc(predicted.coord, goal_point, predicted.yaw);
-            const speed = pure_pursuit.speedController(predicted.coord, goal_point, params);
+            const speed = pure_pursuit.speedController(predicted.coord, search_radius, goal_point, params);
 
             const ldr, const rdr = ratios * @as(@Vector(2, f64), @splat(speed));
             drive.driveLeft(ldr, &port_buffer);
@@ -196,7 +200,8 @@ pub fn entry() void {
             //   * 180degturnmul
             //   * precise_thres
             const label = switch (tuned_param) {
-                .search_radius    => "search_radius",
+                .search_ceiling   => "searchceiling",
+                .search_floor     => "search_floor",
                 .proportional     => "proportional",
                 .lookahead_window => "lookahead_win",
             };
