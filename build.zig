@@ -31,7 +31,6 @@ pub fn build(b: *std.Build) void {
     const asm_opcontrol = b.option(bool, "asm-opcontrol", "Sets whether to use the arm asm version of opcontrol");
     const log_velocity = b.option(bool, "log-velocity", "Sets whether to log the velocity of the robot every tick");
     const log_bench = b.option(bool, "benchmark", "Sets whether to log cycle times for benchmarking");
-    const arcade = b.option(bool, "arcade", "Sets whether to use normal arcade drive in opcontrol");
     const split_arcade = b.option(bool, "split-arcade", "Sets whether to use normal split-arcade drive in opcontrol");
     const toggle_arcade = b.option(bool, "toggle-arcade", "Sets whether to use 'toggle' arcade in opcontrol");
     const tune = b.option([]const u8, "tune", "Sets the kind of tuning (instead of opcontrol) you wish to do");
@@ -42,7 +41,6 @@ pub fn build(b: *std.Build) void {
     options.addOption(bool, "asm_opcontrol", asm_opcontrol orelse false);
     options.addOption(bool, "log_velocity", log_velocity orelse false);
     options.addOption(bool, "benchmark", log_bench orelse false);
-    options.addOption(bool, "arcade", arcade orelse false);
     options.addOption(bool, "split_arcade", split_arcade orelse false);
     options.addOption(bool, "toggle_arcade", toggle_arcade orelse false);
     options.addOption(?[]const u8, "tune", tune);
