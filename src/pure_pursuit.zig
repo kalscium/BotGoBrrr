@@ -49,8 +49,12 @@ pub fn autonFollowPath(path: []const odom.Coord, in_reverse: bool, odom_state: *
         }
 
         // if it's within precision, break
-        if (vector.calMag(f64, path[last_end] - odom_copy.coord) < auton.precision_mm)
+        if (vector.calMag(f64, path[last_end] - odom_copy.coord) < auton.precision_mm) {
+            // stop moving before breaking
+            drive.driveLeft(0, port_buffer);
+            drive.driveRight(0, port_buffer);
             break;
+        }
 
         const params = auton.pure_pursuit_params;
 

@@ -74,8 +74,12 @@ pub fn move(desired_coord: odom.Coord, odom_state: *odom.State, port_buffer: *po
         const distance = vector.dotProduct(f64, displacement, vector.polarToCartesian(1, yaw));
 
         // if it's within precision, break
-        if (distance < auton.precision_mm)
+        if (distance < auton.precision_mm) {
+            // stop driving
+            drive.driveLeft(0, port_buffer);
+            drive.driveRight(0, port_buffer);
             break;
+        }
 
         // get controls from pid
         const y = pid.update(auton.mov_pid_param, distance, auton.cycle_delay);
@@ -103,8 +107,12 @@ pub fn rotate(desired_yaw: f64, odom_state: *odom.State, port_buffer: *port.Port
         const err = odom.minimalAngleDiff(yaw, desired_yaw);
 
         // if it's within precision, break
-        if (err < auton.precision_rad)
+        if (err < auton.precision_rad) {
+            // stop driving
+            drive.driveLeft(0, port_buffer);
+            drive.driveRight(0, port_buffer);
             break;
+        }
 
         // get controls from pid
         const x = pid.update(auton.yaw_pid_param, yaw, auton.cycle_delay);

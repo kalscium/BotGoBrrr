@@ -51,13 +51,17 @@ pub const yaw_pid_param = pid.Param {
 
 /// The *tuned* pure pursuit parameters
 pub const pure_pursuit_params = pure_pursuit.Parameters{
-    .search_radius = 240.0, // works well enough, but robot osccilates a bit, so try 300 if it's not too inaccurate
-    .kp = 0.4, // reasonable speed (accurate and fast enough), try 0.5 if you want it to be faster
-    .lookahead_window = 20.0, // works as is, might be too high as robot is pre-maturely stopping
+    .search_radius = 260.0, // we know 240 works well enough (little osccilation) and 280 is too inaccurate
+    .kp = 0.5, // reasonable speed (accurate and fast enough), try 0.5 if you want it to be faster
+    .lookahead_window = 10.0, // if it's still pre-maturely stopping just set it to zero
 };
 
 export fn autonomous() callconv(.C) void {
-    _ = pros.printf("hello, world from autonomous!\n");
+    autonomousLeft();
+}
+
+pub fn autonomousLeft() void {
+    _ = pros.printf("hello, world from autonomous (left side)!\n");
     // open the motor disconnect file
     const port_buffer_file = pros.fopen(port_buffer_path, "wb");
     defer if (port_buffer_file) |file| {
@@ -67,8 +71,41 @@ export fn autonomous() callconv(.C) void {
     var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connected/working initially
     var odom_state = odom.State.init(&port_buffer);
 
-    pure_pursuit.autonFollowPath(&.{ .{ 0, 100 } }, false, &odom_state, &port_buffer);
-    pid.rotate(0, &odom_state, &port_buffer);
+    // NOTE: ALL COORDINATES AND ANGLES USED ARE ALL PLACEHOLDERS UNTIL I HAVE ACCESS TO THE FIELD
+
+    // move to the long goals and align to them
+    pure_pursuit.autonFollowPath(&.{ .{ 0, 0 }, .{ 1, 1 }, .{ 2, 2 } }, false, &odom_state, &port_buffer);
+    pid.rotate(90, &odom_state, &port_buffer);
+    // score the pre-load by spinning the tower for 1 seconds
+    tower.spin(tower.tower_velocity, &port_buffer);
+    wait(1000, &odom_state, &port_buffer);
+    tower.spin(0, &port_buffer);
+
+    // move backwards to get out of the way of the long goal (just remove if doesn't work)
+    pure_pursuit.autonFollowPath(&.{ .{ 0, 0 } }, true, &odom_state, &port_buffer);
+
+    // go to the 3 blocks in front of the centre goals (but do not touch)
+    pure_pursuit.autonFollowPath(&.{ .{ 0, 0 }, .{ 1, 1 }, .{ 2, 2 } }, false, &odom_state, &port_buffer);
+    // rotate towards the blocks (at the right angle)
+    pid.rotate(135.0, &odom_state, &port_buffer);
+    // move forwards for 1 second at a slow speed with the tower active
+    tower.spin(tower.tower_velocity, &port_buffer);
+    drive.driveLeft(0.2, &port_buffer);
+    drive.driveRight(0.2, &port_buffer);
+    wait(500, &odom_state, &port_buffer);
+    tower.spin(0, &port_buffer);
+    drive.driveLeft(0, &port_buffer);
+    drive.driveRight(0, &port_buffer);
+
+    // drive to the centre goals, align and score
+    pure_pursuit.autonFollowPath(&.{ .{ 0, 0 } }, false, &odom_state, &port_buffer);
+    pid.rotate(135.0, &odom_state, &port_buffer);
+    tower.spin(-tower.tower_velocity_down, &port_buffer);
+    wait(1000, &odom_state, &port_buffer);
+    tower.spin(0, &port_buffer);
+
+    // move backwards to get to a nicer spot (remove if it doesn't work)
+    pure_pursuit.autonFollowPath(&.{ .{ 0, 0 } }, true, &odom_state, &port_buffer);
 
     // write the port buffer to the port_buffer file
     if (port_buffer_file) |file|
