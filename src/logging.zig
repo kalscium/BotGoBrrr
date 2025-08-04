@@ -99,12 +99,6 @@ pub fn temp(ms: u32, file: ?*std.c.FILE) void {
     var tower_b_temp = pros.motors.motor_get_temperature(tower.motors.b.port);
     if (tower_b_temp == def.pros_err_f64) // in case it fails
         tower_b_temp = 0;
-    var tower_c_temp = pros.motors.motor_get_temperature(tower.motors.c.port);
-    if (tower_c_temp == def.pros_err_f64) // in case it fails
-        tower_c_temp = 0;
-    var tower_d_temp = pros.motors.motor_get_temperature(tower.motors.d.port);
-    if (tower_d_temp == def.pros_err_f64) // in case it fails
-        tower_d_temp = 0;
 
     var l1_temp = pros.motors.motor_get_temperature(drive.drivetrain_motors.l1.port);
     if (l1_temp == def.pros_err_f64) // in case it fails
@@ -129,13 +123,11 @@ pub fn temp(ms: u32, file: ?*std.c.FILE) void {
     // write it to the logfile
     _ = pros.fprintf(
         f,
-        "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+        "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
         time,
         battery_temp,
         tower_a_temp,
         tower_b_temp,
-        tower_c_temp,
-        tower_d_temp,
         l1_temp,
         l2_temp,
         l3_temp,
