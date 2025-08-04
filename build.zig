@@ -35,6 +35,7 @@ pub fn build(b: *std.Build) void {
     const toggle_arcade = b.option(bool, "toggle-arcade", "Sets whether to use 'toggle' arcade in opcontrol");
     const tune = b.option([]const u8, "tune", "Sets the kind of tuning (instead of opcontrol) you wish to do");
     const debug_mode = b.option(bool, "dbgmode", "Sets whether to enable 'debug mode' opcontrol, for debugging, tuning, planning, and showcasing auton");
+    const auton_routine = b.option([]const u8, "auton-routine", "Sets the auton routine to use/compile.");
 
     // options set
     var options = b.addOptions();
@@ -45,6 +46,7 @@ pub fn build(b: *std.Build) void {
     options.addOption(bool, "toggle_arcade", toggle_arcade orelse false);
     options.addOption(?[]const u8, "tune", tune);
     options.addOption(bool, "debug_mode", debug_mode orelse false);
+    options.addOption(?[]const u8, "auton_routine", auton_routine);
     userlib.root_module.addOptions("options", options);
 
     // define the pros module
