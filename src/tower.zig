@@ -19,12 +19,19 @@ pub const motors = struct {
     pub const b = towerMotor(2);
 };
 
+/// The ADI port of the little will dropping pneumatics
+pub const little_will_port = 'A';
+
 /// The tower controller controls
 pub const controls = struct {
     /// The button for spinning the tower up
     pub const up: c_int = pros.misc.E_CONTROLLER_DIGITAL_L2;
     /// The button for spinning the tower up
     pub const down: c_int = pros.misc.E_CONTROLLER_DIGITAL_L1;
+    /// The button for dropping little will
+    pub const down_will: c_int = pros.misc.E_CONTROLLER_DIGITAL_DOWN;
+    /// The button for dropping little will
+    pub const up_will: c_int = pros.misc.E_CONTROLLER_DIGITAL_UP;
 };
 
 /// Tower motor default configs (port is negative for reversed)
@@ -49,6 +56,10 @@ pub fn controllerUpdate(port_buffer: *port.PortBuffer) void {
             spin(tower_velocity, port_buffer);
     } else if (controller.get_digital(controls.down))
         spin(-tower_velocity_down, port_buffer)
+    else if (controller.get_digital(controls.up_will))
+        _ = pros.adi.adi_digital_write(little_will_port, true)
+    else if (controller.get_digital(controls.down_will))
+        _ = pros.adi.adi_digital_write(little_will_port, false)
     else
         spin(0, port_buffer);
 }
