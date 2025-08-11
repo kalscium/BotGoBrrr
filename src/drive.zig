@@ -43,18 +43,8 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
     var ldr: f64 = 0;
     var rdr: f64 = 0;
 
-    if (comptime options.arcade) {
-        // get the normalized main joystick values
-        const jx = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127.0;
-        const jy = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
-        ldr, rdr = arcadeDrive(jx * speed_multiplier, jy * speed_multiplier);
-    } else if (comptime options.toggle_arcade) {
+    if (comptime options.toggle_arcade) {
         ldr, rdr = toggleArcade();
-    } else if (comptime options.split_arcade) {
-        // get the normalized main joystick values
-        const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127.0;
-        const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127.0;
-        ldr, rdr = arcadeDrive(j1 * speed_multiplier, j2 * speed_multiplier);
     } else {
         // get the normalized main joystick values
         const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
@@ -112,7 +102,13 @@ pub fn init() void {
 pub fn toggleArcade() struct { f64, f64 } {
     // gets the normalized x and y from the left joystick
     var x = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127.0;
-    var y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
+    var y: f64 = undefined;
+
+    // if split arcade, then split
+    if (options.split_arcade)
+        y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0
+    else
+        y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127.0;
 
     // apply the rotation and movement multipliers
     x *= speed_multiplier;
