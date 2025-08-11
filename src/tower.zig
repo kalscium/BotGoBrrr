@@ -13,10 +13,10 @@ pub const tower_velocity_down: f64 = 0.5;
 
 /// The motor configs
 pub const motors = struct {
-    // The A B C motors of the tower are ordered from top to bottom
-    // as they appear on the robot, while D is the motor that's in the back.
-    pub const a = towerMotor(1);
-    pub const b = towerMotor(2);
+    // The A B motors of the tower are ordered from top to bottom as
+    // they appear
+    pub const a = towerMotor(-18);
+    pub const b = towerMotor(-6);
 };
 
 /// The ADI port of the little will dropping pneumatics
@@ -51,23 +51,31 @@ pub fn towerMotor(comptime mport: comptime_int) Motor {
 pub fn controllerUpdate(port_buffer: *port.PortBuffer) void {
     if (controller.get_digital(controls.up)) {
         if (controller.get_digital(controls.down)) // if both are hit at the same time, score down at full speed
-            spin(tower_velocity, port_buffer)
+            scoreMid(tower_velocity, port_buffer)
         else
             spin(tower_velocity, port_buffer);
     } else if (controller.get_digital(controls.down))
-        spin(-tower_velocity_down, port_buffer)
-    else if (controller.get_digital(controls.up_will))
-        _ = pros.adi.adi_digital_write(little_will_port, true)
-    else if (controller.get_digital(controls.down_will))
-        _ = pros.adi.adi_digital_write(little_will_port, false)
+        spin(-tower_velocity, port_buffer)
     else
         spin(0, port_buffer);
+
+    if (controller.get_digital(controls.up_will))
+        _ = pros.adi.adi_digital_write(little_will_port, true);
+    if (controller.get_digital(controls.down_will))
+        _ = pros.adi.adi_digital_write(little_will_port, false);
 }
 
 /// Initializes the tower
 pub fn init() void {
     motors.a.init();
     motors.b.init();
+    _ = pros.adi.adi_port_set_config(little_will_port, pros.adi.E_ADI_DIGITAL_OUT);
+}
+
+/// Spins all the motors of the tower based on an input velocity `(-1..=1)` to score mid, reporting disconnects to the port buffer
+pub fn scoreMid(velocity: f64, port_buffer: *port.PortBuffer) void {
+    motors.a.setVelocity(-velocity, port_buffer);
+    motors.b.setVelocity(velocity, port_buffer);
 }
 
 /// Spins all the motors of the tower based on an input velocity `(-1..=1)`, reporting disconnects to the port buffer

@@ -21,12 +21,12 @@ pub const drivetrain_motors = struct {
     // x3 are the top motors of the drivetrain
     // 
     // Also, the tower is at the **FRONT** of the robot
-    pub const l1 = drivetrainMotor(-14);
-    pub const l2 = drivetrainMotor(-8);
+    pub const l1 = drivetrainMotor(-16);
+    pub const l2 = drivetrainMotor(-10);
     pub const l3 = drivetrainMotor(9);
-    pub const r1 = drivetrainMotor(1);
-    pub const r2 = drivetrainMotor(10);
-    pub const r3 = drivetrainMotor(-5);
+    pub const r1 = drivetrainMotor(11);
+    pub const r2 = drivetrainMotor(2);
+    pub const r3 = drivetrainMotor(-1);
 };
 
 /// The multiplier applied to the robot's turning & movement speed normally
@@ -105,10 +105,10 @@ pub fn toggleArcade() struct { f64, f64 } {
     var y: f64 = undefined;
 
     // if split arcade, then split
-    if (options.split_arcade)
-        y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0
+    if (comptime options.split_arcade)
+        y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127.0
     else
-        y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127.0;
+        y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
 
     // apply the rotation and movement multipliers
     x *= speed_multiplier;
