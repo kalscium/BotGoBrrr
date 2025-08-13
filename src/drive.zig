@@ -9,7 +9,7 @@ const options = @import("options");
 const controller = @import("controller.zig");
 
 /// Driving in reverse toggle button
-pub const reverse_toggle: c_int = pros.misc.E_CONTROLLER_DIGITAL_X;
+pub const reverse_toggle: c_int = pros.misc.E_CONTROLLER_DIGITAL_DOWN;
 
 /// Drivetrain motor configs
 pub const drivetrain_motors = struct {
@@ -30,7 +30,8 @@ pub const drivetrain_motors = struct {
 };
 
 /// The multiplier applied to the robot's turning & movement speed normally
-pub const speed_multiplier = 0.32;
+pub const drive_multiplier = 0.5;
+pub const turn_multiplier = 0.20;
 
 /// Reads the controller and updates the drivetrain accordingly based upon the
 /// enabled build options
@@ -101,31 +102,30 @@ pub fn init() void {
 /// For 'Toggle Arcade'
 pub fn toggleArcade() struct { f64, f64 } {
     // gets the normalized x and y from the left joystick
-    var x = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127.0;
-    var y: f64 = undefined;
+    var x: f64 = undefined;
+    var y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
 
     // if split arcade, then split
     if (comptime options.split_arcade)
-        y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127.0
+        x = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_X))) / 127.0
     else
-        y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
+        x = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127.0;
 
     // apply the rotation and movement multipliers
-    x *= speed_multiplier;
-    y *= speed_multiplier;
+    x *= turn_multiplier;
+    y *= drive_multiplier;
 
     // if R1 is hit, lock to rotation
-    if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_R1)) {
+    if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_Y)) {
         y = 0;
         // turning should be 'slower' when locking to rotation
-        x *= speed_multiplier; // turning slowdown should be proportional to the movement speedup
+        x *= drive_multiplier; // turning slowdown should be proportional to the movement speedup
     }
 
-    // if R2 is hit, lock to movement
-    if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_R2)) {
-        x = 0;
+    // if R2 is hit, do NOT lock to movement
+    if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_A)) {
         // movement should be 'faster' when locking to movement
-        y /= speed_multiplier; // to undo the speed multiplier
+        y /= drive_multiplier; // to undo the speed multiplier
     }
 
     // rest is just normal arcade drive

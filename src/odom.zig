@@ -8,7 +8,7 @@ const vector = @import("vector.zig");
 const controller = @import("controller.zig");
 
 /// The controller button for recording the current odom coordinate
-pub const record_coord_button = pros.misc.E_CONTROLLER_DIGITAL_A;
+pub const record_coord_button = pros.misc.E_CONTROLLER_DIGITAL_UP;
 
 /// The current radius of the robot's odometry wheel in mm
 const wheel_radius = 34.925;
@@ -17,11 +17,11 @@ const wheel_radius = 34.925;
 pub const start_coord = Coord{ 0, 0 };
 
 /// The port of the vertical odometry rotation sensor
-pub const rotation_port_vertical = 6;
+pub const rotation_port_vertical = 13;
 /// The port of the lateral odometry rotation sensor
 pub const rotation_port_lateral = 12;
 /// The offset from the midde (in mm), along the vertical axis of the lateral rotation sensor
-const rot_lateral_offset = -1;
+const rot_lateral_offset = -12.7;
 /// The port of the IMU sensor
 pub const imu_port = 14;
 
@@ -125,7 +125,7 @@ pub fn getRotation(comptime rport: u8, port_buffer: *port.PortBuffer) ?f64 {
 /// Necessary initialization code (such as taring/calibrating) required for odom
 pub fn programInit() void {
     _ = pros.imu.imu_reset(imu_port);
-    _ = pros.rotation.rotation_set_reversed(rotation_port_vertical, true); // vertical rotation sensor is physically reversed from the robot's movements, remove this if it's fixed
+    _ = pros.rotation.rotation_set_reversed(rotation_port_lateral, true); // lateral rotation sensor is physically reversed from the robot's movements, remove this if it's fixed
 }
 
 /// Odometry state variables
