@@ -8,15 +8,14 @@ const controller = @import("controller.zig");
 
 /// The velocity of the tower spinning up
 pub const tower_velocity: f64 = 1.0;
-/// The velocity the tower when spinning down
-pub const tower_velocity_down: f64 = 0.5;
+/// The velocity the tower when out-taking (b-down)
+pub const tower_outtake_vel: f64 = 0.33;
 
 /// The motor configs
 pub const motors = struct {
-    // The A B C motors of the tower are ordered from top to bottom
-    // as they appear on the robot, while D is the motor that's in the back.
-    pub const a = towerMotor(1);
-    pub const b = towerMotor(2);
+    // The two motors in the tower
+    pub const top = towerMotor(-18);
+    pub const bottom = towerMotor(-6);
 };
 
 /// The ADI port of the little will dropping pneumatics
@@ -25,13 +24,17 @@ pub const little_will_port = 'A';
 /// The tower controller controls
 pub const controls = struct {
     /// The button for spinning the tower up
-    pub const up: c_int = pros.misc.E_CONTROLLER_DIGITAL_L2;
+    pub const top_forwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_L2;
     /// The button for spinning the tower up
-    pub const down: c_int = pros.misc.E_CONTROLLER_DIGITAL_L1;
+    pub const bottom_forwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_R1;
+    /// The button for spinning the tower up
+    pub const top_backwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_L1;
+    /// The button for spinning the tower up
+    pub const bottom_backwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_L1;
     /// The button for dropping little will
-    pub const down_will: c_int = pros.misc.E_CONTROLLER_DIGITAL_DOWN;
+    pub const down_will: c_int = pros.misc.E_CONTROLLER_DIGITAL_B;
     /// The button for dropping little will
-    pub const up_will: c_int = pros.misc.E_CONTROLLER_DIGITAL_UP;
+    pub const up_will: c_int = pros.misc.E_CONTROLLER_DIGITAL_X;
 };
 
 /// Tower motor default configs (port is negative for reversed)
@@ -49,29 +52,45 @@ pub fn towerMotor(comptime mport: comptime_int) Motor {
 /// 
 /// Updates the port buffer upon motor disconnects.
 pub fn controllerUpdate(port_buffer: *port.PortBuffer) void {
-    if (controller.get_digital(controls.up)) {
-        if (controller.get_digital(controls.down)) // if both are hit at the same time, score down at full speed
-            spin(tower_velocity, port_buffer)
-        else
-            spin(tower_velocity, port_buffer);
-    } else if (controller.get_digital(controls.down))
-        spin(-tower_velocity_down, port_buffer)
-    else if (controller.get_digital(controls.up_will))
-        _ = pros.adi.adi_digital_write(little_will_port, true)
-    else if (controller.get_digital(controls.down_will))
-        _ = pros.adi.adi_digital_write(little_will_port, false)
-    else
-        spin(0, port_buffer);
+    if (controller.get_digital(controls.top_forwards)) {
+        motors.top.setVelocity(tower_velocity, port_buffer);
+        motors.bottom.setVelocity(tower_velocity, port_buffer);
+    } else if (controller.get_digital(controls.top_backwards)) {
+        motors.top.setVelocity(-tower_velocity, port_buffer);
+        motors.bottom.setVelocity(-tower_outtake_vel, port_buffer);
+    } else {
+        motors.top.setVelocity(0, port_buffer);
+        motors.bottom.setVelocity(0, port_buffer);
+    }
+
+    // if (controller.get_digital(controls.bottom_forwards))
+    //     motors.bottom.setVelocity(tower_velocity, port_buffer)
+    // else if (controller.get_digital(controls.bottom_backwards))
+    //     motors.bottom.setVelocity(-tower_outtake_vel, port_buffer)
+    // else 
+    //     motors.bottom.setVelocity(0, port_buffer);
+
+    if (controller.get_digital(controls.up_will))
+        _ = pros.adi.adi_digital_write(little_will_port, true);
+    if (controller.get_digital(controls.down_will))
+        _ = pros.adi.adi_digital_write(little_will_port, false);
 }
 
 /// Initializes the tower
 pub fn init() void {
-    motors.a.init();
-    motors.b.init();
+    motors.top.init();
+    motors.bottom.init();
+    _ = pros.adi.adi_port_set_config(little_will_port, pros.adi.E_ADI_DIGITAL_OUT);
+}
+
+/// Spins all the motors of the tower based on an input velocity `(-1..=1)` to score mid, reporting disconnects to the port buffer
+pub fn scoreMid(velocity: f64, port_buffer: *port.PortBuffer) void {
+    motors.top.setVelocity(-velocity, port_buffer);
+    motors.bottom.setVelocity(velocity, port_buffer);
 }
 
 /// Spins all the motors of the tower based on an input velocity `(-1..=1)`, reporting disconnects to the port buffer
 pub fn spin(velocity: f64, port_buffer: *port.PortBuffer) void {
-    motors.a.setVelocity(velocity, port_buffer);
-    motors.b.setVelocity(velocity, port_buffer);
+    motors.top.setVelocity(velocity, port_buffer);
+    motors.bottom.setVelocity(velocity, port_buffer);
 }

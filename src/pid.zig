@@ -71,7 +71,7 @@ pub fn move(desired_coord: odom.Coord, odom_state: *odom.State, port_buffer: *po
 
         // get the current reachable distance (through dotproduct)
         const displacement = desired_coord - odom_state.coord;
-        const distance = vector.dotProduct(f64, displacement, vector.polarToCartesian(1, yaw));
+        const distance = @abs(vector.dotProduct(f64, displacement, vector.polarToCartesian(1, yaw)));
 
         // if it's within precision, break
         if (distance < auton.precision_mm) {
@@ -94,7 +94,8 @@ pub fn move(desired_coord: odom.Coord, odom_state: *odom.State, port_buffer: *po
 }
 
 /// State-machine for rotating towards a yaw goal until a precision threshold is met (auton) with a PID
-pub fn rotate(desired_yaw: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+pub fn rotateDeg(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    const desired_yaw = math.degreesToRadians(desired_yaw_deg);
     // state machine state
     var now = pros.rtos.millis();
     var pid = State{};
@@ -107,7 +108,8 @@ pub fn rotate(desired_yaw: f64, odom_state: *odom.State, port_buffer: *port.Port
         const err = odom.minimalAngleDiff(yaw, desired_yaw);
 
         // if it's within precision, break
-        if (err < auton.precision_rad) {
+        if (@abs(err) < auton.precision_rad) {
+            _ = pros.printf("err: %lf, precision: %lf\n", err, auton.precision_rad);
             // stop driving
             drive.driveLeft(0, port_buffer);
             drive.driveRight(0, port_buffer);
@@ -115,7 +117,7 @@ pub fn rotate(desired_yaw: f64, odom_state: *odom.State, port_buffer: *port.Port
         }
 
         // get controls from pid
-        const x = pid.update(auton.yaw_pid_param, yaw, auton.cycle_delay);
+        const x = pid.update(auton.yaw_pid_param, err, auton.cycle_delay);
 
         // drive it
         const ldr, const rdr = drive.arcadeDrive(x, 0);

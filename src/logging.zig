@@ -65,10 +65,10 @@ pub const csv_header_velocity = "time (ms),vertical movement (m/s),lateral movem
 pub fn velocity(file: ?*std.c.FILE, state: odom.State) void {
     const f = file orelse return;
 
-    var tower_a_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.a.port));
+    var tower_a_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.top.port));
     if (tower_a_vel == def.pros_err_f64) // in case it fails
         tower_a_vel = 0;
-    var tower_b_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.b.port));
+    var tower_b_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.bottom.port));
     if (tower_b_vel == def.pros_err_f64) // in case it fails
         tower_b_vel = 0;
     var tower_c_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.c.port));
@@ -93,10 +93,10 @@ pub fn temp(ms: u32, file: ?*std.c.FILE) void {
     if (battery_temp == def.pros_err_f64) // in case it fails
         battery_temp = 0;
 
-    var tower_a_temp = pros.motors.motor_get_temperature(tower.motors.a.port);
+    var tower_a_temp = pros.motors.motor_get_temperature(tower.motors.top.port);
     if (tower_a_temp == def.pros_err_f64) // in case it fails
         tower_a_temp = 0;
-    var tower_b_temp = pros.motors.motor_get_temperature(tower.motors.b.port);
+    var tower_b_temp = pros.motors.motor_get_temperature(tower.motors.bottom.port);
     if (tower_b_temp == def.pros_err_f64) // in case it fails
         tower_b_temp = 0;
 

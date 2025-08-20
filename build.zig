@@ -16,9 +16,8 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    // define the user-library
-    const userlib = b.addObject(.{
-        .name = "userlib",
+    // define the robot code
+    const robot_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = vex_v5_target,
         .optimize = optimize,
@@ -47,7 +46,7 @@ pub fn build(b: *std.Build) void {
     options.addOption(?[]const u8, "tune", tune);
     options.addOption(bool, "debug_mode", debug_mode orelse false);
     options.addOption(?[]const u8, "auton_routine", auton_routine);
-    userlib.root_module.addOptions("options", options);
+    robot_mod.addOptions("options", options);
 
     // define the pros module
     const pros_mod = b.createModule(.{
@@ -56,34 +55,47 @@ pub fn build(b: *std.Build) void {
 
     // add the pros header files and module
     pros_mod.addIncludePath(b.path("include"));
-    userlib.root_module.addImport("pros", pros_mod);
+    robot_mod.addImport("pros", pros_mod);
+
+    // create the object
+    const robot_obj = b.addObject(.{
+        .name = "BotGoBrrr",
+        .root_module = robot_mod,
+    });
 
     // install the object (for the makefile)
-    const obj_install = b.addInstallBinFile(userlib.getEmittedBin(), "userlib.zig.o");
+    const obj_install = b.addInstallBinFile(robot_obj.getEmittedBin(), "robot.zig.o");
     const install_obj = b.step("obj", "Builds the userlib as a .o file");
     install_obj.dependOn(&obj_install.step);
     b.getInstallStep().dependOn(&obj_install.step);
 
     // create the test binary
     const local_target = b.standardTargetOptions(.{});
-    const test_exe = b.addTest(.{
+    const test_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = local_target,
+    });
+    const test_exe = b.addTest(.{
+        .root_module = test_mod,
     });
     test_exe.root_module.addImport("pros", pros_mod);
     test_exe.root_module.addOptions("options", options);
 
     // add the stub library for the test and link it
-    const stubs = b.addStaticLibrary(.{
-        .name = "stubs",
+    const stubs_mod = b.createModule(.{
         .root_source_file = b.path("include/stub.zig"),
         .target = local_target,
         .optimize = optimize,
     });
-    test_exe.linkLibrary(stubs);
+    const stubs_lib = b.addLibrary(.{
+        .linkage = .static,
+        .name = "stubs",
+        .root_module = stubs_mod,
+    });
+    test_exe.linkLibrary(stubs_lib);
 
     // add a test step for the userlib
     const test_step = b.step("test", "Run unit tests");
-    const run_tests = b.addRunArtifact(test_exe);
-    test_step.dependOn(&run_tests.step);
+    const run_unit_tests = b.addRunArtifact(test_exe);
+    test_step.dependOn(&run_unit_tests.step);
 }
