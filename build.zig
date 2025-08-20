@@ -64,7 +64,7 @@ pub fn build(b: *std.Build) void {
     });
 
     // install the object (for the makefile)
-    const obj_install = b.addInstallBinFile(robot_obj.getEmittedBin(), "robot.zig.o");
+    const obj_install = b.addInstallBinFile(robot_obj.getEmittedBin(), "userlib.zig.o");
     const install_obj = b.step("obj", "Builds the userlib as a .o file");
     install_obj.dependOn(&obj_install.step);
     b.getInstallStep().dependOn(&obj_install.step);
