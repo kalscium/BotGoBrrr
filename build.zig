@@ -2,6 +2,7 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     // get the standard config options
+    const local_target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
     // define the vex v5 brain target
@@ -70,7 +71,6 @@ pub fn build(b: *std.Build) void {
     b.getInstallStep().dependOn(&obj_install.step);
 
     // create the test binary
-    const local_target = b.standardTargetOptions(.{});
     const test_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = local_target,
@@ -98,4 +98,34 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run unit tests");
     const run_unit_tests = b.addRunArtifact(test_exe);
     test_step.dependOn(&run_unit_tests.step);
+
+    // create the simulation binary
+    const sim_mod = b.createModule(.{
+        .root_source_file = b.path("src/simulation.zig"),
+        .target = local_target,
+        .optimize = optimize,
+    });
+    const sim_exe = b.addExecutable(.{
+        .name = "simulation",
+        .root_module = sim_mod,
+    });
+    const sim_robot_mod = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = local_target,
+        .optimize = optimize,
+    });
+    sim_robot_mod.addImport("pros", pros_mod);
+    sim_robot_mod.addOptions("options", options);
+    const sim_robot_obj = b.addObject(.{
+        .name = "sim_robot_code",
+        .root_module = sim_robot_mod,
+    });
+
+    // simulation link step
+    sim_exe.addObject(sim_robot_obj);
+
+    // add a simulation step
+    const sim_step = b.step("simulate", "runs the robot code in a simulated Vex VRC brain");
+    const run_sim = b.addRunArtifact(sim_exe);
+    sim_step.dependOn(&run_sim.step);
 }
