@@ -14,9 +14,10 @@ pub const tower_outtake_vel: f64 = 0.33;
 /// The motor configs
 pub const motors = struct {
     // The two motors in the tower
+    pub const hood = towerMotor(-5, pros.motors.E_MOTOR_GEAR_200);
     pub const top = towerMotor(4, pros.motors.E_MOTOR_GEAR_200);
     pub const mid = towerMotor(6, pros.motors.E_MOTOR_GEAR_200);
-    pub const bottom = towerMotor(-18, pros.motors.E_MOTOR_GEAR_BLUE);
+    pub const bottom = towerMotor(18, pros.motors.E_MOTOR_GEAR_200);
 };
 
 /// The ADI port of the little will dropping pneumatics
@@ -56,23 +57,13 @@ pub fn controllerUpdate(port_buffer: *port.PortBuffer) void {
     if (controller.get_digital(controls.top_forwards) and controller.get_digital(controls.top_backwards)) {
         spin(tower_velocity, port_buffer);
     } else {
-        _ = pros.motors.motor_set_brake_mode(motors.top.port, pros.motors.E_MOTOR_BRAKE_COAST);
-
         if (controller.get_digital(controls.top_forwards))
-            storeBlocks(tower_outtake_vel, port_buffer)
+            storeBlocks(tower_velocity, port_buffer)
         else if (controller.get_digital(controls.top_backwards)) 
             spin(-tower_outtake_vel, port_buffer)
         else 
             spin(0.0, port_buffer);
-        
     }
-
-    // if (controller.get_digital(controls.bottom_forwards))
-    //     motors.bottom.setVelocity(tower_velocity, port_buffer)
-    // else if (controller.get_digital(controls.bottom_backwards))
-    //     motors.bottom.setVelocity(-tower_outtake_vel, port_buffer)
-    // else 
-    //     motors.bottom.setVelocity(0, port_buffer);
 
     if (controller.get_digital(controls.up_will))
         _ = pros.adi.adi_digital_write(little_will_port, true);
@@ -82,6 +73,7 @@ pub fn controllerUpdate(port_buffer: *port.PortBuffer) void {
 
 /// Initializes the tower
 pub fn init() void {
+    motors.hood.init();
     motors.top.init();
     motors.mid.init();
     motors.bottom.init();
@@ -90,14 +82,15 @@ pub fn init() void {
 
 /// Spins all the motors of the tower based on an input velocity `(-1..=1)` to store (not score) blocks, reporting disconnects to the port buffer
 pub fn storeBlocks(velocity: f64, port_buffer: *port.PortBuffer) void {
-    _ = pros.motors.motor_set_brake_mode(motors.top.port, pros.motors.E_MOTOR_BRAKE_HOLD);
-    motors.top.setVelocity(0.0, port_buffer);
+    motors.hood.setVelocity(-velocity, port_buffer);
+    motors.top.setVelocity(velocity, port_buffer);
     motors.mid.setVelocity(velocity, port_buffer);
     motors.bottom.setVelocity(velocity, port_buffer);
 }
 
 /// Spins all the motors of the tower based on an input velocity `(-1..=1)`, reporting disconnects to the port buffer
 pub fn spin(velocity: f64, port_buffer: *port.PortBuffer) void {
+    motors.hood.setVelocity(velocity, port_buffer);
     motors.top.setVelocity(velocity, port_buffer);
     motors.mid.setVelocity(velocity, port_buffer);
     motors.bottom.setVelocity(velocity, port_buffer);

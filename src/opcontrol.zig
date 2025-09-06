@@ -100,10 +100,6 @@ pub fn opcontrol() callconv(.C) void {
     if (cycles / 50 == 0)
         logging.battery(now, battery_file);
 
-    // log the temperature every 32 cycles
-    if (cycles / 32 == 0)
-        logging.temp(now, drive_temp_file);
-
     // log odom coordinates every 16 cycles
     if (cycles / 16 == 0)
         logging.coords(coords_file, odom_state);
