@@ -89,5 +89,6 @@ export fn task_delay_until(prev_time: *u32, delta_time: u32) callconv(.C) void {
 
     if (prev_time.* % 1000 == 0)
         std.debug.print("x: {d}, y: {d}, yaw: {d}\n", .{simulation.sim_state.x, simulation.sim_state.y, std.math.radiansToDegrees(simulation.sim_state.yaw)});
-    simulation.sim_state.forwardKinematics(@as(f64, @floatFromInt(delta_time))/1000.0);
+    simulation.sim_state.forwardKinematics(@floatFromInt(delta_time));
+    simulation.sim_state.log() catch unreachable;
 }
