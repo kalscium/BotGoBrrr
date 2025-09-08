@@ -75,6 +75,8 @@ pub fn format(writer: anytype, fmt: [*:0]const u8, va_list: *std.builtin.VaList)
                 continue // don't unset parse_arg
             else if (char == 'd' or char == 'i') // integers
                 try std.fmt.format(writer, "{}", .{@cVaArg(va_list, c_int)})
+            else if (char == 'u') // unsigned integers
+                try std.fmt.format(writer, "{}", .{@cVaArg(va_list, c_uint)})
             else if (char == 'f') // floating-point
                 // for some reason only f64 produces valid values...
                 try std.fmt.format(writer, "{d}", .{@cVaArg(va_list, f64)})

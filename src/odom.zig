@@ -11,7 +11,7 @@ const controller = @import("controller.zig");
 pub const record_coord_button = pros.misc.E_CONTROLLER_DIGITAL_UP;
 
 /// The current radius of the robot's odometry wheel in mm
-const wheel_radius = 34.925;
+pub const wheel_radius = 34.925;
 
 /// The starting coordinate of the robot
 pub const start_coord = Coord{ 0, 0 };
@@ -21,7 +21,7 @@ pub const rotation_port_vertical = 13;
 /// The port of the lateral odometry rotation sensor
 pub const rotation_port_lateral = 12;
 /// The offset from the midde (in mm), along the vertical axis of the lateral rotation sensor
-const rot_lateral_offset = -12.7;
+pub const rot_lateral_offset = -12.7;
 /// The port of the IMU sensor
 pub const imu_port = 14;
 

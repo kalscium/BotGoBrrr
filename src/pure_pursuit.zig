@@ -9,7 +9,7 @@ const auton = @import("autonomous.zig");
 const drive = @import("drive.zig");
 
 /// The width of the robot in mm
-pub const robot_width: comptime_float = 290.0; // placeholder
+pub const robot_width: comptime_float = 290.0;
 
 /// The smallest possible f64 value that's just outside of precision.
 /// So, this will be automatically removed/lost if added to a value

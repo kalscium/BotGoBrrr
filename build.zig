@@ -114,6 +114,7 @@ pub fn build(b: *std.Build) void {
         .target = local_target,
         .optimize = optimize,
     });
+    sim_mod.addImport("pros", pros_mod);
     sim_robot_mod.addImport("pros", pros_mod);
     sim_robot_mod.addOptions("options", options);
     const sim_robot_obj = b.addObject(.{

@@ -58,8 +58,8 @@ pub const pure_pursuit_params = pure_pursuit.Parameters{
 };
 
 export fn autonomous() callconv(.C) void {
-    autonomousNew();
-    if (true) return; // remove this later
+    // autonomousNew();
+    // if (true) return; // remove this later
     if (comptime options.auton_routine) |routine|
         if (comptime std.mem.eql(u8, routine, "left"))
             autonomousLeft()

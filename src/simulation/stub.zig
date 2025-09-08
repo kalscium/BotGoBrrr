@@ -12,10 +12,6 @@ export fn ftell() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn fwrite() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn remove() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn rewind() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-// export fn printf(fmt: [*:0]const u8, ...) callconv(.C) c_int {
-//     std.debug.print("{s}", .{fmt});
-//     return 0;
-// }
 export fn scanf() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn fscanf() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn fgetc() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
@@ -28,7 +24,6 @@ export fn puts() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 // PROS stubs
 export fn adi_port_get_config() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn adi_port_get_value() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-export fn adi_port_set_config() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn adi_port_set_value() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn adi_analog_calibrate() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn adi_analog_read() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
@@ -144,7 +139,6 @@ export fn gps_get_accel() callconv(.C) void { std.debug.panic("unimplemented", .
 export fn gps_get_accel_x() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn gps_get_accel_y() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn gps_get_accel_z() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-export fn imu_reset() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn imu_reset_blocking() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn imu_set_data_rate() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn imu_get_rotation() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
@@ -157,7 +151,6 @@ export fn imu_get_status() callconv(.C) void { std.debug.panic("unimplemented", 
 export fn imu_set_euler() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn imu_get_pitch() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn imu_get_roll() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-export fn imu_get_yaw() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn imu_tare_rotation() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn imu_tare_pitch() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn imu_tare_roll() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
@@ -202,7 +195,6 @@ export fn motor_move() callconv(.C) void { std.debug.panic("unimplemented", .{})
 export fn motor_brake() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_move_absolute() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_move_relative() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-export fn motor_move_velocity() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_move_voltage() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_modify_profiled_velocity() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_get_target_position() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
@@ -222,8 +214,6 @@ export fn motor_set_zero_position() callconv(.C) void { std.debug.panic("unimple
 export fn motor_tare_position() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_set_brake_mode() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_set_current_limit() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-export fn motor_set_encoder_units() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-export fn motor_set_gearing() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_set_voltage_limit() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_get_brake_mode() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_get_current_limit() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
@@ -248,21 +238,12 @@ export fn rotation_set_data_rate() callconv(.C) void { std.debug.panic("unimplem
 export fn rotation_reset_position() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn rotation_get_position() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn rotation_get_velocity() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-export fn rotation_get_angle() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-export fn rotation_set_reversed() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn rotation_reverse() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn rotation_init_reverse() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn rotation_get_reversed() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-var time_start: i64 = 0;
-export fn millis() callconv(.C) u32 {
-    if (time_start == 0)
-        time_start = std.time.milliTimestamp();
-    return @intCast(std.time.milliTimestamp() - time_start);
-}
 export fn task_delete() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn task_delay() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn delay() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-export fn task_delay_until() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn task_get_priority() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn task_set_priority() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn task_get_state() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
