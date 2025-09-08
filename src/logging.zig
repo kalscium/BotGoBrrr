@@ -31,7 +31,7 @@ pub fn benchmark(file: ?*std.c.FILE, compute_time: u32, log_time: u32, total_tim
 }
 
 /// The CSV header for the battery percentage (battery & controller)
-pub const csv_header_battery = "time (s), battery capacity%,controller level%\n";
+pub const csv_header_battery = "time (s), battery capacity%%,controller level%%\n";
 
 /// Checks the battery percentages and logs them
 pub fn battery(ms: u32, file: ?*std.c.FILE) void {
