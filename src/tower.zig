@@ -20,24 +20,18 @@ pub const motors = struct {
     pub const bottom = towerMotor(18, pros.motors.E_MOTOR_GEAR_200);
 };
 
-/// The ADI port of the little will dropping pneumatics
-pub const little_will_port = 'A';
-
 /// The tower controller controls
 pub const controls = struct {
     /// The button for spinning the tower up
-    pub const top_forwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_L2;
-    /// The button for spinning the tower up
-    pub const bottom_forwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_R1;
-    /// The button for spinning the tower up
-    pub const top_backwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_L1;
-    /// The button for spinning the tower up
-    pub const bottom_backwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_L1;
-    /// The button for dropping little will
-    pub const down_will: c_int = pros.misc.E_CONTROLLER_DIGITAL_B;
-    /// The button for dropping little will
-    pub const up_will: c_int = pros.misc.E_CONTROLLER_DIGITAL_X;
+    pub const forwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_L2;
+    /// The button for spinning the tower down
+    pub const backwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_L1;
+    /// The button for toggling little will
+    pub const toggle_will: c_int = pros.misc.E_CONTROLLER_DIGITAL_B;
 };
+
+/// The ADI port of the little will dropping pneumatics
+pub const little_will_port = 'A';
 
 /// Tower motor default configs (port is negative for reversed)
 pub fn towerMotor(comptime mport: comptime_int, gearset: pros.motors.motor_gearset_e_t) Motor {
@@ -50,25 +44,43 @@ pub fn towerMotor(comptime mport: comptime_int, gearset: pros.motors.motor_gears
     };
 }
 
+/// The state of the tower
+pub const TowerState = struct {
+    /// If little will is toggled on
+    little_will: bool = false,
+    /// If the intake is toggled on
+    intake: bool = false,
+};
+
 /// Reads the controller and updates the towers accordingly
 /// 
 /// Updates the port buffer upon motor disconnects.
-pub fn controllerUpdate(port_buffer: *port.PortBuffer) void {
-    if (controller.get_digital(controls.top_forwards) and controller.get_digital(controls.top_backwards)) {
+pub fn controllerUpdate(state: *TowerState, port_buffer: *port.PortBuffer) void {
+    if (controller.get_digital(controls.forwards) and controller.get_digital(controls.backwards)) {
         spin(tower_velocity, port_buffer);
     } else {
-        if (controller.get_digital(controls.top_forwards))
-            storeBlocks(tower_velocity, port_buffer)
-        else if (controller.get_digital(controls.top_backwards)) 
+        // check for the intake toggle
+        if (controller.get_digital_new_press(controls.forwards)) {
+            state.intake = !state.intake;
+            if (state.intake) // rumble when toggled on
+                _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, ".");
+        }
+
+        if (controller.get_digital(controls.backwards)) 
             spin(-tower_outtake_vel, port_buffer)
+        else if (state.intake)
+            storeBlocks(tower_velocity, port_buffer)
         else 
             spin(0.0, port_buffer);
     }
 
-    if (controller.get_digital(controls.up_will))
-        _ = pros.adi.adi_digital_write(little_will_port, true);
-    if (controller.get_digital(controls.down_will))
-        _ = pros.adi.adi_digital_write(little_will_port, false);
+    if (controller.get_digital_new_press(controls.toggle_will)) {
+        state.little_will = !state.little_will;
+        // rumble if down
+        if (state.little_will)
+            _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, "-");
+        _ = pros.adi.adi_digital_write(little_will_port, state.little_will);
+    }
 }
 
 /// Initializes the tower
