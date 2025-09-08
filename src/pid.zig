@@ -57,24 +57,23 @@ pub const State = struct {
     }
 };
 
-/// State-machine for moving towards a movement goal until a precision threshold is met (auton) with a PID
-pub fn move(desired_coord: odom.Coord, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+/// State-machine for moving a certain distance in mm until a precision threshold is met (auton) with a PID
+pub fn move(goal_distance: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
     // state machine state
     var now = pros.rtos.millis();
     var pid = State{};
+    const direction = vector.polarToCartesian(1, odom_state.prev_yaw);
+    const start_pos = vector.dotProduct(f64, odom_state.coord, direction);
     while (true) {
         // update odom
         odom_state.update(port_buffer);
 
-        // get the yaw
-        const yaw = odom.getYaw(port_buffer) orelse 0;
-
         // get the current reachable distance (through dotproduct)
-        const displacement = desired_coord - odom_state.coord;
-        const distance = @abs(vector.dotProduct(f64, displacement, vector.polarToCartesian(1, yaw)));
+        const distance_travelled = vector.dotProduct(f64, odom_state.coord, direction) - start_pos;
+        const distance = goal_distance - distance_travelled;
 
         // if it's within precision, break
-        if (distance < auton.precision_mm) {
+        if (@abs(distance) < auton.precision_mm) {
             // stop driving
             drive.driveLeft(0, port_buffer);
             drive.driveRight(0, port_buffer);
@@ -85,8 +84,8 @@ pub fn move(desired_coord: odom.Coord, odom_state: *odom.State, port_buffer: *po
         const y = pid.update(auton.mov_pid_param, distance, auton.cycle_delay);
 
         // drive it
-        drive.driveLeft(y, port_buffer);
-        drive.driveRight(y, port_buffer);
+        drive.driveLeft(@intFromFloat(y * 12000), port_buffer);
+        drive.driveRight(@intFromFloat(y * 12000), port_buffer);
 
         // wait for the next cycle
         pros.rtos.task_delay_until(&now, auton.cycle_delay);

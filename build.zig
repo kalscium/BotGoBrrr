@@ -31,7 +31,8 @@ pub fn build(b: *std.Build) void {
     const log_velocity = b.option(bool, "log-velocity", "Sets whether to log the velocity of the robot every tick");
     const log_bench = b.option(bool, "benchmark", "Sets whether to log cycle times for benchmarking");
     const tune = b.option([]const u8, "tune", "Sets the kind of tuning (instead of opcontrol) you wish to do");
-    const debug_mode = b.option(bool, "dbgmode", "Sets whether to enable 'debug mode' opcontrol, for debugging, tuning, planning, and showcasing auton");
+    const debug_mode = b.option(bool, "dbgmode", "Sets whether to enable 'debug mode' opcontrol, for debugging, tuning, planning, and showcasing auton (pure pursuit)");
+    const debug_mode_pid = b.option(bool, "dbgmode-pid", "Sets whether to enable 'debug mode' for PIDs");
     const auton_routine = b.option([]const u8, "auton-routine", "Sets the auton routine to use/compile.");
 
     // options set
@@ -41,6 +42,7 @@ pub fn build(b: *std.Build) void {
     options.addOption(bool, "benchmark", log_bench orelse false);
     options.addOption(?[]const u8, "tune", tune);
     options.addOption(bool, "debug_mode", debug_mode orelse false);
+    options.addOption(bool, "debug_mode_pid", debug_mode_pid orelse false);
     options.addOption(?[]const u8, "auton_routine", auton_routine);
     robot_mod.addOptions("options", options);
 

@@ -5,7 +5,7 @@ const pros = @import("pros");
 const logging = @import("logging.zig");
 const port = @import("port.zig");
 const odom = @import("odom.zig");
-const pure_pursuit = @import("pure_pursuit.zig");
+const pid = @import("pid.zig");
 const auton = @import("autonomous.zig");
 const drive = @import("drive.zig");
 const controller = @import("controller.zig");
@@ -15,12 +15,15 @@ const vector = @import("vector.zig");
 const tank_vel: f64 = 0.2;
 
 /// The path to the debug-mode log file
-const log_path = "/usd/dbgmode.log";
+const log_path = "/usd/dbgmode_pid.log";
 
 const TunedParameter = enum(i8) {
-    search_radius = 0,
-    proportional = 1,
-    lookahead_window = 2,
+    yaw_kp = 0,
+    yaw_ki = 1,
+    yaw_kd = 2,
+    mov_kp = 3,
+    mov_ki = 4,
+    mov_kd = 5,
 
     pub fn cycle(self: *TunedParameter, amount: i8) void {
         const raw = @as(i8, @intFromEnum(self.*)) + amount;
@@ -28,19 +31,25 @@ const TunedParameter = enum(i8) {
         self.* = @enumFromInt(wrapped);
     }
 
-    pub fn set(self: TunedParameter, params: *pure_pursuit.Parameters, val: f64) void {
+    pub fn set(self: TunedParameter, yaw_param: *pid.Param, mov_param: *pid.Param, val: f64) void {
         switch (self) {
-            .search_radius => params.search_radius = val,
-            .proportional => params.kp = val,
-            .lookahead_window => params.lookahead_window = val,
+            .yaw_kp => yaw_param.kp = val,
+            .yaw_ki => yaw_param.ki = val,
+            .yaw_kd => yaw_param.kd = val,
+            .mov_kp => mov_param.kp = val,
+            .mov_ki => mov_param.ki = val,
+            .mov_kd => mov_param.kd = val,
         }
     }
 
-    pub fn get(self: TunedParameter, params: pure_pursuit.Parameters) f64 {
+    pub fn get(self: TunedParameter, yaw_param: pid.Param, mov_param: pid.Param) f64 {
         return switch (self) {
-            .search_radius => params.search_radius,
-            .proportional => params.kp,
-            .lookahead_window => params.lookahead_window,
+            .yaw_kp => yaw_param.kp,
+            .yaw_ki => yaw_param.ki,
+            .yaw_kd => yaw_param.kd,
+            .mov_kp => mov_param.kp,
+            .mov_ki => mov_param.ki,
+            .mov_kd => mov_param.kd,
         };
     }
 };
@@ -61,9 +70,10 @@ pub fn entry() void {
     // the path point stack, last_end & tuned pure pursuit parameters
     var path_stack = std.BoundedArray(odom.Coord, 32).init(0) catch unreachable; // 32 is a reasonable amount
     var last_end: usize = 0;
-    var params: pure_pursuit.Parameters = auton.pure_pursuit_params;
+    var yaw_params = auton.yaw_pid_param;
+    var mov_params = auton.mov_pid_param;
     var incr_order_of_mag: f64 = 0; // the order of magnitude of the parameter increments
-    var tuned_param = TunedParameter.search_radius; // the current auton paramter getting tuned
+    var tuned_param = TunedParameter.yaw_kp; // the current auton paramter getting tuned
     var rumble: enum { none, short, long } = .none; // concurrent queuing for the controller rumble (50ms speed limit)
 
     // main loop
@@ -86,18 +96,18 @@ pub fn entry() void {
 
             // otherwise calculate pure pursuit and follow it
             // calculate the robot's predicted location and base all future calculations off of it
-            const predicted = pure_pursuit.predictCoordYaw(odom_state, params.lookahead_window);
-            const path_seg_start = pure_pursuit.pickPathPoints(predicted.coord, params.search_radius, path_stack.slice(), &last_end);
-            const goal_point = pure_pursuit.interpolateGoal(predicted.coord, params.search_radius, path_seg_start, path_stack.slice()[last_end]);
-            const ratios = pure_pursuit.followArc(predicted.coord, goal_point, predicted.yaw);
-            const speed = pure_pursuit.speedController(predicted.coord, goal_point, params);
+            for (path_stack.slice()) |point| {
+                // calculate the point coord relative to the current coord and rotate and move to it
+                const rel_point = point - odom_state.coord;
+                const angle = vector.calDir(f64, rel_point);
+                const distance = vector.calMag(f64, rel_point);
 
-            const ldr, const rdr = ratios * @as(@Vector(2, f64), @splat(speed));
-            drive.driveLeft(@intFromFloat(ldr * 12000), &port_buffer);
-            drive.driveRight(@intFromFloat(rdr * 12000), &port_buffer);
+                pid.rotateDeg(std.math.radiansToDegrees(angle), &odom_state, &port_buffer);
+                pid.move(distance, &odom_state, &port_buffer);
+            }
 
             // if it's within precision, rumble and pause
-            if (vector.calMag(f64, path_stack.slice()[last_end] - odom_state.coord) < auton.precision_mm) {
+            if (vector.calMag(f64, path_stack.slice()[path_stack.len-1] - odom_state.coord) < auton.precision_mm) {
                 rumble = .long;
                 auton_paused = !auton_paused;
             }
@@ -138,9 +148,12 @@ pub fn entry() void {
                 _ = pros.fprintf(file, "}\n");
 
                 // print the parameters
-                _ = pros.fprintf(file, "pure pursuit parameters:\n");
-                inline for (@typeInfo(pure_pursuit.Parameters).@"struct".fields) |field|
-                    _ = pros.fprintf(file, "  * %s: %lf\n", @as([*:0]const c_char, @ptrCast(field.name)), @field(params, field.name));
+                _ = pros.fprintf(file, "yaw PID parameters:\n");
+                inline for (@typeInfo(pid.Param).@"struct".fields) |field|
+                    _ = pros.fprintf(file, "  * %s: %lf\n", @as([*:0]const c_char, @ptrCast(field.name)), @field(yaw_params, field.name));
+                _ = pros.fprintf(file, "mov PID parameters:\n");
+                inline for (@typeInfo(pid.Param).@"struct".fields) |field|
+                    _ = pros.fprintf(file, "  * %s: %lf\n", @as([*:0]const c_char, @ptrCast(field.name)), @field(mov_params, field.name));
 
                 // print the port buffer if there are disconnects
                 if (@as(u24, @bitCast(port_buffer)) != 0xFFFFFF) {
@@ -169,9 +182,9 @@ pub fn entry() void {
 
         // L2 doubles the parameter, L1 halves it
         if (controller.get_digital_new_press(pros.misc.E_CONTROLLER_DIGITAL_L2))
-            tuned_param.set(&params, tuned_param.get(params) * 2.0)
+            tuned_param.set(&yaw_params, &mov_params, tuned_param.get(yaw_params, mov_params) * 2.0)
         else if (controller.get_digital_new_press(pros.misc.E_CONTROLLER_DIGITAL_L1))
-            tuned_param.set(&params, tuned_param.get(params) / 2.0);
+            tuned_param.set(&yaw_params, &mov_params, tuned_param.get(yaw_params, mov_params) / 2.0);
 
         // left & right arrows increase and decrease the order of magnitude
         // (moves the decimal point)
@@ -182,23 +195,20 @@ pub fn entry() void {
 
         // R2 increments, R1 decrements (by the order of magnitude)
         if (controller.get_digital_new_press(pros.misc.E_CONTROLLER_DIGITAL_R2))
-            tuned_param.set(&params, tuned_param.get(params) + std.math.pow(f64, 10.0, incr_order_of_mag))
+            tuned_param.set(&yaw_params, &mov_params, tuned_param.get(yaw_params, mov_params) + std.math.pow(f64, 10.0, incr_order_of_mag))
         else if (controller.get_digital_new_press(pros.misc.E_CONTROLLER_DIGITAL_R1))
-            tuned_param.set(&params, tuned_param.get(params) - std.math.pow(f64, 10.0, incr_order_of_mag));
+            tuned_param.set(&yaw_params, &mov_params, tuned_param.get(yaw_params, mov_params) - std.math.pow(f64, 10.0, incr_order_of_mag));
 
         // display the parameter tuning menu on the controller
         if (cycles % 20 == 0) { // every 150ms
             // reports the current auton parameter getting tuned
-            // list goes as follows:
-            //   * search_radius
-            //   * proportional
-            //   * lookahead_win
-            //   * 180degturnmul
-            //   * precise_thres
             const label = switch (tuned_param) {
-                .search_radius    => "search_radius",
-                .proportional     => "proportional",
-                .lookahead_window => "lookahead_win",
+                .yaw_kp => "yaw_kp",
+                .yaw_ki => "yaw_ki",
+                .yaw_kd => "yaw_kd",
+                .mov_kp => "mov_kp",
+                .mov_ki => "mov_ki",
+                .mov_kd => "mov_kd",
             };
             _ = pros.misc.controller_print(pros.misc.E_CONTROLLER_MASTER, 0, 0, ">%s", @as([*:0]const c_char, @ptrCast(label)));
         } else if (cycles % 20 == 5) {
@@ -206,7 +216,7 @@ pub fn entry() void {
             _ = pros.misc.controller_print(pros.misc.E_CONTROLLER_MASTER, 1, 0, "10^%lf = %lf", incr_order_of_mag, std.math.pow(f64, 10, incr_order_of_mag));
         } else if (cycles % 20 == 10) {
             // reports the current value of the tuned parameter
-            _ = pros.misc.controller_print(pros.misc.E_CONTROLLER_MASTER, 2, 0, "$ %lf", tuned_param.get(params));
+            _ = pros.misc.controller_print(pros.misc.E_CONTROLLER_MASTER, 2, 0, "$ %lf", tuned_param.get(yaw_params, mov_params));
         } else if (cycles % 20 == 15) {
             // rumbles if the controller needs rumbling
             if (rumble == .short)
