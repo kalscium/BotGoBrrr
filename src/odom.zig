@@ -21,7 +21,7 @@ pub const rotation_port_vertical = 13;
 /// The port of the lateral odometry rotation sensor
 pub const rotation_port_lateral = 12;
 /// The offset from the midde (in mm), along the vertical axis of the lateral rotation sensor
-const rot_lateral_offset = -12.7;
+const rot_lateral_offset = 0; // quickfix
 /// The port of the IMU sensor
 pub const imu_port = 14;
 

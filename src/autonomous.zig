@@ -81,8 +81,8 @@ pub fn autonomousNew() void {
     var odom_state = odom.State.init(&port_buffer);
 
     pid.rotateDeg(-25.0, &odom_state, &port_buffer);
-    drive.driveLeft(0.5, &port_buffer);
-    drive.driveRight(0.5, &port_buffer);
+    drive.driveLeft(6000, &port_buffer);
+    drive.driveRight(6000, &port_buffer);
     wait(500, &odom_state, &port_buffer);
     drive.driveLeft(0, &port_buffer);
     drive.driveRight(0, &port_buffer);

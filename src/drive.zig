@@ -9,7 +9,7 @@ const options = @import("options");
 const controller = @import("controller.zig");
 
 /// Driving in reverse toggle button
-pub const reverse_toggle: c_int = pros.misc.E_CONTROLLER_DIGITAL_DOWN;
+pub const reverse_toggle: c_int = pros.misc.E_CONTROLLER_DIGITAL_LEFT;
 
 /// Drivetrain motor configs
 pub const drivetrain_motors = struct {
@@ -30,8 +30,8 @@ pub const drivetrain_motors = struct {
 };
 
 /// The multiplier applied to the robot's turning & movement speed normally
-pub const drive_multiplier = 0.5;
-pub const turn_multiplier = 0.20;
+pub const drive_multiplier = 1.0;
+pub const turn_multiplier = 1.0;
 
 /// Reads the controller and updates the drivetrain accordingly based upon the
 /// enabled build options
@@ -41,8 +41,8 @@ pub const turn_multiplier = 0.20;
 /// Updates the port buffer on any motor disconnects
 pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
     // hopefully gets set by one of the options
-    var ldr: f64 = 0;
-    var rdr: f64 = 0;
+    var ldr: i32 = 0;
+    var rdr: i32 = 0;
 
     if (comptime options.toggle_arcade) {
         ldr, rdr = toggleArcade();
@@ -52,8 +52,8 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
         const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127.0;
 
         // just do a simple tank drive
-        ldr = j1;
-        rdr = j2;
+        ldr = @intFromFloat(j1 * 12000);
+        rdr = @intFromFloat(j2 * 12000);
     }
 
     // check for toggling of the reverse toggle
@@ -100,7 +100,7 @@ pub fn init() void {
 
 /// Returns the desired left and right drive velocities based on the controller.
 /// For 'Toggle Arcade'
-pub fn toggleArcade() struct { f64, f64 } {
+pub fn toggleArcade() struct { i32, i32 } {
     // gets the normalized x and y from the left joystick
     var x: f64 = undefined;
     var y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
@@ -132,27 +132,27 @@ pub fn toggleArcade() struct { f64, f64 } {
     return arcadeDrive(x, y);
 }
 
-/// Converts -1..=1 x & y values into left & right drive velocities
-pub fn arcadeDrive(x: f64, y: f64) struct { f64, f64 } {
+/// Converts -1..=1 x & y values into left & right drive voltages
+pub fn arcadeDrive(x: f64, y: f64) struct { i32, i32 } {
     const ldr = std.math.clamp(y + x, -1, 1);
     const rdr = std.math.clamp(y - x, -1, 1);
 
-    return .{ ldr, rdr };
+    return .{ @intFromFloat(ldr * 12000), @intFromFloat(rdr * 12000) };
 }
 
-/// Drives the drivetrain side based upon the input velocity, reports any motor
+/// Drives the drivetrain side based upon the input voltage, reports any motor
 /// disconnects to the port buffer
-pub fn driveLeft(velocity: f64, port_buffer: *port.PortBuffer) void {
-    drivetrain_motors.l1.setVelocity(velocity, port_buffer);
-    drivetrain_motors.l2.setVelocity(velocity, port_buffer);
-    drivetrain_motors.l3.setVelocity(velocity, port_buffer);
+pub fn driveLeft(voltage: i32, port_buffer: *port.PortBuffer) void {
+    drivetrain_motors.l1.setVoltage(voltage, port_buffer);
+    drivetrain_motors.l2.setVoltage(voltage, port_buffer);
+    drivetrain_motors.l3.setVoltage(voltage, port_buffer);
 }
 
-/// Drives the drivetrain side based upon the input velocity
+/// Drives the drivetrain side based upon the input voltage
 /// 
 /// Disconnect buffer is a buffer of disconnected motor ports, 0s are ignored
-pub fn driveRight(velocity: f64, port_buffer: *port.PortBuffer) void {
-    drivetrain_motors.r1.setVelocity(velocity, port_buffer);
-    drivetrain_motors.r2.setVelocity(velocity, port_buffer);
-    drivetrain_motors.r3.setVelocity(velocity, port_buffer);
+pub fn driveRight(voltage: i32, port_buffer: *port.PortBuffer) void {
+    drivetrain_motors.r1.setVoltage(voltage, port_buffer);
+    drivetrain_motors.r2.setVoltage(voltage, port_buffer);
+    drivetrain_motors.r3.setVoltage(voltage, port_buffer);
 }

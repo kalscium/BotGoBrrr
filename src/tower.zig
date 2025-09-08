@@ -9,7 +9,7 @@ const controller = @import("controller.zig");
 /// The velocity of the tower spinning up
 pub const tower_velocity: f64 = 1.0;
 /// The velocity the tower when out-taking (b-down)
-pub const tower_outtake_vel: f64 = 0.33;
+pub const tower_outtake_vel: f64 = 1.0;
 
 /// The motor configs
 pub const motors = struct {
