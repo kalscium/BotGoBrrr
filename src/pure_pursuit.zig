@@ -51,8 +51,7 @@ pub fn autonFollowPath(path: []const odom.Coord, in_reverse: bool, odom_state: *
         // if it's within precision, break
         if (vector.calMag(f64, path[path.len-1] - odom_copy.coord) < auton.precision_mm) {
             // stop moving before breaking
-            drive.driveLeft(0, port_buffer);
-            drive.driveRight(0, port_buffer);
+            drive.driveVel(0, 0, port_buffer);
             break;
         }
 
@@ -85,8 +84,7 @@ pub fn autonFollowPath(path: []const odom.Coord, in_reverse: bool, odom_state: *
         }
 
         // drive the changes made
-        drive.driveLeft(ldr, port_buffer);
-        drive.driveRight(rdr, port_buffer);
+        drive.driveVel(ldr, rdr, port_buffer);
 
         // wait for the next cycle
         pros.rtos.task_delay_until(&now, auton.cycle_delay);

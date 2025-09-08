@@ -58,8 +58,8 @@ pub const pure_pursuit_params = pure_pursuit.Parameters{
 };
 
 export fn autonomous() callconv(.C) void {
-    autonomousNew();
-    if (true) return; // remove this later
+    // autonomousNew();
+    // if (true) return; // remove this later
     if (comptime options.auton_routine) |routine|
         if (comptime std.mem.eql(u8, routine, "left"))
             autonomousLeft()
@@ -81,11 +81,9 @@ pub fn autonomousNew() void {
     var odom_state = odom.State.init(&port_buffer);
 
     pid.rotateDeg(-25.0, &odom_state, &port_buffer);
-    drive.driveLeft(6000, &port_buffer);
-    drive.driveRight(6000, &port_buffer);
+    drive.driveVel(0.5, 0.5, &port_buffer);
     wait(500, &odom_state, &port_buffer);
-    drive.driveLeft(0, &port_buffer);
-    drive.driveRight(0, &port_buffer);
+    drive.driveVel(0, 0, &port_buffer);
 }
 
 pub fn autonomousLeft() void {
@@ -118,12 +116,10 @@ pub fn autonomousLeft() void {
     pid.rotateDeg(135.0, &odom_state, &port_buffer);
     // move forwards for 1 second at a slow speed with the tower active
     tower.spin(tower.tower_velocity, &port_buffer);
-    drive.driveLeft(0.2, &port_buffer);
-    drive.driveRight(0.2, &port_buffer);
+    drive.driveVel(0.2, 0.2, &port_buffer);
     wait(500, &odom_state, &port_buffer);
     tower.spin(0, &port_buffer);
-    drive.driveLeft(0, &port_buffer);
-    drive.driveRight(0, &port_buffer);
+    drive.driveVel(0, 0, &port_buffer);
 
     // drive to the centre goals, align and score
     pure_pursuit.autonFollowPath(&.{ .{ -40.844710, 1237.229800 }, }, false, &odom_state, &port_buffer);
@@ -170,12 +166,10 @@ pub fn autonomousRight() void {
     pid.rotateDeg(135.0, &odom_state, &port_buffer);
     // move forwards for 1 second at a slow speed with the tower active
     tower.spin(tower.tower_velocity, &port_buffer);
-    drive.driveLeft(0.2, &port_buffer);
-    drive.driveRight(0.2, &port_buffer);
+    drive.driveVel(0.2, 0.2, &port_buffer);
     wait(500, &odom_state, &port_buffer);
     tower.spin(0, &port_buffer);
-    drive.driveLeft(0, &port_buffer);
-    drive.driveRight(0, &port_buffer);
+    drive.driveVel(0, 0, &port_buffer);
 
     // drive to the centre goals, align and score
     pure_pursuit.autonFollowPath(&.{ .{ 0, 0 } }, false, &odom_state, &port_buffer);

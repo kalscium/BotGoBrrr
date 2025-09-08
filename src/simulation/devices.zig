@@ -76,6 +76,21 @@ export fn motor_move_velocity(port: i8, rpm: i32) callconv(.C) c_int {
     return 0;
 } 
 
+/// Moves a motor with the specified voltage (has extra effect for drivetrain motors)
+export fn motor_move_voltage(port: i8, voltage: i32) callconv(.C) c_int {
+    const uport: usize = @intCast(@abs(port));
+    const velocity = @as(f64, @floatFromInt(voltage)) / 12000.0;
+    simulation.sim_state.motor_velocities[uport] = velocity;
+
+    switch (port) {
+        configs.drive_left_port => simulation.sim_state.drive_left_vel = velocity,
+        configs.drive_right_port => simulation.sim_state.drive_right_vel = velocity,
+        else => {},
+    }
+
+    return 0;
+} 
+
 /// Gets the simulation's waited time in milliseconds
 export fn millis() callconv(.C) u32 {
     return simulation.sim_state.time;

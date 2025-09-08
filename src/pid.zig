@@ -110,8 +110,7 @@ pub fn rotateDeg(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer: *po
         if (@abs(err) < auton.precision_rad) {
             _ = pros.printf("err: %lf, precision: %lf\n", err, auton.precision_rad);
             // stop driving
-            drive.driveLeft(0, port_buffer);
-            drive.driveRight(0, port_buffer);
+            drive.driveVolt(0, 0, port_buffer);
             break;
         }
 
@@ -120,8 +119,7 @@ pub fn rotateDeg(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer: *po
 
         // drive it
         const ldr, const rdr = drive.arcadeDrive(x, 0);
-        drive.driveLeft(ldr, port_buffer);
-        drive.driveRight(rdr, port_buffer);
+        drive.driveVolt(ldr, rdr, port_buffer);
 
         // wait for the next cycle
         pros.rtos.task_delay_until(&now, auton.cycle_delay);

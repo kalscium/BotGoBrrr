@@ -14,7 +14,7 @@ pub fn sandboxPath(path: [*:0]const u8) ![]const u8 {
 }
 
 /// Custom implementation of the fopen func
-export fn fopen(filename: [*:0]const u8, mode: [*:0]const u8) ?*std.fs.File { // supposed to be ?*std.c.FILE but this is an evil hack to get things working
+export fn fopen(filename: [*:0]const u8, mode: [*:0]const u8) callconv(.C) ?*std.fs.File { // supposed to be ?*std.c.FILE but this is an evil hack to get things working
     // get the relative path
     const rel_path = sandboxPath(filename) catch return null;
     defer simulation.allocator.free(rel_path);
@@ -29,19 +29,25 @@ export fn fopen(filename: [*:0]const u8, mode: [*:0]const u8) ?*std.fs.File { //
     return file;
 }
 
+/// Custom implementation of the fwrite func
+export fn fwrite(ptr: [*]const u8, size: isize, nmemb: isize, stream: *std.fs.File) callconv(.C) c_long {
+    stream.writeAll(ptr[0..@intCast(size * nmemb)]) catch unreachable;
+    return 0;
+}
+
 /// Custom implementation of the fprintf func
-export fn fprintf(file: *std.fs.File, fmt: [*:0]const u8, ...) c_int {
+export fn fprintf(file: *std.fs.File, fmt: [*:0]const u8, ...) callconv(.C) c_int {
     // get va_list and stdout
     var va_list = @cVaStart();
     defer @cVaEnd(&va_list);
 
-    format(file.writer(), fmt, &va_list) catch {};
+    format(file.writer(), fmt, &va_list) catch unreachable;
 
     return 0; // OK code
 }
 
 /// Custom implementation of the fclose func
-export fn fclose(file: *std.fs.File) c_int { // should be *std.c.FILE, but this is an evil hack
+export fn fclose(file: *std.fs.File) callconv(.C) c_int { // should be *std.c.FILE, but this is an evil hack
     file.close(); // close the file
     simulation.allocator.destroy(file); // free the file ptr
     return 0;
@@ -54,7 +60,7 @@ export fn printf(fmt: [*:0]const u8, ...) callconv(.C) c_int {
     defer @cVaEnd(&va_list);
     const stdout = std.io.getStdOut().writer();
 
-    format(stdout, fmt, &va_list) catch {};
+    format(stdout, fmt, &va_list) catch unreachable;
 
     return 0; // OK code
 }
@@ -92,6 +98,6 @@ pub fn format(writer: anytype, fmt: [*:0]const u8, va_list: *std.builtin.VaList)
             continue;
         }
 
-        writer.writeByte(char) catch {};
+        writer.writeByte(char) catch unreachable;
     }
 }

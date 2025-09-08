@@ -87,8 +87,7 @@ pub fn controllerUpdate(drive_state: *DriveState, port_buffer: *port.PortBuffer)
     }
 
     // drive the drivetrain
-    driveLeft(ldr, port_buffer);
-    driveRight(rdr, port_buffer);
+    driveVolt(ldr, rdr, port_buffer);
 }
 
 /// Drivetrain default configs (port is negative for reversed)
@@ -142,19 +141,24 @@ pub fn arcadeDrive(x: f64, y: f64) struct { i32, i32 } {
     return .{ @intFromFloat(ldr * 12000), @intFromFloat(rdr * 12000) };
 }
 
-/// Drives the drivetrain side based upon the input voltage, reports any motor
-/// disconnects to the port buffer
-pub fn driveLeft(voltage: i32, port_buffer: *port.PortBuffer) void {
-    drivetrain_motors.l1.setVoltage(voltage, port_buffer);
-    drivetrain_motors.l2.setVoltage(voltage, port_buffer);
-    drivetrain_motors.l3.setVoltage(voltage, port_buffer);
+/// Drives the drivetrain based upon the input voltages for left and right,
+/// reports any motor disconnects to the port buffer
+pub fn driveVolt(ldr: i32, rdr: i32, port_buffer: *port.PortBuffer) void {
+    drivetrain_motors.l1.setVoltage(ldr, port_buffer);
+    drivetrain_motors.l2.setVoltage(ldr, port_buffer);
+    drivetrain_motors.l3.setVoltage(ldr, port_buffer);
+    drivetrain_motors.r1.setVoltage(rdr, port_buffer);
+    drivetrain_motors.r2.setVoltage(rdr, port_buffer);
+    drivetrain_motors.r3.setVoltage(rdr, port_buffer);
 }
 
-/// Drives the drivetrain side based upon the input voltage
-/// 
-/// Disconnect buffer is a buffer of disconnected motor ports, 0s are ignored
-pub fn driveRight(voltage: i32, port_buffer: *port.PortBuffer) void {
-    drivetrain_motors.r1.setVoltage(voltage, port_buffer);
-    drivetrain_motors.r2.setVoltage(voltage, port_buffer);
-    drivetrain_motors.r3.setVoltage(voltage, port_buffer);
+/// Drives the drivetrain based upon the input velocities for left and right,
+/// reports any motor disconnects to the port buffer
+pub fn driveVel(ldr: f64, rdr: f64, port_buffer: *port.PortBuffer) void {
+    drivetrain_motors.l1.setVelocity(ldr, port_buffer);
+    drivetrain_motors.l2.setVelocity(ldr, port_buffer);
+    drivetrain_motors.l3.setVelocity(ldr, port_buffer);
+    drivetrain_motors.r1.setVelocity(rdr, port_buffer);
+    drivetrain_motors.r2.setVelocity(rdr, port_buffer);
+    drivetrain_motors.r3.setVelocity(rdr, port_buffer);
 }

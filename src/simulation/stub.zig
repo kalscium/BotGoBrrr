@@ -9,7 +9,6 @@ export fn fread() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn freopen() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn fseek() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn ftell() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-export fn fwrite() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn remove() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn rewind() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn scanf() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
@@ -195,7 +194,6 @@ export fn motor_move() callconv(.C) void { std.debug.panic("unimplemented", .{})
 export fn motor_brake() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_move_absolute() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_move_relative() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-export fn motor_move_voltage() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_modify_profiled_velocity() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_get_target_position() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn motor_get_actual_velocity() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
