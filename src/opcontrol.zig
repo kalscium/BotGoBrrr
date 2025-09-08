@@ -98,11 +98,15 @@ pub fn opcontrol() callconv(.C) void {
     const logging_start_time = pros.rtos.millis();
 
     // log the battery every 50 cycles
-    if (cycles / 50 == 0)
+    if (cycles % 50 == 0)
         logging.battery(now, battery_file);
 
+    // log the battery every 50 cycles
+    if (cycles % 50 == 0)
+        logging.temperature(now, drive_temp_file);
+
     // log odom coordinates every 16 cycles
-    if (cycles / 16 == 0)
+    if (cycles % 16 == 0)
         logging.coords(coords_file, odom_state);
 
     // log odom velocities every tick
