@@ -79,22 +79,19 @@ pub fn entry() void {
             // update the drivetrain (tank drive)
             const ldr = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0 * tank_vel;
             const rdr = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127.0 * tank_vel;
-            drive.driveLeft(@intFromFloat(ldr * 12000), &port_buffer);
-            drive.driveRight(@intFromFloat(rdr * 12000), &port_buffer);
+            drive.driveVel(ldr, rdr, &port_buffer);
         } else {
             // run auton based upon the path stack
 
             // otherwise calculate pure pursuit and follow it
             // calculate the robot's predicted location and base all future calculations off of it
-            const predicted = pure_pursuit.predictCoordYaw(odom_state, params.lookahead_window);
-            const path_seg_start = pure_pursuit.pickPathPoints(predicted.coord, params.search_radius, path_stack.slice(), &last_end);
-            const goal_point = pure_pursuit.interpolateGoal(predicted.coord, params.search_radius, path_seg_start, path_stack.slice()[last_end]);
-            const ratios = pure_pursuit.followArc(predicted.coord, goal_point, predicted.yaw);
-            const speed = pure_pursuit.speedController(predicted.coord, goal_point, params);
+            const path_seg_start = pure_pursuit.pickPathPoints(odom_state.coord, params.search_radius, path_stack.slice(), &last_end);
+            const goal_point = pure_pursuit.interpolateGoal(odom_state.coord, params.search_radius, path_seg_start, path_stack.slice()[last_end]);
+            const ratios = pure_pursuit.followArc(odom_state.coord, goal_point, odom_state.prev_yaw);
+            const speed = pure_pursuit.speedController(odom_state.coord, goal_point, params);
 
             const ldr, const rdr = ratios * @as(@Vector(2, f64), @splat(speed));
-            drive.driveLeft(@intFromFloat(ldr * 12000), &port_buffer);
-            drive.driveRight(@intFromFloat(rdr * 12000), &port_buffer);
+            drive.driveVel(ldr, rdr, &port_buffer);
 
             // if it's within precision, rumble and pause
             if (vector.calMag(f64, path_stack.slice()[last_end] - odom_state.coord) < auton.precision_mm) {

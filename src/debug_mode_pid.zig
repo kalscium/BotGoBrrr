@@ -89,8 +89,7 @@ pub fn entry() void {
             // update the drivetrain (tank drive)
             const ldr = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0 * tank_vel;
             const rdr = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127.0 * tank_vel;
-            drive.driveLeft(@intFromFloat(ldr * 12000), &port_buffer);
-            drive.driveRight(@intFromFloat(rdr * 12000), &port_buffer);
+            drive.driveVolt(@intFromFloat(ldr * 12000), @intFromFloat(rdr * 12000), &port_buffer);
         } else {
             // run auton based upon the path stack
 

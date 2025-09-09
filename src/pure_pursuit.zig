@@ -57,20 +57,17 @@ pub fn autonFollowPath(path: []const odom.Coord, in_reverse: bool, odom_state: *
 
         const params = auton.pure_pursuit_params;
 
-        // calculate the robot's predicted location and base all future calculations off of it
-        const predicted = predictCoordYaw(odom_copy, params.lookahead_window);
-
         // pick the next path points
-        const path_seg_start = pickPathPoints(predicted.coord, params.search_radius, path, &last_end);
+        const path_seg_start = pickPathPoints(odom_state.coord, params.search_radius, path, &last_end);
 
         // interpolate the goal point
-        const goal_point = interpolateGoal(predicted.coord, params.search_radius, path_seg_start, path[last_end]);
+        const goal_point = interpolateGoal(odom_state.coord, params.search_radius, path_seg_start, path[last_end]);
 
         // calculate the left and right drive ratios
-        const ratios = followArc(predicted.coord, goal_point, predicted.yaw);
+        const ratios = followArc(odom_state.coord, goal_point, odom_state.prev_yaw);
 
         // calculate the speed for the robot
-        const speed = speedController(predicted.coord, goal_point, params);
+        const speed = speedController(odom_state.coord, goal_point, params);
 
         // find the left and right drive velocities from combining the speed and ratios
         // and then drive the robot at those values
@@ -216,35 +213,6 @@ pub fn followArc(coord: odom.Coord, goal: odom.Coord, yaw: f64) @Vector(2, f64) 
 test followArc {
     const ldr, const rdr = followArc(.{ -2, 1 }, .{ -2, 10 }, std.math.degreesToRadians(0));
     std.debug.assert(ldr == 1 and rdr == 1);
-}
-
-/// Calculates the robot's predicted location & yaw based upon the lookahead
-/// window and also odom state
-pub fn predictCoordYaw(odom_state: odom.State, lookahead_window: f64) struct{ coord: odom.Coord, yaw: f64 } {
-    // calculate the predicted robot location (from velocity & SUVATs)
-    const predicted_yaw = odom_state.prev_yaw + odom_state.rot_vel * lookahead_window;
-    const predicted_coord =
-        odom_state.coord + // current location
-        vector.polarToCartesian(odom_state.mov_ver_vel * lookahead_window, predicted_yaw) + // predicted vertical movement
-        vector.polarToCartesian(odom_state.mov_lat_vel * lookahead_window, predicted_yaw + comptime std.math.degreesToRadians(90)) // predicted lateral movement
-    ;
-
-    return .{ .coord = predicted_coord, .yaw = predicted_yaw };
-}
-
-test predictCoordYaw {
-    // example odom state
-    var state: odom.State = undefined;
-    state.mov_ver_vel = 1;
-    state.mov_lat_vel = 0.5;
-    state.coord = .{ 10, 10 };
-    state.rot_vel = std.math.degreesToRadians(10);
-
-    // predict the new coord
-    const new = predictCoordYaw(state, 3); // 3 ms into the future
-    // std.debug.print("new coord: {d}\nnew_yaw: {d}\n", .{ new.coord, std.math.radiansToDegrees(new.yaw) });
-    std.debug.assert(@reduce(.And, @round(new.coord) == @as(odom.Coord, .{ 13, 12 })));
-    std.debug.assert(@round(std.math.radiansToDegrees(new.yaw)) == 30);
 }
 
 /// Calculates the velocity multiplier (from 0..=1) for pure pursuit

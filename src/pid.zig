@@ -75,8 +75,7 @@ pub fn move(goal_distance: f64, odom_state: *odom.State, port_buffer: *port.Port
         // if it's within precision, break
         if (@abs(distance) < auton.precision_mm) {
             // stop driving
-            drive.driveLeft(0, port_buffer);
-            drive.driveRight(0, port_buffer);
+            drive.driveVolt(0, 0, port_buffer);
             break;
         }
 
@@ -84,8 +83,7 @@ pub fn move(goal_distance: f64, odom_state: *odom.State, port_buffer: *port.Port
         const y = pid.update(auton.mov_pid_param, distance, auton.cycle_delay);
 
         // drive it
-        drive.driveLeft(@intFromFloat(y * 12000), port_buffer);
-        drive.driveRight(@intFromFloat(y * 12000), port_buffer);
+        drive.driveVolt(@intFromFloat(y * 12000), @intFromFloat(y * 12000), port_buffer);
 
         // wait for the next cycle
         pros.rtos.task_delay_until(&now, auton.cycle_delay);

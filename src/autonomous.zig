@@ -20,9 +20,9 @@ pub const cycle_delay = 10;
 const port_buffer_path = "/usd/auton_port_buffers.bin";
 
 /// The 'precision' (in mm) that the robot must achieve before moving onto the next path coordinate
-pub const precision_mm: f64 = 10; // try 5
+pub const precision_mm: f64 = 5;
 /// The 'precision' (in radians) that the robot must achieve before moving onto the next path coordinate
-pub const precision_rad: f64 = std.math.degreesToRadians(1);
+pub const precision_rad: f64 = std.math.degreesToRadians(0.5);
 
 /// The *tuned* movement (Y) PID controller
 pub const mov_pid_param = pid.Param {
@@ -58,8 +58,8 @@ pub const pure_pursuit_params = pure_pursuit.Parameters{
 };
 
 export fn autonomous() callconv(.C) void {
-    // autonomousNew();
-    // if (true) return; // remove this later
+    autonomousNew();
+    if (true) return; // remove this later
     if (comptime options.auton_routine) |routine|
         if (comptime std.mem.eql(u8, routine, "left"))
             autonomousLeft()
@@ -81,9 +81,9 @@ pub fn autonomousNew() void {
     var odom_state = odom.State.init(&port_buffer);
 
     pid.rotateDeg(-25.0, &odom_state, &port_buffer);
-    drive.driveVel(0.5, 0.5, &port_buffer);
-    wait(500, &odom_state, &port_buffer);
-    drive.driveVel(0, 0, &port_buffer);
+    pid.move(10000, &odom_state, &port_buffer);
+    pid.rotateDeg(45.0, &odom_state, &port_buffer);
+    pid.move(1000, &odom_state, &port_buffer);
 }
 
 pub fn autonomousLeft() void {
