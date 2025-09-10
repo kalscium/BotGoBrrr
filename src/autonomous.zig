@@ -47,14 +47,13 @@ pub const yaw_pid_param = pid.Param {
 
 /// The *tuned* pure pursuit parameters
 pub const pure_pursuit_params = pure_pursuit.Parameters{
-    .search_ceiling = 300.0, // keep increasing until osccilations are gone
-    .search_floor = 190.5, // keep increasing until it's able to make 90 degree turn successfully
-    .kp = 0.5, // reasonable speed (accurate and fast enough), try 0.5 if you want it to be faster
+    .search_radius = 300.0,
+    .bounding_radius = 10,
+    .kp = 0.4,
+    .yaw_limit_deg = 15,
 };
 
 export fn autonomous() callconv(.C) void {
-    // autonomousNew();
-    // if (true) return; // remove this later
     if (comptime options.auton_routine) |routine|
         if (comptime std.mem.eql(u8, routine, "shad"))
             autonomousShad()

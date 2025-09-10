@@ -58,19 +58,16 @@ pub fn autonFollowPath(path: []const odom.Coord, in_reverse: bool, odom_state: *
         const params = auton.pure_pursuit_params;
 
         // pick the next path points
-        const path_seg_start = pickPathPoints(odom_state.coord, params.search_ceiling, path, &last_end);
-
-        // calculate the search radius
-        const search_radius = calSearchRadius(odom_state.coord, path_seg_start, params);
+        const path_seg_start = pickPathPoints(odom_state.coord, params.bounding_radius, path, &last_end);
 
         // interpolate the goal point
-        const goal_point = interpolateGoal(odom_state.coord, search_radius, path_seg_start, path[last_end]);
+        const goal_point = interpolateGoal(odom_state.coord, params.search_radius, path_seg_start, path[last_end]);
 
         // calculate the left and right drive ratios
-        const ratios = followArc(odom_copy.coord, goal_point, odom_copy.prev_yaw);
+        const ratios = followArc(odom_copy.coord, goal_point, odom_copy.prev_yaw, comptime std.math.degreesToRadians(params.yaw_limit_deg));
 
         // calculate the speed for the robot
-        const speed = speedController(odom_state.coord, search_radius, goal_point, params);
+        const speed = speedController(odom_state.coord, path_seg_start, goal_point, params);
 
         // find the left and right drive velocities from combining the speed and ratios
         // and then drive the robot at those values
@@ -126,14 +123,6 @@ test pickPathPoints {
     std.debug.assert(last_end == 5);
 }
 
-/// Calculates the search radius from the pure pursuit parameters, the robot coord, and the path start point
-pub fn calSearchRadius(coord: odom.Coord, start_point: odom.Coord, params: Parameters) f64 {
-    // calculate the distance from the start point
-    const distance = vector.calMag(f64, coord - start_point);
-    // clamps the distance within the search ceiling and floor, to find the search radius we'll use
-    return std.math.clamp(distance, params.search_floor, params.search_ceiling);
-}
-
 /// Interpolates a goal coordinate from the path start point and end
 /// points, the robot coordinate and also the search radius (for
 /// calculating an extension)
@@ -177,7 +166,8 @@ test interpolateGoal {
 /// Sets the drivetrain ratio to drive in an arc that connects the
 /// current coordinate and goal coordinate, whilst keeping a constant
 /// angular velocity (robot yaw as tangent line).
-pub fn followArc(coord: odom.Coord, goal: odom.Coord, yaw: f64) @Vector(2, f64) {
+/// Also takes in the yaw limit in radians.
+pub fn followArc(coord: odom.Coord, goal: odom.Coord, yaw: f64, yaw_limit: f64) @Vector(2, f64) {
     // get the goal vector relative to the robot's current coordinate
     const rel_goal = goal - coord;
 
@@ -188,11 +178,11 @@ pub fn followArc(coord: odom.Coord, goal: odom.Coord, yaw: f64) @Vector(2, f64) 
     const theta = odom.minimalAngleDiff(yaw, path_seg_angle);
     const theta_sign = std.math.sign(theta);
 
-    // if theta is larger than 90 degrees (in radians that's pi/2), then just
+    // if theta is larger than yaw_limit degrees, then just
     // rotate towards the path segment angle
-    if (theta > comptime std.math.pi/2.0)
+    if (theta > yaw_limit)
         return .{ 1, -1 }
-    else if (theta < comptime -std.math.pi/2.0)
+    else if (theta < -yaw_limit)
         return .{ -1, 1 };
 
     // calculate the length of the path segment
@@ -218,54 +208,41 @@ pub fn followArc(coord: odom.Coord, goal: odom.Coord, yaw: f64) @Vector(2, f64) 
 }
 
 test followArc {
-    const ldr, const rdr = followArc(.{ -2, 1 }, .{ -2, 10 }, std.math.degreesToRadians(0));
+    const ldr, const rdr = followArc(.{ -2, 1 }, .{ -2, 10 }, std.math.degreesToRadians(0), std.math.degreesToRadians(10));
     std.debug.assert(ldr == 1 and rdr == 1);
 }
 
 /// Calculates the velocity multiplier (from 0..=1) for pure pursuit
 /// from the robot's coord & yaw, goal positions, and tuned parameters
-pub fn speedController(coord: odom.Coord, search_radius: f64, goal: odom.Coord, params: Parameters) f64 {
-    // calculate the distance & yaw errors between the coord and goal
+pub fn speedController(coord: odom.Coord, path_seg_start: odom.Coord, goal: odom.Coord, params: Parameters) f64 {
+    const rel_start = path_seg_start - coord;
+    const start_distance_err = @min(vector.calMag(f64, rel_start), params.search_radius); // start distance is not naturally bound to search_radius
+    const start_mul = @max(start_distance_err, params.bounding_radius) / params.search_radius; // so no zero speed
+
+    // calculate the distance between the goal and the robot and get a multiplier
     const rel_goal = goal - coord;
-    const distance_err = vector.calMag(f64, rel_goal); // distance will always be less or equal to the search radius
+    const goal_distance_err = vector.calMag(f64, rel_goal); // distance will always be less or equal to the search radius
+    const goal_mul = goal_distance_err / params.search_radius;
 
-    // calculate the proportional distance term of the controller
-    const prop_distance = distance_err / search_radius;
-
-    // calculate the final turning speed by multiplying together the multipliers
-    return prop_distance * params.kp;
+    // calculate the final turning speed by multiplying together the set speed and the minimum multiplier
+    return params.kp * @min(start_mul, goal_mul);
 }
 
 /// The tune-able parameters for pure pursuit, all in one place for convenience
 pub const Parameters = struct {
-    /// The ceiling of the search radius, in that the largest value the search
-    /// radius (usually based upon the distance from the path segment start) can
-    /// be.
-    /// 
-    /// This is the search radius, that is used to drive the robot across long
-    /// straight paths without turns.
-    /// 
-    /// Also, this is used to pick the start and end points of the path.
-    /// (Think of this as the simulation distance, and the search radius as the
-    ///  render distance).
-    ///
-    /// Start off with a small search ceiling, and keep increasing until it
-    /// stops osccilating left and right when travelling in a long straight line.
-    search_ceiling: f64,
+    /// Similar to traditional pure-pursuit's look-ahead.
+    /// A radius around the robot used to sample the path segment and travel towards it in a circle.
+    /// Larger the search radius, the smoother the movement, but the longer it takes to correct errors.
+    search_radius: f64,
 
-    /// The floor of the search radius, in that the smallest value the search
-    /// radius (usually based upon the distance from the path segment start) can
-    /// be.
-    /// 
-    /// This is the search radius that is used when the robot is making a turn
-    /// or traversing between path segments.
-    /// 
-    /// This is necessary, as to keep the robot continuing to move forwards.
-    /// 
-    /// Start off with a small value, and keep increasing until the robot's
-    /// osccilations are just small enough to complete a 90 degree turn without
-    /// issue.
-    search_floor: f64,
+    /// This is the radius that determines when to progress to the next path segment.
+    /// Think of this as the 'accuracy' of the coordinates path segments.
+    bounding_radius: f64,
+
+    /// The maximum rotational error before the robot just rotates towards the goal point.
+    /// Think of this as the yaw accuracy or tight-ness of the turns;
+    /// the larger the value, the smoother the turns, but the larger error.
+    yaw_limit_deg: f64,
 
     /// The proportional distance error speed multiplier for the robot (0..=1).
     /// 
@@ -285,8 +262,8 @@ test "robot forwards kinematics simulation" {
     const max_cycle = 10000; // simulation force quits after this many iterations (gives up)
     // the parameters for pure pursuit
     const params = Parameters{
-        .search_ceiling = 20,
-        .search_floor = 16,
+        .search_radius = 20,
+        .bounding_radius = 16,
         .kp = 1.0,
         .lookahead_window = 0.0,
     };
@@ -314,15 +291,14 @@ test "robot forwards kinematics simulation" {
     var last_end: usize = 0;
     while (now < max_cycle) : (now += 1) {
         // get the ldr & rdr from pure pursuit
-        const path_start = pickPathPoints(coord, params.search_ceiling, path, &last_end);
+        const path_start = pickPathPoints(coord, params.bounding_radius, path, &last_end);
         const path_end = path[last_end];
-        const search_radius = calSearchRadius(coord, path_start, params);
-        const goal_coord = interpolateGoal(coord, search_radius, path_start, path_end);
-        const speed = speedController(coord, search_radius, goal_coord, params);
-        const ldr, const rdr = followArc(coord, goal_coord, yaw);
+        const goal_coord = interpolateGoal(coord, params.search_radius, path_start, path_end);
+        const speed = speedController(coord, params.search_radius, goal_coord, params);
+        const ldr, const rdr = followArc(coord, goal_coord, yaw, comptime std.math.radiansToDegrees(params.yaw_limit_deg));
 
         // log the logs
-        try file.writer().print("{d},{d},{d},{d},{d},{d},{d},{d},{d},{d},{d}\n", .{
+        try file.writer().print("{d},{d},{d},{d},{d},{d},{d},{d},{d},{d}\n", .{
             std.math.radiansToDegrees(yaw),
             coord[0],
             coord[1],
@@ -333,7 +309,6 @@ test "robot forwards kinematics simulation" {
             ldr,
             rdr,
             speed,
-            search_radius,
         });
 
         // if the goal is reached, break
