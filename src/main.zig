@@ -17,6 +17,7 @@ pub const major_minor = @import("major_minor.zig");
 pub const pure_pursuit = @import("pure_pursuit.zig");
 pub const debug_mode = @import("debug_mode.zig");
 pub const debug_mode_pid = @import("debug_mode_pid.zig");
+pub const Shadow = @import("Shadow.zig");
 
 // prevent lazy loading
 // so that the files are actually included in the outputted binary

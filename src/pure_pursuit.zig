@@ -58,30 +58,26 @@ pub fn autonFollowPath(path: []const odom.Coord, in_reverse: bool, odom_state: *
         const params = auton.pure_pursuit_params;
 
         // pick the next path points
-        const path_seg_start = pickPathPoints(odom_state.coord, params.search_radius, path, &last_end);
+        const path_seg_start = pickPathPoints(odom_copy.coord, params.search_radius, path, &last_end);
 
         // interpolate the goal point
-        const goal_point = interpolateGoal(odom_state.coord, params.search_radius, path_seg_start, path[last_end]);
+        const goal_point = interpolateGoal(odom_copy.coord, params.search_radius, path_seg_start, path[last_end]);
 
         // calculate the left and right drive ratios
-        const ratios = followArc(odom_state.coord, goal_point, odom_state.prev_yaw);
+        const ratios = followArc(odom_copy.coord, goal_point, odom_copy.prev_yaw);
 
         // calculate the speed for the robot
-        const speed = speedController(odom_state.coord, goal_point, params);
+        const speed = speedController(odom_copy.coord, goal_point, params);
 
         // find the left and right drive velocities from combining the speed and ratios
         // and then drive the robot at those values
-        var ldr, var rdr = ratios * @as(@Vector(2, f64), @splat(speed));
+        const ldr, const rdr = ratios * @as(@Vector(2, f64), @splat(speed));
 
         // if driving in reverse, then switch the left and right and invert them
-        if (in_reverse) {
-            const ldr_tmp = ldr;
-            ldr = -rdr;
-            rdr = -ldr_tmp;
-        }
-
-        // drive the changes made
-        drive.driveVel(ldr, rdr, port_buffer);
+        if (in_reverse)
+            drive.driveVel(-rdr, -ldr, port_buffer)
+        else
+            drive.driveVel(ldr, rdr, port_buffer);
 
         // wait for the next cycle
         pros.rtos.task_delay_until(&now, auton.cycle_delay);

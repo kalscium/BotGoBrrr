@@ -12,6 +12,7 @@ const drive = @import("drive.zig");
 const tower = @import("tower.zig");
 const pure_pursuit = @import("pure_pursuit.zig");
 const options = @import("options");
+const Shadow = @import("Shadow.zig");
 
 /// The delay in ms, between each 'cycle' of autonomous (the lower the more precise though less stable)
 pub const cycle_delay = 10;
@@ -55,7 +56,9 @@ export fn autonomous() callconv(.C) void {
     // autonomousNew();
     // if (true) return; // remove this later
     if (comptime options.auton_routine) |routine|
-        if (comptime std.mem.eql(u8, routine, "left"))
+        if (comptime std.mem.eql(u8, routine, "shad"))
+            autonomousShad()
+        else if (comptime std.mem.eql(u8, routine, "left"))
             autonomousLeft()
         else if (comptime std.mem.eql(u8, routine, "right"))
             autonomousRight()
@@ -63,21 +66,33 @@ export fn autonomous() callconv(.C) void {
             @compileError("invalid autonomous routine build flag");
 }
 
-pub fn autonomousNew() void {
-    _ = pros.printf("hello, world from autonomous (new side)!\n");
+pub fn autonomousShad() void {
+    _ = pros.printf("hello, world from autonomous (shadow side)!\n");
     // open the motor disconnect file
     const port_buffer_file = pros.fopen(port_buffer_path, "wb");
     defer if (port_buffer_file) |file| {
         _ = pros.fclose(file);
     };
-
     var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connected/working initially
     var odom_state = odom.State.init(&port_buffer);
+    var shadow: Shadow = .{};
 
-    pid.rotateDeg(-25.0, &odom_state, &port_buffer);
-    pid.move(10000, &odom_state, &port_buffer);
-    pid.rotateDeg(45.0, &odom_state, &port_buffer);
-    pid.move(1000, &odom_state, &port_buffer);
+    shadow.moveCM(20);
+    const shad1 = shadow.toCoord();
+
+    shadow.rotateToDeg(25);
+    shadow.moveCM(100);
+    const shad2 = shadow.toCoord();
+
+    shadow.rotateToDeg(180);
+    shadow.moveCM(120);
+    const shad3 = shadow.toCoord();
+
+    shadow.rotateToDeg(90);
+    shadow.moveCM(10);
+    const shad4 = shadow.toCoord();
+
+    pure_pursuit.autonFollowPath(&.{ shad1, shad2, shad3, shad4 }, true, &odom_state, &port_buffer);
 }
 
 pub fn autonomousLeft() void {
@@ -90,8 +105,6 @@ pub fn autonomousLeft() void {
 
     var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connected/working initially
     var odom_state = odom.State.init(&port_buffer);
-
-    // NOTE: ALL COORDINATES AND ANGLES USED ARE ALL PLACEHOLDERS UNTIL I HAVE ACCESS TO THE FIELD
 
     // move to the long goals and align to them
     pid.move(200, &odom_state, &port_buffer);
