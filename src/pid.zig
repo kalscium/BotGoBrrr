@@ -75,7 +75,7 @@ pub fn move(goal_distance: f64, odom_state: *odom.State, port_buffer: *port.Port
         // if it's within precision, break
         if (@abs(distance) < auton.precision_mm) {
             // stop driving
-            drive.driveVolt(0, 0, port_buffer);
+            drive.driveVel(0, 0, port_buffer);
             break;
         }
 
@@ -83,7 +83,7 @@ pub fn move(goal_distance: f64, odom_state: *odom.State, port_buffer: *port.Port
         const y = pid.update(auton.mov_pid_param, distance, auton.cycle_delay);
 
         // drive it
-        drive.driveVolt(@intFromFloat(y * 12000), @intFromFloat(y * 12000), port_buffer);
+        drive.driveVel(y, y, port_buffer);
 
         // wait for the next cycle
         pros.rtos.task_delay_until(&now, auton.cycle_delay);
@@ -108,7 +108,7 @@ pub fn rotateDeg(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer: *po
         if (@abs(err) < auton.precision_rad) {
             _ = pros.printf("err: %lf, precision: %lf\n", err, auton.precision_rad);
             // stop driving
-            drive.driveVolt(0, 0, port_buffer);
+            drive.driveVel(0, 0, port_buffer);
             break;
         }
 
@@ -117,7 +117,7 @@ pub fn rotateDeg(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer: *po
 
         // drive it
         const ldr, const rdr = drive.arcadeDrive(x, 0);
-        drive.driveVolt(ldr, rdr, port_buffer);
+        drive.driveVel(ldr, rdr, port_buffer);
 
         // wait for the next cycle
         pros.rtos.task_delay_until(&now, auton.cycle_delay);

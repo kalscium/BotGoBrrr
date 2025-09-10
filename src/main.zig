@@ -59,11 +59,6 @@ export fn opcontrol() callconv(.C) void {
 /// Gets called upon the initialization of the user-program
 export fn initialize() callconv(.C) void {
     _ = pros.printf("hello, world from the initialization function\n");
-    _ = pros.printf("here's an int: %d %lf%%, %d!\n", @as(c_int, 12), @as(f32, 12.2), @as(c_int, 9));
-    const file = pros.fopen("/usd/file.txt", "w+") orelse unreachable;
-    _ = pros.fprintf(file, "There will be %d messages!\n", @as(c_int, 2));
-    _ = pros.fprintf(file, "wow, another message\n");
-    _ = pros.fclose(file);
     odom.programInit();
     drive.init();
     tower.init();

@@ -58,14 +58,16 @@ pub fn controllerUpdate(drive_state: *DriveState, port_buffer: *port.PortBuffer)
     var rdr: i32 = 0;
 
     if (controller.get_digital(absolute_turn_held)) {
-        ldr, rdr = absTurn(drive_state, port_buffer);
+        const vldr, const vrdr = absTurn(drive_state, port_buffer);
+        driveVel(vldr, vrdr, port_buffer);
+        return;
     } else {
         // gets the normalized x and y from the right and left joystick
         const x = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_X))) / 127.0;
         const y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
 
         // rest is just normal arcade drive
-        ldr, rdr = arcadeDrive(x, y);
+        ldr, rdr = userArcadeDrive(x, y);
     }
 
     // check for toggling of the reverse toggle
@@ -110,7 +112,7 @@ pub fn init() void {
 }
 
 /// Turns to an absolute angle (from IMU) relative to it's starting angle
-pub fn absTurn(drive_state: *DriveState, port_buffer: *port.PortBuffer) struct { i32, i32 } {
+pub fn absTurn(drive_state: *DriveState, port_buffer: *port.PortBuffer) struct { f64, f64 } {
     // gets the normalized y from the left joystick, and the x and y from the right joystick
     const y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
     const j2x = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_X))) / 127.0;
@@ -118,7 +120,7 @@ pub fn absTurn(drive_state: *DriveState, port_buffer: *port.PortBuffer) struct {
 
     // get the 'x' value for the turn from the PID (if the right joystick is being used)
     var x: f64 = 0;
-    if (j2x > 0 or j2y > 0) {
+    if (@abs(j2x) > 0 or @abs(j2y) > 0) {
         const desired = vector.calDir(f64, .{ j2x, j2y }); // calculate the desired angle
         const yaw = odom.getYaw(port_buffer) orelse 0;
         const err = odom.minimalAngleDiff(yaw, desired);
@@ -126,11 +128,14 @@ pub fn absTurn(drive_state: *DriveState, port_buffer: *port.PortBuffer) struct {
     }
 
     // pass it through arcade drive
-    return arcadeDrive(x, y);
+    return .{
+        std.math.clamp(y + x, -1, 1),
+        std.math.clamp(y - x, -1, 1),
+    };
 }
 
 /// Converts -1..=1 x & y values into left & right drive voltages
-pub fn arcadeDrive(x: f64, y: f64) struct { i32, i32 } {
+pub fn userArcadeDrive(x: f64, y: f64) struct { i32, i32 } {
     // apply the rotation and movement multipliers
     const n_x = x * turn_multiplier;
     const n_y = y * drive_multiplier;
@@ -139,6 +144,18 @@ pub fn arcadeDrive(x: f64, y: f64) struct { i32, i32 } {
     const rdr = std.math.clamp(n_y - n_x, -1, 1);
 
     return .{ @intFromFloat(ldr * 12000), @intFromFloat(rdr * 12000) };
+}
+
+/// Converts -1..=1 x & y values into left & right drive velocities
+pub fn arcadeDrive(x: f64, y: f64) struct { f64, f64 } {
+    // apply the rotation and movement multipliers
+    const n_x = x * turn_multiplier;
+    const n_y = y * drive_multiplier;
+
+    const ldr = std.math.clamp(n_y + n_x, -1, 1);
+    const rdr = std.math.clamp(n_y - n_x, -1, 1);
+
+    return .{ ldr, rdr };
 }
 
 /// Drives the drivetrain based upon the input voltages for left and right,

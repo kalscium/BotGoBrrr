@@ -27,7 +27,7 @@ const TunedParameter = enum(i8) {
 
     pub fn cycle(self: *TunedParameter, amount: i8) void {
         const raw = @as(i8, @intFromEnum(self.*)) + amount;
-        const wrapped = @mod(raw, 3);
+        const wrapped = @mod(raw, 6);
         self.* = @enumFromInt(wrapped);
     }
 
