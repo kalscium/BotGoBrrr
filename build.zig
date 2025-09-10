@@ -2,6 +2,7 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     // get the standard config options
+    const local_target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
     // define the vex v5 brain target
@@ -30,10 +31,9 @@ pub fn build(b: *std.Build) void {
     const asm_opcontrol = b.option(bool, "asm-opcontrol", "Sets whether to use the arm asm version of opcontrol");
     const log_velocity = b.option(bool, "log-velocity", "Sets whether to log the velocity of the robot every tick");
     const log_bench = b.option(bool, "benchmark", "Sets whether to log cycle times for benchmarking");
-    const split_arcade = b.option(bool, "split-arcade", "Sets whether to use normal split-arcade drive in opcontrol");
-    const toggle_arcade = b.option(bool, "toggle-arcade", "Sets whether to use 'toggle' arcade in opcontrol");
     const tune = b.option([]const u8, "tune", "Sets the kind of tuning (instead of opcontrol) you wish to do");
-    const debug_mode = b.option(bool, "dbgmode", "Sets whether to enable 'debug mode' opcontrol, for debugging, tuning, planning, and showcasing auton");
+    const debug_mode = b.option(bool, "dbgmode", "Sets whether to enable 'debug mode' opcontrol, for debugging, tuning, planning, and showcasing auton (pure pursuit)");
+    const debug_mode_pid = b.option(bool, "dbgmode-pid", "Sets whether to enable 'debug mode' for PIDs");
     const auton_routine = b.option([]const u8, "auton-routine", "Sets the auton routine to use/compile.");
 
     // options set
@@ -41,10 +41,9 @@ pub fn build(b: *std.Build) void {
     options.addOption(bool, "asm_opcontrol", asm_opcontrol orelse false);
     options.addOption(bool, "log_velocity", log_velocity orelse false);
     options.addOption(bool, "benchmark", log_bench orelse false);
-    options.addOption(bool, "split_arcade", split_arcade orelse false);
-    options.addOption(bool, "toggle_arcade", toggle_arcade orelse false);
     options.addOption(?[]const u8, "tune", tune);
     options.addOption(bool, "debug_mode", debug_mode orelse false);
+    options.addOption(bool, "debug_mode_pid", debug_mode_pid orelse false);
     options.addOption(?[]const u8, "auton_routine", auton_routine);
     robot_mod.addOptions("options", options);
 
@@ -70,7 +69,6 @@ pub fn build(b: *std.Build) void {
     b.getInstallStep().dependOn(&obj_install.step);
 
     // create the test binary
-    const local_target = b.standardTargetOptions(.{});
     const test_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = local_target,
@@ -98,4 +96,35 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run unit tests");
     const run_unit_tests = b.addRunArtifact(test_exe);
     test_step.dependOn(&run_unit_tests.step);
+
+    // create the simulation binary
+    const sim_mod = b.createModule(.{
+        .root_source_file = b.path("src/simulation.zig"),
+        .target = local_target,
+        .optimize = optimize,
+    });
+    const sim_exe = b.addExecutable(.{
+        .name = "simulation",
+        .root_module = sim_mod,
+    });
+    const sim_robot_mod = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = local_target,
+        .optimize = optimize,
+    });
+    sim_mod.addImport("pros", pros_mod);
+    sim_robot_mod.addImport("pros", pros_mod);
+    sim_robot_mod.addOptions("options", options);
+    const sim_robot_obj = b.addObject(.{
+        .name = "sim_robot_code",
+        .root_module = sim_robot_mod,
+    });
+
+    // simulation link step
+    sim_exe.addObject(sim_robot_obj);
+
+    // add a simulation step
+    const sim_step = b.step("simulate", "runs the robot code in a simulated Vex VRC brain");
+    const run_sim = b.addRunArtifact(sim_exe);
+    sim_step.dependOn(&run_sim.step);
 }

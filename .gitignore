@@ -12,6 +12,7 @@ zig-out/
 
 # Data
 *.csv
+simulation-fs/
 
 # PROS
 bin/

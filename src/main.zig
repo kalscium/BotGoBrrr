@@ -16,6 +16,8 @@ pub const tuner = @import("tuner.zig");
 pub const major_minor = @import("major_minor.zig");
 pub const pure_pursuit = @import("pure_pursuit.zig");
 pub const debug_mode = @import("debug_mode.zig");
+pub const debug_mode_pid = @import("debug_mode_pid.zig");
+pub const Shadow = @import("Shadow.zig");
 
 // prevent lazy loading
 // so that the files are actually included in the outputted binary
@@ -44,6 +46,8 @@ export fn opcontrol() callconv(.C) void {
                  // it's fine cuz it has no runtime cost (aside from this extra function call)
             extern fn asm_opcontrol() callconv(.C) void;
         }.asm_opcontrol();
+    } else if (comptime options.debug_mode_pid) {
+        debug_mode_pid.entry();
     } else if (comptime options.debug_mode) {
         debug_mode.entry();
     } else if (comptime options.tune) |tune| {

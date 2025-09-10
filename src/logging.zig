@@ -31,7 +31,7 @@ pub fn benchmark(file: ?*std.c.FILE, compute_time: u32, log_time: u32, total_tim
 }
 
 /// The CSV header for the battery percentage (battery & controller)
-pub const csv_header_battery = "time (s), battery capacity%,controller level%\n";
+pub const csv_header_battery = "time (s), battery capacity%%,controller level%%\n";
 
 /// Checks the battery percentages and logs them
 pub fn battery(ms: u32, file: ?*std.c.FILE) void {
@@ -61,31 +61,11 @@ pub fn coords(file: ?*std.c.FILE, state: odom.State) void {
 /// The CSV header for the velocity log
 pub const csv_header_velocity = "time (ms),vertical movement (m/s),lateral movement (m/s),rotation (*/s),tower motor a (rpm),tower motor b (rpm),tower motor c (rpm),tower motor d (rpm)\n";
 
-/// Checks and logs the movement velocity and rotational velocity of the robot
-pub fn velocity(file: ?*std.c.FILE, state: odom.State) void {
-    const f = file orelse return;
-
-    var tower_a_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.top.port));
-    if (tower_a_vel == def.pros_err_f64) // in case it fails
-        tower_a_vel = 0;
-    var tower_b_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.bottom.port));
-    if (tower_b_vel == def.pros_err_f64) // in case it fails
-        tower_b_vel = 0;
-    var tower_c_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.c.port));
-    if (tower_c_vel == def.pros_err_f64) // in case it fails
-        tower_c_vel = 0;
-    var tower_d_vel = @abs(pros.motors.motor_get_actual_velocity(tower.motors.d.port));
-    if (tower_d_vel == def.pros_err_f64) // in case it fails
-        tower_d_vel = 0;
-
-    _ = pros.fprintf(f, "%lu,%lf,%lf,%lf,%lf,%lf,%lf\n", state.prev_time, state.mov_ver_vel, state.mov_lat_vel, std.math.radiansToDegrees(state.rot_vel), tower_a_vel, tower_b_vel, tower_c_vel, tower_d_vel);
-}
-
 /// The CSV header for the drive motor temperature log
-pub const csv_header_temp = "time (s),battery (*C),tower a (*C),tower b (*C),tower c (*C),tower d (*C),l1 (*C),l2 (*C),l3 (*C),r1 (*C),r2 (*C),r3 (*C)\n";
+pub const csv_header_temp = "time (s),battery (*C),tower hood (*C),tower top (*C),tower mid (*C),tower bottom (*C),l1 (*C),l2 (*C),l3 (*C),r1 (*C),r2 (*C),r3 (*C)\n";
 
 /// Checks and logs the temperatures of all the motors and battery alongside the tick
-pub fn temp(ms: u32, file: ?*std.c.FILE) void {
+pub fn temperature(ms: u32, file: ?*std.c.FILE) void {
     const f = file orelse return;
     const time = @as(f64, @floatFromInt(ms)) / 1000;
 
@@ -93,12 +73,18 @@ pub fn temp(ms: u32, file: ?*std.c.FILE) void {
     if (battery_temp == def.pros_err_f64) // in case it fails
         battery_temp = 0;
 
-    var tower_a_temp = pros.motors.motor_get_temperature(tower.motors.top.port);
-    if (tower_a_temp == def.pros_err_f64) // in case it fails
-        tower_a_temp = 0;
-    var tower_b_temp = pros.motors.motor_get_temperature(tower.motors.bottom.port);
-    if (tower_b_temp == def.pros_err_f64) // in case it fails
-        tower_b_temp = 0;
+    var tower_hood_temp = pros.motors.motor_get_temperature(tower.motors.hood.port);
+    if (tower_hood_temp == def.pros_err_f64) // in case it fails
+        tower_hood_temp = 0;
+    var tower_top_temp = pros.motors.motor_get_temperature(tower.motors.top.port);
+    if (tower_top_temp == def.pros_err_f64) // in case it fails
+        tower_top_temp = 0;
+    var tower_mid_temp = pros.motors.motor_get_temperature(tower.motors.mid.port);
+    if (tower_mid_temp == def.pros_err_f64) // in case it fails
+        tower_mid_temp = 0;
+    var tower_bottom_temp = pros.motors.motor_get_temperature(tower.motors.bottom.port);
+    if (tower_bottom_temp == def.pros_err_f64) // in case it fails
+        tower_bottom_temp = 0;
 
     var l1_temp = pros.motors.motor_get_temperature(drive.drivetrain_motors.l1.port);
     if (l1_temp == def.pros_err_f64) // in case it fails
@@ -123,11 +109,13 @@ pub fn temp(ms: u32, file: ?*std.c.FILE) void {
     // write it to the logfile
     _ = pros.fprintf(
         f,
-        "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+        "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
         time,
         battery_temp,
-        tower_a_temp,
-        tower_b_temp,
+        tower_hood_temp,
+        tower_top_temp,
+        tower_mid_temp,
+        tower_bottom_temp,
         l1_temp,
         l2_temp,
         l3_temp,

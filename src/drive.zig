@@ -7,9 +7,17 @@ const pros = @import("pros");
 const def = @import("def.zig");
 const options = @import("options");
 const controller = @import("controller.zig");
+const pid = @import("pid.zig");
+const opcontrol = @import("opcontrol.zig");
+const auton = @import("autonomous.zig");
+const vector = @import("vector.zig");
+const odom = @import("odom.zig");
 
 /// Driving in reverse toggle button
-pub const reverse_toggle: c_int = pros.misc.E_CONTROLLER_DIGITAL_DOWN;
+pub const reverse_toggle: c_int = pros.misc.E_CONTROLLER_DIGITAL_RIGHT;
+
+/// For turning to absolute angles (from start)
+pub const absolute_turn_held: c_int = pros.misc.E_CONTROLLER_DIGITAL_DOWN;
 
 /// Drivetrain motor configs
 pub const drivetrain_motors = struct {
@@ -29,9 +37,31 @@ pub const drivetrain_motors = struct {
     pub const r3 = drivetrainMotor(-1);
 };
 
-/// The multiplier applied to the robot's turning & movement speed normally
-pub const drive_multiplier = 0.5;
-pub const turn_multiplier = 0.20;
+/// The multiplier applied to the robot's movement speed normally
+pub const drive_multiplier = 1.0;
+/// The multiplier applied to the robot's turning speed normally
+pub const turn_multiplier = 1.0;
+
+pub const DriveState = struct {
+    yaw_pid: pid.State = .{},
+    reverse: bool = false,
+};
+
+/// Driver keeps complaining about controls being exponential when they are in fact linear.
+/// We're switching to logarithmic controls.
+pub fn spite(x: f64) f64 {
+    const a = 0.3; // coefficient
+    const b = 4; // log base
+    const floor = 0.02; // minimum value to not blow up to undefined
+
+    const abs_x = @abs(x); // negatives treated same as positives
+
+    if (abs_x < floor) { // just return linear
+        return x;
+    } else { // return the fancy log
+        return (a * std.math.log(f64, b, abs_x) + 1) * std.math.sign(x);
+    }
+}
 
 /// Reads the controller and updates the drivetrain accordingly based upon the
 /// enabled build options
@@ -39,35 +69,36 @@ pub const turn_multiplier = 0.20;
 /// Also takes in whether the robot is currently driving backwards (in reverse)
 /// 
 /// Updates the port buffer on any motor disconnects
-pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
+pub fn controllerUpdate(drive_state: *DriveState, port_buffer: *port.PortBuffer) void {
     // hopefully gets set by one of the options
-    var ldr: f64 = 0;
-    var rdr: f64 = 0;
+    var ldr: i32 = 0;
+    var rdr: i32 = 0;
 
-    if (comptime options.toggle_arcade) {
-        ldr, rdr = toggleArcade();
+    if (controller.get_digital(absolute_turn_held)) {
+        const vldr, const vrdr = absTurn(drive_state, port_buffer);
+        driveVel(vldr, vrdr, port_buffer);
+        return;
     } else {
-        // get the normalized main joystick values
-        const j1 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
-        const j2 = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127.0;
+        // gets the normalized x and y from the right and left joystick
+        const x = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_X))) / 127.0;
+        const y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
 
-        // just do a simple tank drive
-        ldr = j1;
-        rdr = j2;
+        // rest is just normal arcade drive
+        ldr, rdr = userArcadeDrive(x, y);
     }
 
     // check for toggling of the reverse toggle
     if (controller.get_digital_new_press(reverse_toggle)) {
-        reverse.* = !reverse.*;
+        drive_state.reverse = !drive_state.reverse;
         // if toggled on, vibrate long, else short
-        _ = if (reverse.*)
+        _ = if (drive_state.reverse)
             pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, "-")
         else
             pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, ".");
     }
 
     // check for reverse driving toggle
-    if (reverse.*) {
+    if (drive_state.reverse) {
         // swap then negate
         const tmp = ldr;
         ldr = -rdr;
@@ -75,8 +106,7 @@ pub fn controllerUpdate(reverse: *bool, port_buffer: *port.PortBuffer) void {
     }
 
     // drive the drivetrain
-    driveLeft(ldr, port_buffer);
-    driveRight(rdr, port_buffer);
+    driveVolt(ldr, rdr, port_buffer);
 }
 
 /// Drivetrain default configs (port is negative for reversed)
@@ -98,61 +128,71 @@ pub fn init() void {
     drivetrain_motors.r3.init();
 }
 
-/// Returns the desired left and right drive velocities based on the controller.
-/// For 'Toggle Arcade'
-pub fn toggleArcade() struct { f64, f64 } {
-    // gets the normalized x and y from the left joystick
-    var x: f64 = undefined;
-    var y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
+/// Turns to an absolute angle (from IMU) relative to it's starting angle
+pub fn absTurn(drive_state: *DriveState, port_buffer: *port.PortBuffer) struct { f64, f64 } {
+    // gets the normalized y from the left joystick, and the x and y from the right joystick
+    const y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
+    const j2x = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_X))) / 127.0;
+    const j2y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_Y))) / 127.0;
 
-    // if split arcade, then split
-    if (comptime options.split_arcade)
-        x = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_X))) / 127.0
-    else
-        x = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_X))) / 127.0;
+    // get the 'x' value for the turn from the PID (if the right joystick is being used)
+    var x: f64 = 0;
+    if (@abs(j2x) > 0 or @abs(j2y) > 0) {
+        const desired = vector.calDir(f64, .{ j2x, j2y }); // calculate the desired angle
+        const yaw = odom.getYaw(port_buffer) orelse 0;
+        const err = odom.minimalAngleDiff(yaw, desired);
+        x = drive_state.yaw_pid.update(auton.yaw_pid_param, err, opcontrol.cycle_delay);
+    }
 
+    // pass it through arcade drive
+    return .{
+        std.math.clamp(y + x, -1, 1),
+        std.math.clamp(y - x, -1, 1),
+    };
+}
+
+/// Converts -1..=1 x & y values into left & right drive voltages
+pub fn userArcadeDrive(x: f64, y: f64) struct { i32, i32 } {
     // apply the rotation and movement multipliers
-    x *= turn_multiplier;
-    y *= drive_multiplier;
+    const n_x = spite(x) * turn_multiplier;
+    const n_y = spite(y) * drive_multiplier;
 
-    // if R1 is hit, lock to rotation
-    if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_Y)) {
-        y = 0;
-        // turning should be 'slower' when locking to rotation
-        x *= drive_multiplier; // turning slowdown should be proportional to the movement speedup
-    }
+    const ldr = std.math.clamp(n_y + n_x, -1, 1);
+    const rdr = std.math.clamp(n_y - n_x, -1, 1);
 
-    // if R2 is hit, do NOT lock to movement
-    if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_A)) {
-        // movement should be 'faster' when locking to movement
-        y /= drive_multiplier; // to undo the speed multiplier
-    }
-
-    // rest is just normal arcade drive
-    return arcadeDrive(x, y);
+    return .{ @intFromFloat(ldr * 12000), @intFromFloat(rdr * 12000) };
 }
 
 /// Converts -1..=1 x & y values into left & right drive velocities
 pub fn arcadeDrive(x: f64, y: f64) struct { f64, f64 } {
-    const ldr = std.math.clamp(y + x, -1, 1);
-    const rdr = std.math.clamp(y - x, -1, 1);
+    // apply the rotation and movement multipliers
+    const n_x = x * turn_multiplier;
+    const n_y = y * drive_multiplier;
+
+    const ldr = std.math.clamp(n_y + n_x, -1, 1);
+    const rdr = std.math.clamp(n_y - n_x, -1, 1);
 
     return .{ ldr, rdr };
 }
 
-/// Drives the drivetrain side based upon the input velocity, reports any motor
-/// disconnects to the port buffer
-pub fn driveLeft(velocity: f64, port_buffer: *port.PortBuffer) void {
-    drivetrain_motors.l1.setVelocity(velocity, port_buffer);
-    drivetrain_motors.l2.setVelocity(velocity, port_buffer);
-    drivetrain_motors.l3.setVelocity(velocity, port_buffer);
+/// Drives the drivetrain based upon the input voltages for left and right,
+/// reports any motor disconnects to the port buffer
+pub fn driveVolt(ldr: i32, rdr: i32, port_buffer: *port.PortBuffer) void {
+    drivetrain_motors.l1.setVoltage(ldr, port_buffer);
+    drivetrain_motors.l2.setVoltage(ldr, port_buffer);
+    drivetrain_motors.l3.setVoltage(ldr, port_buffer);
+    drivetrain_motors.r1.setVoltage(rdr, port_buffer);
+    drivetrain_motors.r2.setVoltage(rdr, port_buffer);
+    drivetrain_motors.r3.setVoltage(rdr, port_buffer);
 }
 
-/// Drives the drivetrain side based upon the input velocity
-/// 
-/// Disconnect buffer is a buffer of disconnected motor ports, 0s are ignored
-pub fn driveRight(velocity: f64, port_buffer: *port.PortBuffer) void {
-    drivetrain_motors.r1.setVelocity(velocity, port_buffer);
-    drivetrain_motors.r2.setVelocity(velocity, port_buffer);
-    drivetrain_motors.r3.setVelocity(velocity, port_buffer);
+/// Drives the drivetrain based upon the input velocities for left and right,
+/// reports any motor disconnects to the port buffer
+pub fn driveVel(ldr: f64, rdr: f64, port_buffer: *port.PortBuffer) void {
+    drivetrain_motors.l1.setVelocity(ldr, port_buffer);
+    drivetrain_motors.l2.setVelocity(ldr, port_buffer);
+    drivetrain_motors.l3.setVelocity(ldr, port_buffer);
+    drivetrain_motors.r1.setVelocity(rdr, port_buffer);
+    drivetrain_motors.r2.setVelocity(rdr, port_buffer);
+    drivetrain_motors.r3.setVelocity(rdr, port_buffer);
 }

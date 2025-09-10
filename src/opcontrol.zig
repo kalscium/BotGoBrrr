@@ -13,7 +13,7 @@ const logging = @import("logging.zig");
 const tower = @import("tower.zig");
 
 /// The delay in ms, between each tick cycle
-const cycle_delay = 50;
+pub const cycle_delay = 50;
 
 /// The path to the opcontrol port buffers file
 const port_buffer_path = "/usd/opctrl_port_buffers.bin";
@@ -77,7 +77,8 @@ pub fn opcontrol() callconv(.C) void {
     var now = pros.rtos.millis();
     var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connected/working initially
     var odom_state = odom.State.init(&port_buffer);
-    var drive_reversed = false;
+    var drive_state: drive.DriveState = .{};
+    var tower_state: tower.TowerState = .{};
     var cycles: u32 = 0;
 
     // main loop
@@ -88,24 +89,24 @@ pub fn opcontrol() callconv(.C) void {
     odom_state.update(&port_buffer);
 
     // update the drivetrain
-    drive.controllerUpdate(&drive_reversed, &port_buffer);
+    drive.controllerUpdate(&drive_state, &port_buffer);
     // update the tower
-    tower.controllerUpdate(&port_buffer);
+    tower.controllerUpdate(&tower_state, &port_buffer);
     // update odom controls
     odom_state.controllerUpdate(recrded_coords_file);
 
     const logging_start_time = pros.rtos.millis();
 
     // log the battery every 50 cycles
-    if (cycles / 50 == 0)
+    if (cycles % 50 == 0)
         logging.battery(now, battery_file);
 
-    // log the temperature every 32 cycles
-    if (cycles / 32 == 0)
-        logging.temp(now, drive_temp_file);
+    // log the battery every 50 cycles
+    if (cycles % 50 == 0)
+        logging.temperature(now, drive_temp_file);
 
     // log odom coordinates every 16 cycles
-    if (cycles / 16 == 0)
+    if (cycles % 16 == 0)
         logging.coords(coords_file, odom_state);
 
     // log odom velocities every tick

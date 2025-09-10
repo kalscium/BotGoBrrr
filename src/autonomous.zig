@@ -12,6 +12,7 @@ const drive = @import("drive.zig");
 const tower = @import("tower.zig");
 const pure_pursuit = @import("pure_pursuit.zig");
 const options = @import("options");
+const Shadow = @import("Shadow.zig");
 
 /// The delay in ms, between each 'cycle' of autonomous (the lower the more precise though less stable)
 pub const cycle_delay = 10;
@@ -20,19 +21,13 @@ pub const cycle_delay = 10;
 const port_buffer_path = "/usd/auton_port_buffers.bin";
 
 /// The 'precision' (in mm) that the robot must achieve before moving onto the next path coordinate
-pub const precision_mm: f64 = 10; // try 5
+pub const precision_mm: f64 = 5;
 /// The 'precision' (in radians) that the robot must achieve before moving onto the next path coordinate
 pub const precision_rad: f64 = std.math.degreesToRadians(1);
 
 /// The *tuned* movement (Y) PID controller
 pub const mov_pid_param = pid.Param {
-    // 1 / max_error
-    // max_error = pure pursuit search-radius
-    // 1" as it's half a field tile
-    .kp = 1.0 / 304.8 / 4.0,
-    // arbitrary, before tuning
-    // .ki = (1.0 / 304.8 / 4.0) * tick_delay,
-    // .kd = (1.0 / 304.8 / 4.0) * 5.0,
+    .kp = 0.001,
     .ki = 0,
     .kd = 0,
     .saturation = 1,
@@ -42,9 +37,9 @@ pub const mov_pid_param = pid.Param {
 /// The *tuned* yaw (radians) PID controller
 pub const yaw_pid_param = pid.Param {
     // 1 / max_error
-    .kp = 1.0 / std.math.degreesToRadians(90.0) / 3.0, // seems to work perfectly
+    .kp = 0.21, // seems to work perfectly
     // proportional alone is enough, due to us setting velocity instead of voltage
-    .ki = 0,
+    .ki = 0.0,
     .kd = 0,
     .saturation = 1,
     .low_pass_a = 0.8,
@@ -58,10 +53,12 @@ pub const pure_pursuit_params = pure_pursuit.Parameters{
 };
 
 export fn autonomous() callconv(.C) void {
-    autonomousNew();
-    if (true) return; // remove this later
+    // autonomousNew();
+    // if (true) return; // remove this later
     if (comptime options.auton_routine) |routine|
-        if (comptime std.mem.eql(u8, routine, "left"))
+        if (comptime std.mem.eql(u8, routine, "shad"))
+            autonomousShad()
+        else if (comptime std.mem.eql(u8, routine, "left"))
             autonomousLeft()
         else if (comptime std.mem.eql(u8, routine, "right"))
             autonomousRight()
@@ -69,23 +66,33 @@ export fn autonomous() callconv(.C) void {
             @compileError("invalid autonomous routine build flag");
 }
 
-pub fn autonomousNew() void {
-    _ = pros.printf("hello, world from autonomous (new side)!\n");
+pub fn autonomousShad() void {
+    _ = pros.printf("hello, world from autonomous (shadow side)!\n");
     // open the motor disconnect file
     const port_buffer_file = pros.fopen(port_buffer_path, "wb");
     defer if (port_buffer_file) |file| {
         _ = pros.fclose(file);
     };
-
     var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connected/working initially
     var odom_state = odom.State.init(&port_buffer);
+    var shadow: Shadow = .{};
 
-    pid.rotateDeg(-25.0, &odom_state, &port_buffer);
-    drive.driveLeft(0.5, &port_buffer);
-    drive.driveRight(0.5, &port_buffer);
-    wait(500, &odom_state, &port_buffer);
-    drive.driveLeft(0, &port_buffer);
-    drive.driveRight(0, &port_buffer);
+    shadow.moveCM(20);
+    const shad1 = shadow.toCoord();
+
+    shadow.rotateToDeg(25);
+    shadow.moveCM(100);
+    const shad2 = shadow.toCoord();
+
+    shadow.rotateToDeg(180);
+    shadow.moveCM(120);
+    const shad3 = shadow.toCoord();
+
+    shadow.rotateToDeg(90);
+    shadow.moveCM(10);
+    const shad4 = shadow.toCoord();
+
+    pure_pursuit.autonFollowPath(&.{ shad1, shad2, shad3, shad4 }, true, &odom_state, &port_buffer);
 }
 
 pub fn autonomousLeft() void {
@@ -99,11 +106,17 @@ pub fn autonomousLeft() void {
     var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connected/working initially
     var odom_state = odom.State.init(&port_buffer);
 
-    // NOTE: ALL COORDINATES AND ANGLES USED ARE ALL PLACEHOLDERS UNTIL I HAVE ACCESS TO THE FIELD
-
     // move to the long goals and align to them
-    pure_pursuit.autonFollowPath(&.{ .{ -767.478678, 335.350953 }, .{ -801.328123, 748.487009 }, .{ -776.244942, 238.132108 } }, false, &odom_state, &port_buffer);
-    pid.rotateDeg(0, &odom_state, &port_buffer);
+    pid.move(200, &odom_state, &port_buffer);
+    pid.rotateDeg(-5, &odom_state, &port_buffer);
+    tower.storeBlocks(1, &port_buffer);
+    pid.move(850, &odom_state, &port_buffer);
+    pid.rotateDeg(42, &odom_state, &port_buffer);
+    pid.move(400, &odom_state, &port_buffer);
+    tower.spin(1, &port_buffer);
+
+    if (true) return;
+    
     // score the pre-load by spinning the tower for 1 seconds
     tower.spin(tower.tower_velocity, &port_buffer);
     wait(1000, &odom_state, &port_buffer);
@@ -118,12 +131,10 @@ pub fn autonomousLeft() void {
     pid.rotateDeg(135.0, &odom_state, &port_buffer);
     // move forwards for 1 second at a slow speed with the tower active
     tower.spin(tower.tower_velocity, &port_buffer);
-    drive.driveLeft(0.2, &port_buffer);
-    drive.driveRight(0.2, &port_buffer);
+    drive.driveVel(0.2, 0.2, &port_buffer);
     wait(500, &odom_state, &port_buffer);
     tower.spin(0, &port_buffer);
-    drive.driveLeft(0, &port_buffer);
-    drive.driveRight(0, &port_buffer);
+    drive.driveVel(0, 0, &port_buffer);
 
     // drive to the centre goals, align and score
     pure_pursuit.autonFollowPath(&.{ .{ -40.844710, 1237.229800 }, }, false, &odom_state, &port_buffer);
@@ -170,12 +181,10 @@ pub fn autonomousRight() void {
     pid.rotateDeg(135.0, &odom_state, &port_buffer);
     // move forwards for 1 second at a slow speed with the tower active
     tower.spin(tower.tower_velocity, &port_buffer);
-    drive.driveLeft(0.2, &port_buffer);
-    drive.driveRight(0.2, &port_buffer);
+    drive.driveVel(0.2, 0.2, &port_buffer);
     wait(500, &odom_state, &port_buffer);
     tower.spin(0, &port_buffer);
-    drive.driveLeft(0, &port_buffer);
-    drive.driveRight(0, &port_buffer);
+    drive.driveVel(0, 0, &port_buffer);
 
     // drive to the centre goals, align and score
     pure_pursuit.autonFollowPath(&.{ .{ 0, 0 } }, false, &odom_state, &port_buffer);

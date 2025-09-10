@@ -9,7 +9,7 @@ const auton = @import("autonomous.zig");
 const drive = @import("drive.zig");
 
 /// The width of the robot in mm
-pub const robot_width: comptime_float = 290.0; // placeholder
+pub const robot_width: comptime_float = 290.0;
 
 /// The smallest possible f64 value that's just outside of precision.
 /// So, this will be automatically removed/lost if added to a value
@@ -51,45 +51,36 @@ pub fn autonFollowPath(path: []const odom.Coord, in_reverse: bool, odom_state: *
         // if it's within precision, break
         if (vector.calMag(f64, path[path.len-1] - odom_copy.coord) < auton.precision_mm) {
             // stop moving before breaking
-            drive.driveLeft(0, port_buffer);
-            drive.driveRight(0, port_buffer);
+            drive.driveVel(0, 0, port_buffer);
             break;
         }
 
         const params = auton.pure_pursuit_params;
 
-        // calculate the robot's predicted location and base all future calculations off of it
-        const predicted = predictCoordYaw(odom_copy, params.lookahead_window);
-
         // pick the next path points
-        const path_seg_start = pickPathPoints(predicted.coord, params.search_ceiling, path, &last_end);
+        const path_seg_start = pickPathPoints(odom_state.coord, params.search_ceiling, path, &last_end);
 
         // calculate the search radius
-        const search_radius = calSearchRadius(predicted.coord, path_seg_start, params);
+        const search_radius = calSearchRadius(odom_state.coord, path_seg_start, params);
 
         // interpolate the goal point
-        const goal_point = interpolateGoal(predicted.coord, search_radius, path_seg_start, path[last_end]);
+        const goal_point = interpolateGoal(odom_state.coord, search_radius, path_seg_start, path[last_end]);
 
         // calculate the left and right drive ratios
-        const ratios = followArc(predicted.coord, goal_point, predicted.yaw);
+        const ratios = followArc(odom_copy.coord, goal_point, odom_copy.prev_yaw);
 
         // calculate the speed for the robot
-        const speed = speedController(predicted.coord, search_radius, goal_point, params);
+        const speed = speedController(odom_state.coord, search_radius, goal_point, params);
 
         // find the left and right drive velocities from combining the speed and ratios
         // and then drive the robot at those values
-        var ldr, var rdr = ratios * @as(@Vector(2, f64), @splat(speed));
+        const ldr, const rdr = ratios * @as(@Vector(2, f64), @splat(speed));
 
         // if driving in reverse, then switch the left and right and invert them
-        if (in_reverse) {
-            const ldr_tmp = ldr;
-            ldr = -rdr;
-            rdr = -ldr_tmp;
-        }
-
-        // drive the changes made
-        drive.driveLeft(ldr, port_buffer);
-        drive.driveRight(rdr, port_buffer);
+        if (in_reverse)
+            drive.driveVel(-rdr, -ldr, port_buffer)
+        else
+            drive.driveVel(ldr, rdr, port_buffer);
 
         // wait for the next cycle
         pros.rtos.task_delay_until(&now, auton.cycle_delay);
@@ -231,35 +222,6 @@ test followArc {
     std.debug.assert(ldr == 1 and rdr == 1);
 }
 
-/// Calculates the robot's predicted location & yaw based upon the lookahead
-/// window and also odom state
-pub fn predictCoordYaw(odom_state: odom.State, lookahead_window: f64) struct{ coord: odom.Coord, yaw: f64 } {
-    // calculate the predicted robot location (from velocity & SUVATs)
-    const predicted_yaw = odom_state.prev_yaw + odom_state.rot_vel * lookahead_window;
-    const predicted_coord =
-        odom_state.coord + // current location
-        vector.polarToCartesian(odom_state.mov_ver_vel * lookahead_window, predicted_yaw) + // predicted vertical movement
-        vector.polarToCartesian(odom_state.mov_lat_vel * lookahead_window, predicted_yaw + comptime std.math.degreesToRadians(90)) // predicted lateral movement
-    ;
-
-    return .{ .coord = predicted_coord, .yaw = predicted_yaw };
-}
-
-test predictCoordYaw {
-    // example odom state
-    var state: odom.State = undefined;
-    state.mov_ver_vel = 1;
-    state.mov_lat_vel = 0.5;
-    state.coord = .{ 10, 10 };
-    state.rot_vel = std.math.degreesToRadians(10);
-
-    // predict the new coord
-    const new = predictCoordYaw(state, 3); // 3 ms into the future
-    // std.debug.print("new coord: {d}\nnew_yaw: {d}\n", .{ new.coord, std.math.radiansToDegrees(new.yaw) });
-    std.debug.assert(@reduce(.And, @round(new.coord) == @as(odom.Coord, .{ 13, 12 })));
-    std.debug.assert(@round(std.math.radiansToDegrees(new.yaw)) == 30);
-}
-
 /// Calculates the velocity multiplier (from 0..=1) for pure pursuit
 /// from the robot's coord & yaw, goal positions, and tuned parameters
 pub fn speedController(coord: odom.Coord, search_radius: f64, goal: odom.Coord, params: Parameters) f64 {
@@ -313,17 +275,6 @@ pub const Parameters = struct {
     /// Tune by getting the robot to drive in a straight line and decrease it
     /// from 1 until it's a reasonable speed.
     kp: f64,
-
-    /// The prediction window (in ms) for the robot
-    /// (should be a multiplier of the cycle time)
-    /// 
-    /// How far into the future the robot will predict and act upon.
-    /// 
-    /// Let it be the last thing you tune, and just keep increasing from zero
-    /// until most of the overshoot due to inertia is gone, but not too much as
-    /// to make the robot jitter
-    /// (where it fights itself and goes forwards and backwards really quickly)
-    lookahead_window: f64,
 };
 
 test "robot forwards kinematics simulation" {
