@@ -37,14 +37,31 @@ pub const drivetrain_motors = struct {
     pub const r3 = drivetrainMotor(-1);
 };
 
-/// The multiplier applied to the robot's turning & movement speed normally
+/// The multiplier applied to the robot's movement speed normally
 pub const drive_multiplier = 1.0;
+/// The multiplier applied to the robot's turning speed normally
 pub const turn_multiplier = 1.0;
 
 pub const DriveState = struct {
     yaw_pid: pid.State = .{},
     reverse: bool = false,
 };
+
+/// Driver keeps complaining about controls being exponential when they are in fact linear.
+/// We're switching to logarithmic controls.
+pub fn spite(x: f64) f64 {
+    const a = 0.3; // coefficient
+    const b = 4; // log base
+    const floor = 0.02; // minimum value to not blow up to undefined
+
+    const abs_x = @abs(x); // negatives treated same as positives
+
+    if (abs_x < floor) { // just return linear
+        return x;
+    } else { // return the fancy log
+        return (a * std.math.log(f64, b, abs_x) + 1) * std.math.sign(x);
+    }
+}
 
 /// Reads the controller and updates the drivetrain accordingly based upon the
 /// enabled build options
@@ -137,8 +154,8 @@ pub fn absTurn(drive_state: *DriveState, port_buffer: *port.PortBuffer) struct {
 /// Converts -1..=1 x & y values into left & right drive voltages
 pub fn userArcadeDrive(x: f64, y: f64) struct { i32, i32 } {
     // apply the rotation and movement multipliers
-    const n_x = x * turn_multiplier;
-    const n_y = y * drive_multiplier;
+    const n_x = spite(x) * turn_multiplier;
+    const n_y = spite(y) * drive_multiplier;
 
     const ldr = std.math.clamp(n_y + n_x, -1, 1);
     const rdr = std.math.clamp(n_y - n_x, -1, 1);
