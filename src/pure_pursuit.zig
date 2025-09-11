@@ -225,7 +225,8 @@ pub fn speedController(coord: odom.Coord, path_seg_start: odom.Coord, goal: odom
     const goal_mul = goal_distance_err / params.search_radius;
 
     // calculate the final turning speed by multiplying together the set speed and the minimum multiplier
-    return params.kp * @min(start_mul, goal_mul);
+    _ = params.kp * @min(start_mul, goal_mul);
+    return params.kp;
 }
 
 /// The tune-able parameters for pure pursuit, all in one place for convenience

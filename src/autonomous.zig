@@ -21,7 +21,7 @@ pub const cycle_delay = 10;
 const port_buffer_path = "/usd/auton_port_buffers.bin";
 
 /// The 'precision' (in mm) that the robot must achieve before moving onto the next path coordinate
-pub const precision_mm: f64 = 5;
+pub const precision_mm: f64 = 10;
 /// The 'precision' (in radians) that the robot must achieve before moving onto the next path coordinate
 pub const precision_rad: f64 = std.math.degreesToRadians(1);
 
@@ -48,9 +48,9 @@ pub const yaw_pid_param = pid.Param {
 /// The *tuned* pure pursuit parameters
 pub const pure_pursuit_params = pure_pursuit.Parameters{
     .search_radius = 300.0,
-    .bounding_radius = 10,
+    .bounding_radius = 20,
     .kp = 0.4,
-    .yaw_limit_deg = 15,
+    .yaw_limit_deg = 25,
 };
 
 export fn autonomous() callconv(.C) void {
@@ -76,22 +76,21 @@ pub fn autonomousShad() void {
     var odom_state = odom.State.init(&port_buffer);
     var shadow: Shadow = .{};
 
+    // turn on intake and move forwards in a curve towards 3 blocks
+    shadow.moveCM(50); // move forwards 50cm before turning
+    const c1 = shadow.toCoord();
+    tower.storeBlocks(tower.tower_velocity, &port_buffer);
+    shadow.rotateToDeg(-20);
+    shadow.moveCM(32);
+    const c2 = shadow.toCoord();
+    shadow.rotateToDeg(20);
+    shadow.moveCM(32);
+    const c3 = shadow.toCoord();
+    shadow.rotateToDeg(45);
     shadow.moveCM(20);
-    const shad1 = shadow.toCoord();
-
-    shadow.rotateToDeg(25);
-    shadow.moveCM(100);
-    const shad2 = shadow.toCoord();
-
-    shadow.rotateToDeg(180);
-    shadow.moveCM(120);
-    const shad3 = shadow.toCoord();
-
-    shadow.rotateToDeg(90);
-    shadow.moveCM(10);
-    const shad4 = shadow.toCoord();
-
-    pure_pursuit.autonFollowPath(&.{ shad1, shad2, shad3, shad4 }, true, &odom_state, &port_buffer);
+    const c4 = shadow.toCoord();
+    pure_pursuit.autonFollowPath(&.{ c1, c2, c3, c4 }, false, &odom_state, &port_buffer);
+    tower.spin(0, &port_buffer);
 }
 
 pub fn autonomousLeft() void {
@@ -107,12 +106,26 @@ pub fn autonomousLeft() void {
 
     // move to the long goals and align to them
     pid.move(200, &odom_state, &port_buffer);
-    pid.rotateDeg(-5, &odom_state, &port_buffer);
+    pid.rotateDeg(-8, &odom_state, &port_buffer);
     tower.storeBlocks(1, &port_buffer);
-    pid.move(850, &odom_state, &port_buffer);
-    pid.rotateDeg(42, &odom_state, &port_buffer);
-    pid.move(400, &odom_state, &port_buffer);
+    pid.move(810, &odom_state, &port_buffer);
+    drive.driveVel(0.3, 0.3, &port_buffer);
+    wait(400, &odom_state, &port_buffer);
+    drive.driveVel(0, 0, &port_buffer);
+    drive.driveVel(-0.3, -0.3, &port_buffer);
+    wait(250, &odom_state, &port_buffer);
+    drive.driveVel(0, 0, &port_buffer);
+    pid.rotateDeg(45, &odom_state, &port_buffer);
+    pid.move(310, &odom_state, &port_buffer);
     tower.spin(1, &port_buffer);
+    wait(1000, &odom_state, &port_buffer);
+    tower.spin(0, &port_buffer);
+    pid.move(-1120, &odom_state, &port_buffer);
+    pid.rotateDeg(0, &odom_state, &port_buffer);
+    pid.move(450, &odom_state, &port_buffer);
+    tower.spin(1, &port_buffer);
+    wait(1000, &odom_state, &port_buffer);
+    tower.spin(0, &port_buffer);
 
     if (true) return;
     
