@@ -162,6 +162,41 @@ test interpolateGoal {
     std.debug.assert(@reduce(.And, @round(goal) == odom.Coord{ 4.0, 5.0 }));
 }
 
+/// Returns the drivetrain ratio to drive in an arc that connects the
+/// current coordinate and goal coordinate, whilst keeping a constant
+/// angular velocity (robot yaw as tangent line).
+pub fn trueFollowArc(coord: odom.Coord, goal: odom.Coord, yaw: f64) @Vector(2, f64) {
+    // get the goal vector relative to the robot's current coordinate
+    const rel_goal = goal - coord;
+
+    // find the angle of the goal relative to the current coord
+    const path_angle = vector.calDir(f64, rel_goal);
+
+    // find theta, the angular distance of the yaw and angle of the path segment
+    const theta = odom.minimalAngleDiff(yaw, path_angle);
+    const theta_sign = std.math.sign(theta);
+
+    // calculate the length of the path segment
+    const path_len = vector.calMag(f64, rel_goal);
+
+    // calculate the radius of the arc
+    const arc_radius = path_len / (2.0 * @sin(theta) * theta_sign + smallest_f64); // not quite dividing by zero, but value small enough, that the precision loss with non-zero values will remove it (won't affect anything)
+
+    // calculate the approximate change in distance for the left and right drives
+    // then calculate the ratio between the two, that's the ratio we'll use
+    // left offset = +base/2
+    // right offset = -base/2
+    const delta_left = arc_radius + robot_width/2.0 * theta_sign;
+    const delta_right = arc_radius - robot_width/2.0 * theta_sign;
+    // const delta_total = delta_left + delta_right;
+    const delta_max = @max(@abs(delta_left), @abs(delta_right));
+
+    // calculate the raw left and right drives
+    const ldr = delta_left / delta_max;
+    const rdr = delta_right / delta_max;
+
+    return .{ ldr, rdr };
+}
 
 /// Sets the drivetrain ratio to drive in an arc that connects the
 /// current coordinate and goal coordinate, whilst keeping a constant
