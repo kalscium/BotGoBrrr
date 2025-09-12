@@ -58,7 +58,7 @@ pub const State = struct {
 };
 
 /// State-machine for moving a certain distance in mm until a precision threshold is met (auton) with a PID
-pub fn move(goal_distance: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+pub fn moveMM(goal_distance: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
     // state machine state
     var now = pros.rtos.millis();
     var pid = State{};
@@ -71,6 +71,40 @@ pub fn move(goal_distance: f64, odom_state: *odom.State, port_buffer: *port.Port
         // get the current reachable distance (through dotproduct)
         const distance_travelled = vector.dotProduct(f64, odom_state.coord, direction) - start_pos;
         const distance = goal_distance - distance_travelled;
+
+        // if it's within precision, break
+        if (@abs(distance) < auton.precision_mm) {
+            // stop driving
+            drive.driveVel(0, 0, port_buffer);
+            break;
+        }
+
+        // get controls from pid
+        const y = pid.update(auton.mov_pid_param, distance, auton.cycle_delay);
+
+        // drive it
+        drive.driveVel(y, y, port_buffer);
+
+        // wait for the next cycle
+        pros.rtos.task_delay_until(&now, auton.cycle_delay);
+    }
+}
+
+/// State-machine for moving a certain distance in mm until a precision threshold is met (auton) with a PID
+pub fn moveCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    // state machine state
+    var now = pros.rtos.millis();
+    var pid = State{};
+    while (true) {
+        // update odom
+        odom_state.update(port_buffer);
+
+        // get the relative goal
+        const rel_goal = goal - odom_state.coord;
+
+        // get the current reachable distance (through dotproduct)
+        const direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
+        const distance = vector.dotProduct(f64, rel_goal, direction);
 
         // if it's within precision, break
         if (@abs(distance) < auton.precision_mm) {

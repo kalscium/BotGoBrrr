@@ -8,6 +8,11 @@ pub inline fn calMag(comptime T: type, vec: @Vector(2, T)) T {
     return @sqrt(vec[0] * vec[0] + vec[1] * vec[1]);
 }
 
+/// Normalizes a vector (sets length to 1)
+pub inline fn normalize(comptime T: type, vec: @Vector(2, T)) T {
+    return polarToCartesian(1.0, calDir(T, vec));
+}
+
 /// Finds the left-handed y-based direction of a vector
 pub inline fn calDir(comptime T: type, vec: @Vector(2, T)) T {
     // get the standard right handed x-based angle

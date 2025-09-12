@@ -58,6 +58,8 @@ export fn autonomous() callconv(.C) void {
         if (comptime std.mem.eql(u8, routine, "shad"))
             autonomousShad()
         else if (comptime std.mem.eql(u8, routine, "left"))
+            autonomousLeft1()
+        else if (comptime std.mem.eql(u8, routine, "left_old"))
             autonomousLeft()
         else if (comptime std.mem.eql(u8, routine, "right"))
             autonomousRight()
@@ -93,6 +95,56 @@ pub fn autonomousShad() void {
     tower.spin(0, &port_buffer);
 }
 
+pub fn autonomousLeft1() void {
+    _ = pros.printf("hello, world from autonomous (left side)!\n");
+    // open the motor disconnect file
+    const port_buffer_file = pros.fopen(port_buffer_path, "wb");
+    defer if (port_buffer_file) |file| {
+        _ = pros.fclose(file);
+    };
+
+    var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connected/working initially
+    var odom_state = odom.State.init(&port_buffer);
+    var shadow: Shadow = .{};
+
+    // do not collide with akibot
+    if (options.w_akibot)
+        wait(2000, &odom_state, &port_buffer);
+
+    // go to the 3 blocks at a slight angle with intake spinnign
+    shadow.moveMMPID(300, &odom_state, &port_buffer);
+    shadow.rotateToDegPID(-45, &odom_state, &port_buffer);
+    tower.storeBlocks(1, &port_buffer);
+    shadow.moveMMPID(400, &odom_state, &port_buffer);
+
+    // move into them slowly for a while to intake
+    drive.driveVel(0.1, 0.1, &port_buffer);
+    wait(1200, &odom_state, &port_buffer);
+    drive.driveVel(0, 0, &port_buffer);
+
+    // go back to where the robot was + a bit
+    shadow.moveMMPID(125, &odom_state, &port_buffer);
+
+    // rotate towards and go to the middle goal and score ~half the blocks
+    shadow.rotateToDegPID(45, &odom_state, &port_buffer);
+    shadow.moveMMPID(420, &odom_state, &port_buffer);
+    tower.spin(1, &port_buffer);
+    wait(500, &odom_state, &port_buffer);
+    tower.spin(0, &port_buffer);
+
+    // move backwards diagonally to the corner, and then move fowards to the long goal before scoring the rest of the blocks
+    shadow.moveMMPID(-1270, &odom_state, &port_buffer);
+    shadow.rotateToDegPID(0, &odom_state, &port_buffer);
+    shadow.moveMMPID(560, &odom_state, &port_buffer);
+    tower.spin(1, &port_buffer);
+    wait(1000, &odom_state, &port_buffer);
+    tower.spin(0, &port_buffer);
+
+    // write the port buffer to the port_buffer file
+    if (port_buffer_file) |file|
+        _ = pros.fwrite(@ptrCast(&port_buffer), comptime @bitSizeOf(port.PortBuffer)/8, 1, file);
+}
+
 pub fn autonomousLeft() void {
     _ = pros.printf("hello, world from autonomous (left side)!\n");
     // open the motor disconnect file
@@ -103,60 +155,36 @@ pub fn autonomousLeft() void {
 
     var port_buffer: port.PortBuffer = @bitCast(@as(u24, 0xFFFFFF)); // assume all ports are connected/working initially
     var odom_state = odom.State.init(&port_buffer);
+    var shadow: Shadow = .{};
 
-    // move to the long goals and align to them
-    pid.move(200, &odom_state, &port_buffer);
-    pid.rotateDeg(-8, &odom_state, &port_buffer);
+    // go to the 3 blocks at a slight angle with intake spinnign
+    shadow.moveMMPID(200, &odom_state, &port_buffer);
+    shadow.rotateToDegPID(-7, &odom_state, &port_buffer);
     tower.storeBlocks(1, &port_buffer);
-    pid.move(810, &odom_state, &port_buffer);
+    shadow.moveMMPID(810, &odom_state, &port_buffer);
+
+    // move into them slowly for a while to intake
     drive.driveVel(0.3, 0.3, &port_buffer);
-    wait(400, &odom_state, &port_buffer);
+    wait(600, &odom_state, &port_buffer);
     drive.driveVel(0, 0, &port_buffer);
-    drive.driveVel(-0.3, -0.3, &port_buffer);
-    wait(250, &odom_state, &port_buffer);
-    drive.driveVel(0, 0, &port_buffer);
-    pid.rotateDeg(45, &odom_state, &port_buffer);
-    pid.move(310, &odom_state, &port_buffer);
+
+    // go back to where the robot was
+    shadow.moveMMPID(75, &odom_state, &port_buffer);
+
+    // rotate towards and go to the middle goal and score ~half the blocks
+    shadow.rotateToDegPID(45, &odom_state, &port_buffer);
+    shadow.moveMMPID(420, &odom_state, &port_buffer);
     tower.spin(1, &port_buffer);
-    wait(1000, &odom_state, &port_buffer);
-    tower.spin(0, &port_buffer);
-    pid.move(-1120, &odom_state, &port_buffer);
-    pid.rotateDeg(0, &odom_state, &port_buffer);
-    pid.move(450, &odom_state, &port_buffer);
-    tower.spin(1, &port_buffer);
-    wait(1000, &odom_state, &port_buffer);
-    tower.spin(0, &port_buffer);
-
-    if (true) return;
-    
-    // score the pre-load by spinning the tower for 1 seconds
-    tower.spin(tower.tower_velocity, &port_buffer);
-    wait(1000, &odom_state, &port_buffer);
-    tower.spin(0, &port_buffer);
-
-    // move backwards to get out of the way of the long goal (just remove if doesn't work)
-    pure_pursuit.autonFollowPath(&.{ .{ -402.464634, 751.293460 }, }, false, &odom_state, &port_buffer);
-
-    // go to the 3 blocks in front of the centre goals (but do not touch)
-    pure_pursuit.autonFollowPath(&.{ .{ -40.844710, 1237.229800 }, }, false, &odom_state, &port_buffer);
-    // rotate towards the blocks (at the right angle)
-    pid.rotateDeg(135.0, &odom_state, &port_buffer);
-    // move forwards for 1 second at a slow speed with the tower active
-    tower.spin(tower.tower_velocity, &port_buffer);
-    drive.driveVel(0.2, 0.2, &port_buffer);
     wait(500, &odom_state, &port_buffer);
     tower.spin(0, &port_buffer);
-    drive.driveVel(0, 0, &port_buffer);
 
-    // drive to the centre goals, align and score
-    pure_pursuit.autonFollowPath(&.{ .{ -40.844710, 1237.229800 }, }, false, &odom_state, &port_buffer);
-    pid.rotateDeg(45.0, &odom_state, &port_buffer);
-    tower.spin(-tower.tower_outtake_vel, &port_buffer);
+    // move backwards diagonally to the corner, and then move fowards to the long goal before scoring the rest of the blocks
+    shadow.moveMMPID(-1270, &odom_state, &port_buffer);
+    shadow.rotateToDegPID(0, &odom_state, &port_buffer);
+    shadow.moveMMPID(620, &odom_state, &port_buffer);
+    tower.spin(1, &port_buffer);
     wait(1000, &odom_state, &port_buffer);
     tower.spin(0, &port_buffer);
-
-    // move backwards to get to a nicer spot (remove if it doesn't work)
-    pure_pursuit.autonFollowPath(&.{ .{ -325.859882, 368.488989 } }, false, &odom_state, &port_buffer);
 
     // write the port buffer to the port_buffer file
     if (port_buffer_file) |file|
