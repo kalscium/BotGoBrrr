@@ -115,14 +115,14 @@ pub fn moveCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.P
         }
 
         // get the ratios from pure pursuit
-        var drive_vel = pure_pursuit.trueFollowArc(odom_state.coord, goal, odom_state.prev_yaw);
+        // var drive_vel = pure_pursuit.trueFollowArc(odom_state.coord, goal, odom_state.prev_yaw);
 
         // get speed from the PID
         const speed = pid.update(auton.mov_pid_param, distance, auton.cycle_delay);
-        drive_vel *= @splat(speed);
+        // drive_vel *= @splat(speed);
 
         // drive it
-        drive.driveVel(drive_vel[0], drive_vel[1], port_buffer);
+        drive.driveVel(speed, speed, port_buffer);
 
         // wait for the next cycle
         pros.rtos.task_delay_until(&now, auton.cycle_delay);

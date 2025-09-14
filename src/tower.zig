@@ -57,6 +57,7 @@ pub const TowerState = struct {
 /// Updates the port buffer upon motor disconnects.
 pub fn controllerUpdate(state: *TowerState, port_buffer: *port.PortBuffer) void {
     if (controller.get_digital(controls.forwards) and controller.get_digital(controls.backwards)) {
+        state.intake = false;
         spin(tower_velocity, port_buffer);
     } else {
         // check for the intake toggle
@@ -66,12 +67,15 @@ pub fn controllerUpdate(state: *TowerState, port_buffer: *port.PortBuffer) void 
                 _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, ".");
         }
 
-        if (controller.get_digital(controls.backwards)) 
-            spin(-tower_outtake_vel, port_buffer)
-        else if (state.intake)
-            storeBlocks(tower_velocity, port_buffer)
-        else 
+        // if anything, toggle off intake
+        if (controller.get_digital(controls.backwards)) {
+            spin(-tower_outtake_vel, port_buffer);
+            state.intake = false;
+        } else if (state.intake) {
+            storeBlocks(tower_velocity, port_buffer);
+        } else {
             spin(0.0, port_buffer);
+        }
     }
 
     if (controller.get_digital_new_press(controls.toggle_will)) {
