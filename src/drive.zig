@@ -41,6 +41,8 @@ pub const turn_multiplier = 1.0;
 
 pub const DriveState = struct {
     yaw_pid: pid.State = .{},
+    /// The last yaw of the robot whilst turning
+    last_turn_yaw: f64 = 0.0,
 };
 
 /// Driver keeps complaining about controls being exponential when they are in fact linear.
@@ -66,25 +68,32 @@ pub fn spite(x: f64) f64 {
 /// 
 /// Updates the port buffer on any motor disconnects
 pub fn controllerUpdate(drive_state: *DriveState, port_buffer: *port.PortBuffer) void {
-    // hopefully gets set by one of the options
-    var ldr: i32 = 0;
-    var rdr: i32 = 0;
-
     if (controller.get_digital(absolute_turn_held)) {
-        const vldr, const vrdr = absTurn(drive_state, port_buffer);
-        driveVel(vldr, vrdr, port_buffer);
-        return;
+        const ldr, const rdr = absTurn(drive_state, port_buffer);
+        driveVel(ldr, rdr, port_buffer);
     } else {
-        // gets the normalized x and y from the right and left joystick
-        const x = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_X))) / 127.0;
-        const y = @as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0;
+        // gets the normalized x and y from the right and left joystick passed through spite and scaled with the multipliers
+        var x = spite(@as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_X))) / 127.0) * turn_multiplier;
+        const y = spite(@as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0) * drive_multiplier;
 
-        // rest is just normal arcade drive
-        ldr, rdr = userArcadeDrive(x, y);
+        // if not turning then maintain the last turned yaw
+            const yaw = odom.getYaw(port_buffer) orelse 0;
+        if (x > 0) {
+            drive_state.last_turn_yaw = yaw;
+        } else {
+            const err = odom.minimalAngleDiff(yaw, drive_state.last_turn_yaw);
+            x = drive_state.yaw_pid.update(auton.yaw_pid_param, err, opcontrol.cycle_delay);
+
+            // must use velocity for pid to work
+            const ldr, const rdr = arcadeDrive(x, y);
+            driveVel(ldr, rdr, port_buffer);
+            return;
+        }
+
+        // otherwise rest is just normal arcade drive converted to millivolts
+        const ldr, const rdr = @as(@Vector(2, i32), @intFromFloat(arcadeDrive(x, y) * @as(@Vector(2, f64), @splat(12000.0))));
+        driveVolt(ldr, rdr, port_buffer);
     }
-
-    // drive the drivetrain
-    driveVolt(ldr, rdr, port_buffer);
 }
 
 /// Drivetrain default configs (port is negative for reversed)
@@ -129,20 +138,8 @@ pub fn absTurn(drive_state: *DriveState, port_buffer: *port.PortBuffer) struct {
     };
 }
 
-/// Converts -1..=1 x & y values into left & right drive voltages
-pub fn userArcadeDrive(x: f64, y: f64) struct { i32, i32 } {
-    // apply the rotation and movement multipliers
-    const n_x = spite(x) * turn_multiplier;
-    const n_y = spite(y) * drive_multiplier;
-
-    const ldr = std.math.clamp(n_y + n_x, -1, 1);
-    const rdr = std.math.clamp(n_y - n_x, -1, 1);
-
-    return .{ @intFromFloat(ldr * 12000), @intFromFloat(rdr * 12000) };
-}
-
 /// Converts -1..=1 x & y values into left & right drive velocities
-pub fn arcadeDrive(x: f64, y: f64) struct { f64, f64 } {
+pub fn arcadeDrive(x: f64, y: f64) @Vector(2, f64) {
     // apply the rotation and movement multipliers
     const n_x = x * turn_multiplier;
     const n_y = y * drive_multiplier;
