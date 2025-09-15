@@ -13,9 +13,6 @@ const auton = @import("autonomous.zig");
 const vector = @import("vector.zig");
 const odom = @import("odom.zig");
 
-/// Driving in reverse toggle button
-pub const reverse_toggle: c_int = pros.misc.E_CONTROLLER_DIGITAL_RIGHT;
-
 /// For turning to absolute angles (from start)
 pub const absolute_turn_held: c_int = pros.misc.E_CONTROLLER_DIGITAL_DOWN;
 
@@ -44,7 +41,6 @@ pub const turn_multiplier = 1.0;
 
 pub const DriveState = struct {
     yaw_pid: pid.State = .{},
-    reverse: bool = false,
 };
 
 /// Driver keeps complaining about controls being exponential when they are in fact linear.
@@ -85,24 +81,6 @@ pub fn controllerUpdate(drive_state: *DriveState, port_buffer: *port.PortBuffer)
 
         // rest is just normal arcade drive
         ldr, rdr = userArcadeDrive(x, y);
-    }
-
-    // check for toggling of the reverse toggle
-    if (controller.get_digital_new_press(reverse_toggle)) {
-        drive_state.reverse = !drive_state.reverse;
-        // if toggled on, vibrate long, else short
-        _ = if (drive_state.reverse)
-            pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, "-")
-        else
-            pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, ".");
-    }
-
-    // check for reverse driving toggle
-    if (drive_state.reverse) {
-        // swap then negate
-        const tmp = ldr;
-        ldr = -rdr;
-        rdr = -tmp;
     }
 
     // drive the drivetrain

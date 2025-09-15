@@ -93,6 +93,10 @@ pub fn moveMM(goal_distance: f64, odom_state: *odom.State, port_buffer: *port.Po
 
 /// State-machine for moving a certain distance in mm until a precision threshold is met (auton) with a PID
 pub fn moveCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    // rotate AOT towards the goal coord (no yaw updates whilst moving)
+    // (but to also correct any accumulative yaw errors)
+    rotateDeg(math.radiansToDegrees(vector.calDir(f64, goal - odom_state.coord)), odom_state, port_buffer); // goal angle relative to current coord
+
     // state machine state
     var now = pros.rtos.millis();
     var pid = State{};
