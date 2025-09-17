@@ -25,6 +25,9 @@ pub const precision_mm: f64 = 10;
 /// The 'precision' (in radians) that the robot must achieve before moving onto the next path coordinate
 pub const precision_rad: f64 = std.math.degreesToRadians(1);
 
+/// The speed at which auton will drive at
+pub const auton_drive_speed: f64 = 0.5;
+
 /// The *tuned* movement (Y) PID controller
 pub const mov_pid_param = pid.Param {
     .kp = 0.001,

@@ -91,21 +91,60 @@ pub fn moveMM(goal_distance: f64, odom_state: *odom.State, port_buffer: *port.Po
     }
 }
 
-/// State-machine for moving a certain distance in mm until a precision threshold is met (auton) with a PID
+/// State-machine for moving to a certain coord in mm until a precision threshold is met (auton) with a PID
 pub fn moveCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
-    // rotate AOT towards the goal coord (no yaw updates whilst moving)
-    // (but to also correct any accumulative yaw errors)
-    var rel_goal = goal - odom_state.coord;
-    var direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
-    var distance = vector.dotProduct(f64, rel_goal, direction);
-    var goal_angle = math.radiansToDegrees(vector.calDir(f64, goal - odom_state.coord));
-    if (distance < 0) // if goal is behind then face it with the back of the robot
-        goal_angle += 180;
-    rotateDeg(goal_angle, odom_state, port_buffer); // goal angle relative to current coord
+    // calculate the drive ratio to drive the robot in an arc to reach it's destination
+    const drive_ratio = pure_pursuit.trueFollowArc(odom_state.coord, goal, odom_state.prev_yaw);
 
     // state machine state
     var now = pros.rtos.millis();
     var pid = State{};
+    while (true) {
+        // update odom
+        odom_state.update(port_buffer);
+
+        // get the relative goal
+        const rel_goal = goal - odom_state.coord;
+
+        // get the current reachable distance (through dotproduct)
+        const direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
+        const distance = vector.dotProduct(f64, rel_goal, direction);
+
+        // if it's within precision, break
+        if (@abs(distance) < auton.precision_mm) {
+            // stop driving
+            drive.driveVel(0, 0, port_buffer);
+            break;
+        }
+
+        // get speed from the PID
+        const speed = pid.update(auton.mov_pid_param, distance, auton.cycle_delay);
+        const drive_vel = drive_ratio * @as(@Vector(2, f64), @splat(speed));
+
+        // drive it
+        drive.driveVel(drive_vel[0], drive_vel[1], port_buffer);
+
+        // wait for the next cycle
+        pros.rtos.task_delay_until(&now, auton.cycle_delay);
+    }
+}
+
+/// State-machine for moving to a certain coord in mm until it passes it
+pub fn moveChainCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    // calculate the drive ratio to drive the robot in an arc to reach it's destination
+    // const drive_ratio = pure_pursuit.trueFollowArc(odom_state.coord, goal, odom_state.prev_yaw);
+    const drive_ratio: @Vector(2, f64) = .{ 1, 1 };
+
+    // get the original distance sign
+    var rel_goal = goal - odom_state.coord;
+    var direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
+    var distance = vector.dotProduct(f64, rel_goal, direction);
+
+    // get the original distance sign
+    const og_dist_sgn = math.sign(distance);
+
+    // state machine state
+    var now = pros.rtos.millis();
     while (true) {
         // update odom
         odom_state.update(port_buffer);
@@ -116,23 +155,21 @@ pub fn moveCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.P
         // get the current reachable distance (through dotproduct)
         direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
         distance = vector.dotProduct(f64, rel_goal, direction);
+        const distance_sgn = math.sign(distance);
 
-        // if it's within precision, break
-        if (@abs(distance) < auton.precision_mm) {
+        // if the distance is reached/passed (sign flipped)
+        if (distance_sgn != og_dist_sgn) {
             // stop driving
             drive.driveVel(0, 0, port_buffer);
             break;
         }
 
-        // get the ratios from pure pursuit
-        // var drive_vel = pure_pursuit.trueFollowArc(odom_state.coord, goal, odom_state.prev_yaw);
-
-        // get speed from the PID
-        const speed = pid.update(auton.mov_pid_param, distance, auton.cycle_delay);
-        // drive_vel *= @splat(speed);
+        // do a constant speed
+        const speed = distance_sgn * auton.auton_drive_speed; // in the right direction
+        const drive_vel = drive_ratio * @as(@Vector(2, f64), @splat(speed));
 
         // drive it
-        drive.driveVel(speed, speed, port_buffer);
+        drive.driveVel(drive_vel[0], drive_vel[1], port_buffer);
 
         // wait for the next cycle
         pros.rtos.task_delay_until(&now, auton.cycle_delay);

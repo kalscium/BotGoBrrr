@@ -42,5 +42,5 @@ pub fn rotateToDegPID(self: *@This(), degree: f64, odom_state: *odom.State, port
 pub fn moveMMPID(self: *@This(), distance: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
     self.x += @sin(self.yaw) * distance;
     self.y += @cos(self.yaw) * distance;
-    pid.moveCoord(.{ self.x, self.y }, odom_state, port_buffer);
+    pid.moveCoord(.{ self.x, self.y }, odom_state, port_buffer); // try moveChainCoord for motion chaining
 }
