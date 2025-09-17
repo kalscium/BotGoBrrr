@@ -41,8 +41,6 @@ pub const turn_multiplier = 1.0;
 
 pub const DriveState = struct {
     yaw_pid: pid.State = .{},
-    /// The last yaw of the robot whilst turning
-    last_turn_yaw: f64 = 0.0,
 };
 
 /// Driver keeps complaining about controls being exponential when they are in fact linear.
