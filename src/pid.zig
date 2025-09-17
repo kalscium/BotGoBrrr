@@ -95,7 +95,13 @@ pub fn moveMM(goal_distance: f64, odom_state: *odom.State, port_buffer: *port.Po
 pub fn moveCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
     // rotate AOT towards the goal coord (no yaw updates whilst moving)
     // (but to also correct any accumulative yaw errors)
-    rotateDeg(math.radiansToDegrees(vector.calDir(f64, goal - odom_state.coord)), odom_state, port_buffer); // goal angle relative to current coord
+    var rel_goal = goal - odom_state.coord;
+    var direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
+    var distance = vector.dotProduct(f64, rel_goal, direction);
+    var goal_angle = math.radiansToDegrees(vector.calDir(f64, goal - odom_state.coord));
+    if (distance < 0) // if goal is behind then face it with the back of the robot
+        goal_angle += 180;
+    rotateDeg(goal_angle, odom_state, port_buffer); // goal angle relative to current coord
 
     // state machine state
     var now = pros.rtos.millis();
@@ -105,11 +111,11 @@ pub fn moveCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.P
         odom_state.update(port_buffer);
 
         // get the relative goal
-        const rel_goal = goal - odom_state.coord;
+        rel_goal = goal - odom_state.coord;
 
         // get the current reachable distance (through dotproduct)
-        const direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
-        const distance = vector.dotProduct(f64, rel_goal, direction);
+        direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
+        distance = vector.dotProduct(f64, rel_goal, direction);
 
         // if it's within precision, break
         if (@abs(distance) < auton.precision_mm) {

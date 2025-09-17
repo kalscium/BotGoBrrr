@@ -73,22 +73,8 @@ pub fn controllerUpdate(drive_state: *DriveState, port_buffer: *port.PortBuffer)
         driveVel(ldr, rdr, port_buffer);
     } else {
         // gets the normalized x and y from the right and left joystick passed through spite and scaled with the multipliers
-        var x = spite(@as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_X))) / 127.0) * turn_multiplier;
+        const x = spite(@as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_X))) / 127.0) * turn_multiplier;
         const y = spite(@as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0) * drive_multiplier;
-
-        // if not turning then maintain the last turned yaw
-            const yaw = odom.getYaw(port_buffer) orelse 0;
-        if (x > 0) {
-            drive_state.last_turn_yaw = yaw;
-        } else {
-            const err = odom.minimalAngleDiff(yaw, drive_state.last_turn_yaw);
-            x = drive_state.yaw_pid.update(auton.yaw_pid_param, err, opcontrol.cycle_delay);
-
-            // must use velocity for pid to work
-            const ldr, const rdr = arcadeDrive(x, y);
-            driveVel(ldr, rdr, port_buffer);
-            return;
-        }
 
         // otherwise rest is just normal arcade drive converted to millivolts
         const ldr, const rdr = @as(@Vector(2, i32), @intFromFloat(arcadeDrive(x, y) * @as(@Vector(2, f64), @splat(12000.0))));

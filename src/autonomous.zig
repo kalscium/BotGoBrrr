@@ -57,7 +57,7 @@ export fn autonomous() callconv(.C) void {
     if (comptime options.auton_routine) |routine|
         if (comptime std.mem.eql(u8, routine, "shad"))
             autonomousShad()
-        else if (comptime std.mem.eql(u8, routine, "left"))
+        else if (comptime std.mem.eql(u8, routine, "left")) // just do left for skills
             autonomousLeft1()
         else if (comptime std.mem.eql(u8, routine, "left_old"))
             autonomousLeft()
@@ -123,7 +123,7 @@ pub fn autonomousLeft1() void {
     drive.driveVel(0, 0, &port_buffer);
 
     // go back to where the robot was + a bit
-    shadow.moveMMPID(125, &odom_state, &port_buffer);
+    shadow.moveMMPID(55, &odom_state, &port_buffer);
 
     // rotate towards and go to the middle goal and score ~half the blocks
     shadow.rotateToDegPID(45, &odom_state, &port_buffer);
@@ -133,12 +133,20 @@ pub fn autonomousLeft1() void {
     tower.spin(0, &port_buffer);
 
     // move backwards diagonally to the corner, and then move fowards to the long goal before scoring the rest of the blocks
-    shadow.moveMMPID(-1200, &odom_state, &port_buffer);
+    shadow.moveMMPID(-1255, &odom_state, &port_buffer);
     shadow.rotateToDegPID(0, &odom_state, &port_buffer);
-    shadow.moveMMPID(475, &odom_state, &port_buffer);
+    shadow.moveMMPID(470, &odom_state, &port_buffer);
     tower.spin(1, &port_buffer);
     wait(1200, &odom_state, &port_buffer);
     tower.spin(0, &port_buffer);
+
+    // move backwards from the long-goal, rotate to face the parking and then full-send it (look at the video it's so cool)
+    // also probably safe to keep this here as it's outside of the 15s time limit for matches
+    shadow.moveMMPID(-550, &odom_state, &port_buffer);
+    shadow.rotateToDegPID(90, &odom_state, &port_buffer);
+    drive.driveVel(1.0, 1.0, &port_buffer);
+    wait(1700, &odom_state, &port_buffer);
+    drive.driveVel(0, 0, &port_buffer);
 
     // write the port buffer to the port_buffer file
     if (port_buffer_file) |file|
@@ -214,24 +222,24 @@ pub fn autonomousRight() void {
     shadow.moveMMPID(415, &odom_state, &port_buffer);
 
     // move into them slowly for a while to intake
-    drive.driveVel(0.1, 0.1, &port_buffer);
+    drive.driveVel(0.1, 0.15, &port_buffer);
     wait(1200, &odom_state, &port_buffer);
     drive.driveVel(0, 0, &port_buffer);
 
     // go back to where the robot was + a bit
-    shadow.moveMMPID(125, &odom_state, &port_buffer);
+    shadow.moveMMPID(55, &odom_state, &port_buffer);
 
     // rotate towards and go to the middle goal and score ~half the blocks
     shadow.rotateToDegPID(-45, &odom_state, &port_buffer);
     shadow.moveMMPID(315, &odom_state, &port_buffer);
-    tower.spin(1, &port_buffer);
+    tower.spin(-1, &port_buffer);
     wait(500, &odom_state, &port_buffer);
     tower.spin(0, &port_buffer);
 
     // move backwards diagonally to the corner, and then move fowards to the long goal before scoring the rest of the blocks
-    shadow.moveMMPID(-1200, &odom_state, &port_buffer);
+    shadow.moveMMPID(-1255, &odom_state, &port_buffer);
     shadow.rotateToDegPID(0, &odom_state, &port_buffer);
-    shadow.moveMMPID(530, &odom_state, &port_buffer);
+    shadow.moveMMPID(470, &odom_state, &port_buffer);
     tower.spin(1, &port_buffer);
     wait(1200, &odom_state, &port_buffer);
     tower.spin(0, &port_buffer);
