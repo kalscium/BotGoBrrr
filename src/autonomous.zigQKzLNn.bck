@@ -30,7 +30,7 @@ pub const auton_drive_speed: f64 = 0.5;
 
 /// The *tuned* movement (Y) PID controller
 pub const mov_pid_param = pid.Param {
-    .kp = 0.001,
+    .kp = 0.0015,
     .ki = 0,
     .kd = 0,
     .saturation = 1,
