@@ -76,9 +76,9 @@ pub fn temperature(ms: u32, file: ?*std.c.FILE) void {
     var tower_hood_temp = pros.motors.motor_get_temperature(tower.motors.hood.port);
     if (tower_hood_temp == def.pros_err_f64) // in case it fails
         tower_hood_temp = 0;
-    var tower_top_temp = pros.motors.motor_get_temperature(tower.motors.top.port);
-    if (tower_top_temp == def.pros_err_f64) // in case it fails
-        tower_top_temp = 0;
+    var tower_storage_temp = pros.motors.motor_get_temperature(tower.motors.storage.port);
+    if (tower_storage_temp == def.pros_err_f64) // in case it fails
+        tower_storage_temp = 0;
     var tower_mid_temp = pros.motors.motor_get_temperature(tower.motors.mid.port);
     if (tower_mid_temp == def.pros_err_f64) // in case it fails
         tower_mid_temp = 0;
@@ -113,7 +113,7 @@ pub fn temperature(ms: u32, file: ?*std.c.FILE) void {
         time,
         battery_temp,
         tower_hood_temp,
-        tower_top_temp,
+        tower_storage_temp,
         tower_mid_temp,
         tower_bottom_temp,
         l1_temp,

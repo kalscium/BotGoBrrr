@@ -15,7 +15,7 @@ pub const tower_outtake_vel: f64 = 1.0;
 pub const motors = struct {
     // The two motors in the tower
     pub const hood = towerMotor(-5, pros.motors.E_MOTOR_GEAR_200);
-    pub const top = towerMotor(4, pros.motors.E_MOTOR_GEAR_200);
+    pub const storage = towerMotor(14, pros.motors.E_MOTOR_GEAR_200);
     pub const mid = towerMotor(6, pros.motors.E_MOTOR_GEAR_200);
     pub const bottom = towerMotor(18, pros.motors.E_MOTOR_GEAR_200);
 };
@@ -90,7 +90,7 @@ pub fn controllerUpdate(state: *TowerState, port_buffer: *port.PortBuffer) void 
 /// Initializes the tower
 pub fn init() void {
     motors.hood.init();
-    motors.top.init();
+    motors.storage.init();
     motors.mid.init();
     motors.bottom.init();
     _ = pros.adi.adi_port_set_config(little_will_port, pros.adi.E_ADI_DIGITAL_OUT);
@@ -99,7 +99,7 @@ pub fn init() void {
 /// Spins all the motors of the tower based on an input velocity `(-1..=1)` to store (not score) blocks, reporting disconnects to the port buffer
 pub fn storeBlocks(velocity: f64, port_buffer: *port.PortBuffer) void {
     motors.hood.setVelocity(-velocity, port_buffer);
-    motors.top.setVelocity(velocity, port_buffer);
+    motors.storage.setVelocity(velocity, port_buffer);
     motors.mid.setVelocity(velocity, port_buffer);
     motors.bottom.setVelocity(velocity, port_buffer);
 }
@@ -107,7 +107,7 @@ pub fn storeBlocks(velocity: f64, port_buffer: *port.PortBuffer) void {
 /// Spins all the motors of the tower based on an input velocity `(-1..=1)`, reporting disconnects to the port buffer
 pub fn spin(velocity: f64, port_buffer: *port.PortBuffer) void {
     motors.hood.setVelocity(velocity, port_buffer);
-    motors.top.setVelocity(velocity, port_buffer);
+    motors.storage.setVelocity(-velocity, port_buffer);
     motors.mid.setVelocity(velocity, port_buffer);
     motors.bottom.setVelocity(velocity, port_buffer);
 }
