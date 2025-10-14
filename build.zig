@@ -36,6 +36,7 @@ pub fn build(b: *std.Build) void {
     const debug_mode_pid = b.option(bool, "dbgmode-pid", "Sets whether to enable 'debug mode' for PIDs");
     const auton_routine = b.option([]const u8, "auton-routine", "Sets the auton routine to use/compile.");
     const w_akibot = b.option(bool, "w-akibot", "Use if allianced with akibot (wait 2s auton)");
+    const prac_driv = b.option(bool, "prac-driv", "Forces the driver to actually practice not maxing out joysticks");
 
     // options set
     var options = b.addOptions();
@@ -46,6 +47,7 @@ pub fn build(b: *std.Build) void {
     options.addOption(bool, "debug_mode", debug_mode orelse false);
     options.addOption(bool, "debug_mode_pid", debug_mode_pid orelse false);
     options.addOption(bool, "w_akibot", w_akibot orelse false);
+    options.addOption(bool, "prac_driv", prac_driv orelse false);
     options.addOption(?[]const u8, "auton_routine", auton_routine);
     robot_mod.addOptions("options", options);
 

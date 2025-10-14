@@ -16,16 +16,16 @@ pub const motors = struct {
     // The two motors in the tower
     pub const hood = towerMotor(-5, pros.motors.E_MOTOR_GEAR_200);
     pub const storage = towerMotor(14, pros.motors.E_MOTOR_GEAR_200);
-    pub const mid = towerMotor(6, pros.motors.E_MOTOR_GEAR_200);
+    pub const mid = towerMotor(6, pros.motors.E_MOTOR_GEAR_600);
     pub const bottom = towerMotor(18, pros.motors.E_MOTOR_GEAR_200);
 };
 
 /// The tower controller controls
 pub const controls = struct {
     /// The button for spinning the tower up
-    pub const forwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_L2;
+    pub const forwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_R2;
     /// The button for spinning the tower down
-    pub const backwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_L1;
+    pub const backwards: c_int = pros.misc.E_CONTROLLER_DIGITAL_R1;
     /// The button for toggling little will
     pub const toggle_will: c_int = pros.misc.E_CONTROLLER_DIGITAL_B;
 };
@@ -56,26 +56,33 @@ pub const TowerState = struct {
 /// 
 /// Updates the port buffer upon motor disconnects.
 pub fn controllerUpdate(state: *TowerState, port_buffer: *port.PortBuffer) void {
+
+    // check for storage
+    if (controller.get_digital(pros.misc.E_CONTROLLER_DIGITAL_Y) or pros.misc.controller_get_digital(pros.misc.E_CONTROLLER_PARTNER, pros.misc.E_CONTROLLER_DIGITAL_Y) != 0)
+        motors.storage.setVelocity(tower_velocity, port_buffer)
+    else
+        motors.storage.setVelocity(-tower_velocity, port_buffer);
+
+    // check for the intake toggle
+    if (controller.get_digital_new_press(controls.forwards)) {
+        state.intake = !state.intake;
+        if (state.intake) // rumble when toggled on
+            _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, ".");
+    }
+
+    // if anything, toggle off intake
     if (controller.get_digital(controls.forwards) and controller.get_digital(controls.backwards)) {
         state.intake = false;
         spin(tower_velocity, port_buffer);
+    } else if (controller.get_digital(controls.backwards)) {
+        spin(-tower_outtake_vel, port_buffer);
+        motors.storage.setVelocity(0, port_buffer);
+        state.intake = false;
+    } else if (state.intake) {
+        storeBlocks(tower_velocity, port_buffer);
     } else {
-        // check for the intake toggle
-        if (controller.get_digital_new_press(controls.forwards)) {
-            state.intake = !state.intake;
-            if (state.intake) // rumble when toggled on
-                _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, ".");
-        }
-
-        // if anything, toggle off intake
-        if (controller.get_digital(controls.backwards)) {
-            spin(-tower_outtake_vel, port_buffer);
-            state.intake = false;
-        } else if (state.intake) {
-            storeBlocks(tower_velocity, port_buffer);
-        } else {
-            spin(0.0, port_buffer);
-        }
+        motors.storage.setVelocity(0, port_buffer);
+        spin(0.0, port_buffer);
     }
 
     if (controller.get_digital_new_press(controls.toggle_will)) {
@@ -99,7 +106,6 @@ pub fn init() void {
 /// Spins all the motors of the tower based on an input velocity `(-1..=1)` to store (not score) blocks, reporting disconnects to the port buffer
 pub fn storeBlocks(velocity: f64, port_buffer: *port.PortBuffer) void {
     motors.hood.setVelocity(-velocity, port_buffer);
-    motors.storage.setVelocity(velocity, port_buffer);
     motors.mid.setVelocity(velocity, port_buffer);
     motors.bottom.setVelocity(velocity, port_buffer);
 }
@@ -107,7 +113,6 @@ pub fn storeBlocks(velocity: f64, port_buffer: *port.PortBuffer) void {
 /// Spins all the motors of the tower based on an input velocity `(-1..=1)`, reporting disconnects to the port buffer
 pub fn spin(velocity: f64, port_buffer: *port.PortBuffer) void {
     motors.hood.setVelocity(velocity, port_buffer);
-    motors.storage.setVelocity(-velocity, port_buffer);
     motors.mid.setVelocity(velocity, port_buffer);
     motors.bottom.setVelocity(velocity, port_buffer);
 }

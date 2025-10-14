@@ -26,9 +26,9 @@ pub const drivetrain_motors = struct {
     // x3 are the top motors of the drivetrain
     // 
     // Also, the tower is at the **FRONT** of the robot
-    pub const l1 = drivetrainMotor(-16);
-    pub const l2 = drivetrainMotor(-10);
-    pub const l3 = drivetrainMotor(9);
+    pub const l1 = drivetrainMotor(-8);
+    pub const l2 = drivetrainMotor(-9);
+    pub const l3 = drivetrainMotor(21);
     pub const r1 = drivetrainMotor(11);
     pub const r2 = drivetrainMotor(2);
     pub const r3 = drivetrainMotor(-1);
@@ -43,20 +43,23 @@ pub const DriveState = struct {
     yaw_pid: pid.State = .{},
 };
 
-/// Driver keeps complaining about controls being exponential when they are in fact linear.
-/// We're switching to logarithmic controls.
-pub fn spite(x: f64) f64 {
-    const a = 0.3; // coefficient
-    const b = 4; // log base
-    const floor = 0.02; // minimum value to not blow up to undefined
+/// Daniel's magic equation.
+/// 
+/// Logarithmic at the start to overcome dead-zones, and a ~0.7 flattened linear
+/// for precise movement to the end.
+/// 
+/// https://www.desmos.com/calculator/xj1enleneb
+pub fn dme(x: f64) f64 {
+    // don't ask what anything means, just that it works
+
+    const a = 4.0;
+    const b = 0.6;
+    const c = b * @log(2.0 * a);
 
     const abs_x = @abs(x); // negatives treated same as positives
+    const sgn_x = std.math.sign(x);
 
-    if (abs_x < floor) { // just return linear
-        return x;
-    } else { // return the fancy log
-        return (a * std.math.log(f64, b, abs_x) + 1) * std.math.sign(x);
-    }
+    return @exp((@log(a) - @sqrt(@log(a)*@log(a) - 4.0 * c * @log(abs_x)))/2.0) * sgn_x;
 }
 
 /// Reads the controller and updates the drivetrain accordingly based upon the
@@ -71,8 +74,15 @@ pub fn controllerUpdate(drive_state: *DriveState, port_buffer: *port.PortBuffer)
         driveVel(ldr, rdr, port_buffer);
     } else {
         // gets the normalized x and y from the right and left joystick passed through spite and scaled with the multipliers
-        const x = spite(@as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_X))) / 127.0) * turn_multiplier;
-        const y = spite(@as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0) * drive_multiplier;
+        var x = dme(@as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_RIGHT_X))) / 127.0) * turn_multiplier;
+        var y = dme(@as(f64, @floatFromInt(controller.get_analog(pros.misc.E_CONTROLLER_ANALOG_LEFT_Y))) / 127.0) * drive_multiplier;
+    
+        // to stop the driver from maxing out joystick (make this an option)
+        if (comptime options.prac_driv)
+        if (x == 1.0 or y == 1.0) {
+            x = 0.0;
+            y = 0.0;
+        };
 
         // otherwise rest is just normal arcade drive converted to millivolts
         const ldr, const rdr = @as(@Vector(2, i32), @intFromFloat(arcadeDrive(x, y) * @as(@Vector(2, f64), @splat(12000.0))));
