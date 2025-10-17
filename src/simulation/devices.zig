@@ -19,7 +19,7 @@ export fn motor_set_encoder_units() callconv(.C) c_int {
 
 /// Sets the gearset of the specified motor
 export fn motor_set_gearing(port: i8, gearset: pros.motors.motor_gearset_e_t) callconv(.C) c_int {
-    simulation.sim_state.motor_gearsets[@intCast(@abs(port))] = switch (gearset) {
+    simulation.sim_state.motor_gearsets[@intCast(@abs(port)-1)] = switch (gearset) {
         pros.motors.E_MOTOR_GEAR_100 => 100,
         pros.motors.E_MOTOR_GEAR_200 => 200,
         pros.motors.E_MOTOR_GEAR_600 => 600,
@@ -33,6 +33,11 @@ export fn motor_set_gearing(port: i8, gearset: pros.motors.motor_gearset_e_t) ca
 /// works for digital values aswell, and the input would need a different
 /// build of robot.
 export fn adi_port_set_config() callconv(.C) c_int {
+    return 0;
+}
+
+/// Does ✨ nothing ✨, as we don't capture ADI port outputs yet.
+export fn adi_digital_write(_: u8, _: bool) callconv(.C) c_int {
     return 0;
 }
 
@@ -62,10 +67,10 @@ export fn imu_get_yaw(_: u8) callconv(.C) f64 {
 /// Moves a motor with the specified velocity (has extra effect for drivetrain motors)
 export fn motor_move_velocity(port: i8, rpm: i32) callconv(.C) c_int {
     const uport: usize = @intCast(@abs(port));
-    const gearset: f64 = @floatFromInt(simulation.sim_state.motor_gearsets[uport]);
+    const gearset: f64 = @floatFromInt(simulation.sim_state.motor_gearsets[uport-1]);
 
     const velocity = @as(f64, @floatFromInt(rpm)) / gearset;
-    simulation.sim_state.motor_velocities[uport] = velocity;
+    simulation.sim_state.motor_velocities[uport-1] = velocity;
 
     switch (port) {
         configs.drive_left_port => simulation.sim_state.drive_left_vel = velocity,

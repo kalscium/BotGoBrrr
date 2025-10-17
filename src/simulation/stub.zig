@@ -30,7 +30,6 @@ export fn adi_analog_read_calibrated() callconv(.C) void { std.debug.panic("unim
 export fn adi_analog_read_calibrated_HR() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn adi_digital_read() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn adi_digital_get_new_press() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
-export fn adi_digital_write() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn adi_pin_mode() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn adi_motor_set() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn adi_motor_get() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
@@ -180,6 +179,8 @@ export fn controller_get_analog() callconv(.C) void { std.debug.panic("unimpleme
 export fn controller_get_battery_capacity() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn controller_get_digital() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn controller_get_digital_new_press() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
+export fn controller_get_digital_release() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
+export fn controller_get_digital_new_release() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn controller_print() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn controller_set_text() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
 export fn controller_clear_line() callconv(.C) void { std.debug.panic("unimplemented", .{}); }
