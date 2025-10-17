@@ -75,8 +75,10 @@ export fn autonomous() callconv(.C) void {
 
     const routine = options.auton_routine orelse "left"; // left is default
 
-    if (comptime std.mem.eql(u8, routine, "left")) // just do left for skills
+    if (comptime std.mem.eql(u8, routine, "left"))
         autonomousLeft(&shadow, &odom_state, &port_buffer)
+    else if (comptime std.mem.eql(u8, routine, "left-parked"))
+        autonomousLeftParked(&shadow, &odom_state, &port_buffer)
     else if (comptime std.mem.eql(u8, routine, "right"))
         autonomousRight(&shadow, &odom_state, &port_buffer)
     else if (comptime std.mem.eql(u8, routine, "skills"))
@@ -102,6 +104,54 @@ pub fn autonomousSkills(shadow: *Shadow, odom_state: *odom.State, port_buffer: *
     drive.driveVel(1.0, 1.0, port_buffer);
     wait(1700, odom_state, port_buffer);
     drive.driveVel(0, 0, port_buffer);
+}
+
+/// An auton for the left side that starts aligned to the parking zone and wall of the field.
+pub fn autonomousLeftParked(shadow: *Shadow, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    // go forwards to clear the parking (to not hit it when rotating)
+    shadow.moveMMPID(600, odom_state, port_buffer);
+    
+    // rotate towards 3 blocks
+    shadow.rotateToDegPID(-30, odom_state, port_buffer);
+    tower.storeBlocks(1, port_buffer);
+
+    // move into them slowly for a while to intake
+    drive.driveVel(0.35, 0.2, port_buffer);
+    wait(1200, odom_state, port_buffer);
+    drive.driveVel(0, 0, port_buffer);
+
+    // IT GOES TO MIDDLE GOAL!!! and score
+    tower.spin(1, port_buffer);
+    wait(1500, odom_state, port_buffer);
+    tower.spin(0, port_buffer);
+
+    // move out of middle goal
+    drive.driveVel(-0.15, -0.15, port_buffer);
+    wait(400, odom_state, port_buffer);
+    drive.driveVel(0, 0, port_buffer);
+
+    // go to match loader
+    shadow.rotateToDegPID(75, odom_state, port_buffer);
+    shadow.moveMMPID(-800, odom_state, port_buffer);
+    shadow.rotateToDegPID(180, odom_state, port_buffer);
+    _ = pros.adi.adi_digital_write(tower.little_will_port, true);
+
+    // penetrate match-loader
+    tower.storeBlocks(1, port_buffer);
+    drive.driveVel(0.4, 0.4, port_buffer);
+    wait(750, odom_state, port_buffer);
+    drive.driveVel(0, 0, port_buffer);
+    
+    // stop intake, fly out backwards, disable will
+    shadow.moveMMPID(-180, odom_state, port_buffer);
+    _ = pros.adi.adi_digital_write(tower.little_will_port, false);
+    shadow.rotateToDegPID(0, odom_state, port_buffer);
+
+    // fly into goal, and score
+    shadow.moveMMPID(115, odom_state, port_buffer);
+    tower.spin(1, port_buffer);
+    wait(3000, odom_state, port_buffer);
+    tower.spin(0, port_buffer);
 }
 
 pub fn autonomousLeft(shadow: *Shadow, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
