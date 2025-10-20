@@ -23,7 +23,7 @@ const port_buffer_path = "/usd/auton_port_buffers.bin";
 /// The 'precision' (in mm) that the robot must achieve before moving onto the next path coordinate
 pub const precision_mm: f64 = 10;
 /// The 'precision' (in radians) that the robot must achieve before moving onto the next path coordinate
-pub const precision_rad: f64 = std.math.degreesToRadians(1);
+pub const precision_rad: f64 = std.math.degreesToRadians(3);
 
 /// The speed at which auton will drive at
 pub const auton_drive_speed: f64 = 0.5;
@@ -83,6 +83,8 @@ export fn autonomous() callconv(.C) void {
         autonomousRight(&shadow, &odom_state, &port_buffer)
     else if (comptime std.mem.eql(u8, routine, "skills"))
         autonomousSkills(&shadow, &odom_state, &port_buffer)
+    else if (comptime std.mem.eql(u8, routine, "simplesk"))
+        autonomousSkillsSimple(&shadow, &odom_state, &port_buffer)
     else
         @compileError("invalid autonomous routine build flag");
 
@@ -99,10 +101,18 @@ pub fn autonomousSkills(shadow: *Shadow, odom_state: *odom.State, port_buffer: *
 
     // move backwards from the long-goal, rotate to face the parking and then full-send it (look at the video it's so cool)
     // also probably safe to keep this here as it's outside of the 15s time limit for matches
-    shadow.moveMMPID(-550, odom_state, port_buffer);
+    shadow.moveMMPID(-700, odom_state, port_buffer);
     shadow.rotateToDegPID(90, odom_state, port_buffer);
     drive.driveVel(1.0, 1.0, port_buffer);
     wait(1700, odom_state, port_buffer);
+    drive.driveVel(0, 0, port_buffer);
+}
+
+pub fn autonomousSkillsSimple(shadow: *Shadow, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    // move forwards then backwards
+    shadow.moveMMPID(-400, odom_state, port_buffer);
+    drive.driveVel(1.0, 1.0, port_buffer);
+    wait(900, odom_state, port_buffer);
     drive.driveVel(0, 0, port_buffer);
 }
 
@@ -116,8 +126,8 @@ pub fn autonomousLeftParked(shadow: *Shadow, odom_state: *odom.State, port_buffe
     tower.storeBlocks(1, port_buffer);
 
     // move into them slowly for a while to intake
-    drive.driveVel(0.35, 0.2, port_buffer);
-    wait(1200, odom_state, port_buffer);
+    drive.driveVel(0.28, 0.2, port_buffer);
+    wait(800, odom_state, port_buffer);
     drive.driveVel(0, 0, port_buffer);
 
     // IT GOES TO MIDDLE GOAL!!! and score
@@ -139,16 +149,17 @@ pub fn autonomousLeftParked(shadow: *Shadow, odom_state: *odom.State, port_buffe
     // penetrate match-loader
     tower.storeBlocks(1, port_buffer);
     drive.driveVel(0.4, 0.4, port_buffer);
-    wait(750, odom_state, port_buffer);
+    wait(480, odom_state, port_buffer);
     drive.driveVel(0, 0, port_buffer);
     
     // stop intake, fly out backwards, disable will
-    shadow.moveMMPID(-180, odom_state, port_buffer);
+    shadow.moveMMPID(-100, odom_state, port_buffer);
     _ = pros.adi.adi_digital_write(tower.little_will_port, false);
     shadow.rotateToDegPID(0, odom_state, port_buffer);
 
     // fly into goal, and score
-    shadow.moveMMPID(115, odom_state, port_buffer);
+    shadow.moveMMPID(240, odom_state, port_buffer);
+    shadow.rotateToDegPID(0, odom_state, port_buffer);
     tower.spin(1, port_buffer);
     wait(3000, odom_state, port_buffer);
     tower.spin(0, port_buffer);
@@ -173,13 +184,14 @@ pub fn autonomousLeft(shadow: *Shadow, odom_state: *odom.State, port_buffer: *po
     shadow.rotateToDegPID(45, odom_state, port_buffer);
     shadow.moveMMPID(315, odom_state, port_buffer);
     tower.spin(1, port_buffer);
-    wait(500, odom_state, port_buffer);
+    wait(1500, odom_state, port_buffer);
     tower.spin(0, port_buffer);
 
     // move backwards diagonally to the corner, and then move fowards to the long goal before scoring the rest of the blocks
-    shadow.moveMMPID(-1255, odom_state, port_buffer);
+    shadow.moveMMPID(-1280, odom_state, port_buffer);
     shadow.rotateToDegPID(0, odom_state, port_buffer);
     shadow.moveMMPID(470, odom_state, port_buffer);
+    shadow.rotateToDegPID(0, odom_state, port_buffer);
     tower.spin(1, port_buffer);
     wait(1200, odom_state, port_buffer);
     tower.spin(0, port_buffer);

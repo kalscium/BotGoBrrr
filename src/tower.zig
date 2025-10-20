@@ -37,7 +37,7 @@ pub const controls = struct {
 pub const little_will_port = 'A';
 
 /// The ADI port of the parking
-pub const park_port = 'H';
+pub const park_port = 'B';
 
 /// Tower motor default configs (port is negative for reversed)
 pub fn towerMotor(comptime mport: comptime_int, gearset: pros.motors.motor_gearset_e_t) Motor {
@@ -69,23 +69,22 @@ pub fn controllerUpdate(state: *TowerState, port_buffer: *port.PortBuffer) void 
             _ = pros.misc.controller_rumble(pros.misc.E_CONTROLLER_MASTER, ".");
     }
 
-    // if anything, toggle off intake
+    // check for intake whilst parking
+    if (controller.get_digital_any(controls.forwards) and controller.get_digital_any(controls.toggle_park)) {
+        storeBlocks(tower_park_vel, port_buffer);
+    } else // if anything, toggle off intake
     if (controller.get_digital_any(controls.forwards) and controller.get_digital_any(controls.backwards)) { // score
         state.intake = false;
         spin(tower_velocity, port_buffer);
-    } else if (controller.get_digital(controls.backwards)) { // out-take
+    } else if (controller.get_digital_any(controls.backwards)) { // out-take
         // if the parking button is held down, the spin slowly
         if (controller.get_digital_any(controls.toggle_park))
             spin(-tower_park_vel, port_buffer)
         else
             spin(-tower_outtake_vel, port_buffer);
         state.intake = false;
-    } else if (state.intake) { // store
-        // if the parking button is held down, the spin slowly
-        if (controller.get_digital_any(controls.toggle_park))
-            storeBlocks(tower_park_vel, port_buffer)
-        else
-            storeBlocks(tower_velocity, port_buffer);
+    } else if (state.intake and !controller.get_digital_any(controls.toggle_park)) { // store (no toggle if parking)
+        storeBlocks(tower_velocity, port_buffer);
     } else {
         spin(0.0, port_buffer);
     }
