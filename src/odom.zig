@@ -6,6 +6,7 @@ const port = @import("port.zig");
 const def = @import("def.zig");
 const vector = @import("vector.zig");
 const controller = @import("controller.zig");
+const pure_pursuit = @import("pure_pursuit.zig");
 
 /// The controller button for recording the current odom coordinate
 pub const record_coord_button = pros.misc.E_CONTROLLER_DIGITAL_UP;
@@ -19,11 +20,11 @@ pub const start_coord = Coord{ 0, 0 };
 /// The port of the vertical odometry rotation sensor
 pub const rotation_port_vertical = 13;
 /// The port of the lateral odometry rotation sensor
-pub const rotation_port_lateral = 12;
+pub const rotation_port_lateral = 16;
 /// The offset from the midde (in mm), along the vertical axis of the lateral rotation sensor
 pub const rot_lateral_offset = 0; // quickfix
 /// The port of the IMU sensor
-pub const imu_port = 17;
+pub const imu_port = 15;
 
 /// A single coordinate/vector
 pub const Coord = @Vector(2, f64);
@@ -147,6 +148,10 @@ pub const State = struct {
     /// The robot's current rotational velocity in rad/ms
     rot_vel: f64,
 
+    /// The calculated left & right moved distances
+    left_dist: f64,
+    right_dist: f64,
+
     /// Initializes the odometry state variables
     pub fn init(port_buffer: *port.PortBuffer) State {
         return .{
@@ -158,12 +163,18 @@ pub const State = struct {
             .mov_lat_vel = 0,
             .rot_vel = 0,
             .coord = start_coord,
+            .left_dist = 0,
+            .right_dist = 0,
         };
     }
 
     /// Updates the odometry coordinates based upon previous and current rotation
     /// sensor values (right and left)
     pub fn update(state: *State, port_buffer: *port.PortBuffer) void {
+        // debug log of odom
+        if (pros.rtos.millis() % 200 < 10)
+            _ = pros.printf("odom_coord: (%lf, %lf), yaw: %lf\n", state.coord[0], state.coord[1], std.math.radiansToDegrees(state.prev_yaw));
+
         // get the current sensor readings/values
         const yaw = getYaw(port_buffer) orelse 0;
         const ver_rotation = getRotation(rotation_port_vertical, port_buffer) orelse 0;
@@ -188,7 +199,17 @@ pub const State = struct {
         const dt: f64 = @floatFromInt(now - state.prev_time);
         state.mov_ver_vel = ver_distance / dt;
         state.mov_lat_vel = lat_distance / dt;
-        state.rot_vel = minimalAngleDiff(state.prev_yaw, yaw) / dt;
+        const delta_yaw = minimalAngleDiff(state.prev_yaw, yaw);
+        state.rot_vel = delta_yaw / dt;
+
+        // calculate the left & right moved distances
+        if (delta_yaw > 0) { // turning right
+            state.left_dist += ver_distance + pure_pursuit.robot_width/2 * @abs(delta_yaw);
+            state.right_dist += ver_distance - pure_pursuit.robot_width/2 * @abs(delta_yaw);
+        } else { // turning left
+            state.left_dist += ver_distance - pure_pursuit.robot_width/2 * @abs(delta_yaw);
+            state.right_dist += ver_distance + pure_pursuit.robot_width/2 * @abs(delta_yaw);
+        }
 
         // update the previous values
         state.prev_ver_rotation = ver_rotation;

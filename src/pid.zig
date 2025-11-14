@@ -29,12 +29,14 @@ pub const State = struct {
     /// The last derivative
     last_derv: f64 = 0,
 
-    /// Updates the state of a PID, based on the current error and delta-time.
+    /// Updates the state of a PID, based on the current error and delta-time (in ms).
     /// 
     /// Upon goal change, the state should be wiped
-    pub fn update(self: *State, params: Param, current_err: f64, delta_time: f64) f64 {
+    pub fn update(self: *State, params: Param, current_err: f64, dt: f64) f64 {
         // compute the low pass filter
         self.last_derv = (params.low_pass_a * self.last_derv) + (1-params.low_pass_a) * (current_err - self.last_err);
+
+        const delta_time = dt / 1000.0;
 
         // compute the derivative
         const derivative = self.last_derv / delta_time;
@@ -96,10 +98,10 @@ pub fn moveCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.P
     var rel_goal = goal - odom_state.coord;
     var direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
     var distance = vector.dotProduct(f64, rel_goal, direction);
-    var goal_angle = math.radiansToDegrees(vector.calDir(f64, goal - odom_state.coord));
-        if (distance < 0) // if goal is behind then face it with the back of the robot
-            goal_angle += 180;
-        rotateDeg(goal_angle, odom_state, port_buffer); // goal angle relative to current coord
+    var goal_angle = math.radiansToDegrees(vector.calDir(f64, rel_goal));
+    if (distance < 0) // if goal is behind then face it with the back of the robot
+        goal_angle += 180;
+    rotateDeg(goal_angle, odom_state, port_buffer); // goal angle relative to current coord
 
     // state machine state
     var now = pros.rtos.millis();
@@ -110,6 +112,7 @@ pub fn moveCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.P
 
         // get the relative goal
         rel_goal = goal - odom_state.coord;
+        goal_angle = math.radiansToDegrees(vector.calDir(f64, rel_goal));
 
         // get the current reachable distance (through dotproduct)
         direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
@@ -125,6 +128,55 @@ pub fn moveCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.P
         // get speed from the PID
         const speed = pid.update(auton.mov_pid_param, distance, auton.cycle_delay);
         const drive_vel = @as(@Vector(2, f64), @splat(speed));
+
+        // drive it
+        drive.driveVel(drive_vel[0], drive_vel[1], port_buffer);
+
+        // wait for the next cycle
+        pros.rtos.task_delay_until(&now, auton.cycle_delay);
+    }
+}
+
+/// State-machine for moving to a certain coord in mm until a precision threshold is met (auton) with a PID
+pub fn moveCoordBoomer(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    var rel_goal = goal - odom_state.coord;
+    var direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
+    var distance = vector.dotProduct(f64, rel_goal, direction);
+    var goal_angle = math.radiansToDegrees(vector.calDir(f64, rel_goal));
+    if (distance < 0) // if goal is behind then face it with the back of the robot
+        goal_angle += 180;
+    rotateDeg(goal_angle, odom_state, port_buffer); // goal angle relative to current coord
+
+    // state machine state
+    var now = pros.rtos.millis();
+    var pid = State{};
+    while (true) {
+        // update odom
+        odom_state.update(port_buffer);
+
+        // get the relative goal
+        rel_goal = goal - odom_state.coord;
+        goal_angle = math.radiansToDegrees(vector.calDir(f64, rel_goal));
+
+        // get the current reachable distance (through dotproduct)
+        direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
+        distance = vector.dotProduct(f64, rel_goal, direction);
+
+        // if it's within precision, break
+        if (@abs(distance) < auton.precision_mm) {
+            // stop driving
+            drive.driveVel(0, 0, port_buffer);
+            break;
+        }
+
+        // get the yaw and current angle error
+        const yaw = odom.getYaw(port_buffer) orelse 0;
+        const err = odom.minimalAngleDiff(yaw, goal_angle);
+
+        // get speed from the PID
+        const steer = pid.update(auton.yaw_pid_param, err, auton.cycle_delay);
+        const speed = pid.update(auton.mov_pid_param, distance, auton.cycle_delay);
+        const drive_vel = drive.arcadeDrive(steer, speed);
 
         // drive it
         drive.driveVel(drive_vel[0], drive_vel[1], port_buffer);
@@ -180,6 +232,75 @@ pub fn moveChainCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *p
     }
 }
 
+/// Move to a coord with dual differential PIDs
+pub fn moveCoordDDP(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    const rel_goal = goal - odom_state.coord;
+    const direction = vector.polarToCartesian(1.0, odom_state.prev_yaw);
+    const distance = vector.dotProduct(f64, rel_goal, direction);
+
+    var goal_angle = vector.calDir(f64, rel_goal);
+    if (distance < 0) // if goal is behind then face it with the back of the robot
+        goal_angle += math.pi;
+
+    // rotate towards the goal and move towards it
+    rotateDegDDPTo(math.radiansToDegrees(goal_angle), odom_state, port_buffer);
+    driveDDP(distance, distance, odom_state, port_buffer);
+}
+
+/// Rotates with dual differential PIDs in DEGREES to an absolute degrees
+pub fn rotateDegDDPTo(angle: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    // get the yaw
+    const yaw = odom.getYaw(port_buffer) orelse 0;
+    // calculate the movement from the desired angle
+    const diff = odom.minimalAngleDiff(yaw, math.degreesToRadians(angle));
+    rotateDegDDP(math.radiansToDegrees(diff), odom_state, port_buffer);
+}
+
+/// Turn with dual differential PIDs in DEGREES
+pub fn rotateDegDDP(angle: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    const rads = math.degreesToRadians(angle);
+
+    // calculate the turn
+    const dist = rads * pure_pursuit.robot_width/2;
+
+    driveDDP(dist, -dist, odom_state, port_buffer);
+}
+
+/// Drive with dual differential PIDs in mm
+pub fn driveDDP(left_mm: f64, right_mm: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    // state machine state
+    var now = pros.rtos.millis();
+    var left_pid = State{};
+    var right_pid = State{};
+    const start_left = odom_state.left_dist;
+    const start_right = odom_state.right_dist;
+
+    while (true) {
+        // update odom
+        odom_state.update(port_buffer);
+
+        const dist_left = left_mm - (odom_state.left_dist - start_left);
+        const dist_right = right_mm - (odom_state.right_dist - start_right);
+
+        // if it's within precision, break
+        if (@abs(dist_left) < auton.precision_mm and @abs(dist_right) < auton.precision_mm) {
+            // stop driving
+            drive.driveVel(0, 0, port_buffer);
+            break;
+        }
+
+        // get controls from pid
+        const left_v = left_pid.update(auton.mov_pid_param, dist_left, auton.cycle_delay);
+        const right_v = right_pid.update(auton.mov_pid_param, dist_right, auton.cycle_delay);
+
+        // drive it
+        drive.driveVel(left_v, right_v, port_buffer);
+
+        // wait for the next cycle
+        pros.rtos.task_delay_until(&now, auton.cycle_delay);
+    }
+}
+
 /// State-machine for rotating towards a yaw goal until a precision threshold is met (auton) with a PID
 pub fn rotateDeg(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
     const desired_yaw = math.degreesToRadians(desired_yaw_deg);
@@ -196,7 +317,45 @@ pub fn rotateDeg(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer: *po
 
         // if it's within precision, break
         if (@abs(err) < auton.precision_rad) {
-            _ = pros.printf("err: %lf, precision: %lf\n", err, auton.precision_rad);
+            // stop driving
+            drive.driveVel(0, 0, port_buffer);
+            break;
+        }
+
+        // get controls from pid
+        const x = pid.update(auton.yaw_pid_param, err, auton.cycle_delay);
+
+        // drive it
+        const ldr, const rdr = drive.arcadeDrive(x, 0);
+        drive.driveVel(ldr, rdr, port_buffer);
+
+        // wait for the next cycle
+        pros.rtos.task_delay_until(&now, auton.cycle_delay);
+    }
+}
+
+/// State-machine for rotating towards a yaw goal until it's been passed with a PID
+pub fn rotateDegFast(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    const desired_yaw = math.degreesToRadians(desired_yaw_deg);
+    // state machine state
+    var now = pros.rtos.millis();
+    var pid = State{};
+
+    // get the yaw and current angle error
+    var yaw = odom.getYaw(port_buffer) orelse 0;
+    var err = odom.minimalAngleDiff(yaw, desired_yaw);
+    const og_sign = err < 0;
+
+    while (true) {
+        // update odom
+        odom_state.update(port_buffer);
+
+        // get the yaw and current angle error
+        yaw = odom.getYaw(port_buffer) orelse 0;
+        err = odom.minimalAngleDiff(yaw, desired_yaw);
+
+        // if it's within precision or passes, break
+        if (@abs(err) < auton.precision_rad or og_sign != (err < 0)) {
             // stop driving
             drive.driveVel(0, 0, port_buffer);
             break;

@@ -26,12 +26,12 @@ pub const drivetrain_motors = struct {
     // x3 are the top motors of the drivetrain
     // 
     // Also, the tower is at the **FRONT** of the robot
-    pub const l1 = drivetrainMotor(-8);
-    pub const l2 = drivetrainMotor(-9);
-    pub const l3 = drivetrainMotor(21);
-    pub const r1 = drivetrainMotor(11);
-    pub const r2 = drivetrainMotor(2);
-    pub const r3 = drivetrainMotor(-1);
+    pub const l1 = drivetrainMotor(-11);
+    pub const l2 = drivetrainMotor(-20);
+    pub const l3 = drivetrainMotor(12);
+    pub const r1 = drivetrainMotor(10);
+    pub const r2 = drivetrainMotor(17);
+    pub const r3 = drivetrainMotor(-14);
 };
 
 /// The multiplier applied to the robot's movement speed normally
