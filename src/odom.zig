@@ -171,10 +171,6 @@ pub const State = struct {
     /// Updates the odometry coordinates based upon previous and current rotation
     /// sensor values (right and left)
     pub fn update(state: *State, port_buffer: *port.PortBuffer) void {
-        // debug log of odom
-        if (pros.rtos.millis() % 200 < 10)
-            _ = pros.printf("odom_coord: (%lf, %lf), yaw: %lf\n", state.coord[0], state.coord[1], std.math.radiansToDegrees(state.prev_yaw));
-
         // get the current sensor readings/values
         const yaw = getYaw(port_buffer) orelse 0;
         const ver_rotation = getRotation(rotation_port_vertical, port_buffer) orelse 0;

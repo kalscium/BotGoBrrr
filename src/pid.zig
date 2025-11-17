@@ -334,12 +334,13 @@ pub fn rotateDeg(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer: *po
     }
 }
 
-/// State-machine for rotating towards a yaw goal until it's been passed with a PID
-pub fn rotateDegFast(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+/// State-machine for rotating towards a yaw goal until it's been passed twice (osccilates) with a PID
+pub fn rotateDegFastre(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
     const desired_yaw = math.degreesToRadians(desired_yaw_deg);
     // state machine state
     var now = pros.rtos.millis();
     var pid = State{};
+    var passed = false;
 
     // get the yaw and current angle error
     var yaw = odom.getYaw(port_buffer) orelse 0;
@@ -354,11 +355,23 @@ pub fn rotateDegFast(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer:
         yaw = odom.getYaw(port_buffer) orelse 0;
         err = odom.minimalAngleDiff(yaw, desired_yaw);
 
-        // if it's within precision or passes, break
-        if (@abs(err) < auton.precision_rad or og_sign != (err < 0)) {
+        // if it's within precision, break
+        if (err == 0) {
             // stop driving
             drive.driveVel(0, 0, port_buffer);
             break;
+        }
+
+        // if it passes
+        if (passed) {
+            if (og_sign == (err < 0)) {
+                // stop driving/break
+                drive.driveVel(0, 0, port_buffer);
+                break;
+            }
+        } else {
+            if (og_sign != (err < 0))
+                passed = true;
         }
 
         // get controls from pid

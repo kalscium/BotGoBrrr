@@ -27,7 +27,7 @@ pub const drivetrain_motors = struct {
     // 
     // Also, the tower is at the **FRONT** of the robot
     pub const l1 = drivetrainMotor(-11);
-    pub const l2 = drivetrainMotor(-20);
+    pub const l2 = drivetrainMotor(-2);
     pub const l3 = drivetrainMotor(12);
     pub const r1 = drivetrainMotor(10);
     pub const r2 = drivetrainMotor(17);
