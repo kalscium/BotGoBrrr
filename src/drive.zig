@@ -85,7 +85,9 @@ pub fn controllerUpdate(drive_state: *DriveState, port_buffer: *port.PortBuffer)
         };
 
         // otherwise rest is just normal arcade drive converted to millivolts
-        const ldr, const rdr = @as(@Vector(2, i32), @intFromFloat(arcadeDrive(x, y) * @as(@Vector(2, f64), @splat(12000.0))));
+        // const ldr, const rdr = @as(@Vector(2, i32), @intFromFloat(arcadeDrive(x, y) * @as(@Vector(2, f64), @splat(12000.0))));
+        const ldr, const rdr = @as(@Vector(2, i32), @intFromFloat(arcadeDriveMaxDesat(x * 1.2, y) * @as(@Vector(2, f64), @splat(12000.0))));
+        // const ldr, const rdr = @as(@Vector(2, i32), @intFromFloat(arcadeDriveMyDesat(x * 1.2, y) * @as(@Vector(2, f64), @splat(12000.0))));
         driveVolt(ldr, rdr, port_buffer);
     }
 }
@@ -144,7 +146,47 @@ pub fn arcadeDrive(x: f64, y: f64) @Vector(2, f64) {
     return .{ ldr, rdr };
 }
 
-/// Drives the drivetrain based upon the input voltages for left and right,
+/// Converts -1..=1 x & y values into desaturated left & right drive velocities (my algorithm)
+pub fn arcadeDriveMyDesat(steer: f64, throttle: f64) @Vector(2, f64) {
+    const ldr = throttle + steer;
+    const rdr = throttle - steer;
+    // const max = @max(@abs(ldr), @abs(rdr));
+    const max = @sqrt(ldr*ldr + rdr*rdr);
+
+    // get the overflows
+    const lof = if (@abs(ldr) > 1) (ldr - std.math.sign(ldr)) / max else 0;
+    const rof = if (@abs(rdr) > 1) (rdr - std.math.sign(rdr)) / max else 0;
+
+    // if one of them is overflowing then desat relative to it
+    return .{ std.math.clamp(ldr, -1, 1) - rof, std.math.clamp(rdr, -1, 1) - lof };
+}
+
+/// Converts -1..=1 x & y values into desaturated left & right drive velocities (diamond shape)
+pub fn arcadeDriveMaxDesat(steer: f64, throttle: f64) @Vector(2, f64) {
+    const ldr = throttle + steer;
+    const rdr = throttle - steer;
+    const max = @max(@abs(ldr), @abs(rdr));
+
+    // if one of them is overflowing then desat relative to it
+    if (max <= 1)
+        return .{ ldr, rdr }
+    else
+        return .{ ldr/max, rdr/max };
+}
+
+/// Converts -1..=1 x & y values into desaturated left & right drive velocities (circle shape)
+pub fn arcadeDriveCircleDesat(steer: f64, throttle: f64) @Vector(2, f64) {
+    const ldr = throttle + steer;
+    const rdr = throttle - steer;
+    const mag = @sqrt(ldr*ldr + rdr*rdr);
+
+    // if one of them is overflowing then desat relative to it
+    if (mag <= 1)
+        return .{ ldr, rdr }
+    else
+        return .{ ldr/mag, rdr/mag };
+}
+
 /// reports any motor disconnects to the port buffer
 pub fn driveVolt(ldr: i32, rdr: i32, port_buffer: *port.PortBuffer) void {
     drivetrain_motors.l1.setVoltage(ldr, port_buffer);

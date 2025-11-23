@@ -44,3 +44,23 @@ pub fn moveMMPID(self: *@This(), distance: f64, odom_state: *odom.State, port_bu
     self.y += @cos(self.yaw) * distance;
     pid.moveCoord(.{ self.x, self.y }, odom_state, port_buffer); // try moveChainCoord for motion chaining
 }
+
+/// Blocking state machine to move the robot with a dual pid
+pub fn moveDDP(self: *@This(), left_mm: f64, right_mm: f64, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    const delta_yaw = (right_mm - left_mm)/@import("pure_pursuit.zig").robot_width;
+    const distance = (left_mm + right_mm)/2;
+
+    // calculate updated yaw
+    self.yaw += delta_yaw;
+    if (self.yaw > std.math.pi)
+        self.yaw -= std.math.tau
+    else if (self.yaw < -std.math.pi)
+        self.yaw += std.math.tau;
+
+    // calculate updated coords
+    self.x += @sin(self.yaw) * distance;
+    self.y += @cos(self.yaw) * distance;
+
+    // drive it
+    pid.driveDDP(left_mm, right_mm, odom_state, port_buffer);
+}

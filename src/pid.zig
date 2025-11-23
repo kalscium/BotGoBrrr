@@ -78,7 +78,9 @@ pub fn moveMM(goal_distance: f64, odom_state: *odom.State, port_buffer: *port.Po
         // if it's within precision, break
         if (@abs(distance) < auton.precision_mm) {
             // stop driving
-            drive.driveVel(0, 0, port_buffer);
+            // drive.driveVolt(-12000 * @as(i32, @intFromFloat(math.sign(distance))), -12000 * @as(i32, @intFromFloat(math.sign(distance))), port_buffer);
+            // pros.rtos.task_delay(40);
+            // drive.driveVel(0, 0, port_buffer);
             break;
         }
 
@@ -101,7 +103,7 @@ pub fn moveCoord(goal: odom.Coord, odom_state: *odom.State, port_buffer: *port.P
     var goal_angle = math.radiansToDegrees(vector.calDir(f64, rel_goal));
     if (distance < 0) // if goal is behind then face it with the back of the robot
         goal_angle += 180;
-    rotateDeg(goal_angle, odom_state, port_buffer); // goal angle relative to current coord
+    rotateDeg(goal_angle, odom_state, port_buffer); // goal angle relative to current coord // we'll try without it
 
     // state machine state
     var now = pros.rtos.millis();
@@ -316,9 +318,11 @@ pub fn rotateDeg(desired_yaw_deg: f64, odom_state: *odom.State, port_buffer: *po
         const err = odom.minimalAngleDiff(yaw, desired_yaw);
 
         // if it's within precision, break
-        if (@abs(err) < auton.precision_rad) {
+        if (@abs(err) < auton.precision_rad and @abs(odom_state.rot_vel) < math.degreesToRadians(1)) {
             // stop driving
-            drive.driveVel(0, 0, port_buffer);
+            // drive.driveVolt(-12000 * @as(i32, @intFromFloat(math.sign(err))), 12000 * @as(i32, @intFromFloat(math.sign(err))), port_buffer);
+            // pros.rtos.task_delay(40);
+            // drive.driveVel(0, 0, port_buffer);
             break;
         }
 

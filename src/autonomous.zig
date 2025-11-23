@@ -21,17 +21,17 @@ pub const cycle_delay = 10;
 const port_buffer_path = "/usd/auton_port_buffers.bin";
 
 /// The 'precision' (in mm) that the robot must achieve before moving onto the next path coordinate
-pub const precision_mm: f64 = 10;
+pub const precision_mm: f64 = 4;
 /// The 'precision' (in radians) that the robot must achieve before moving onto the next path coordinate
-pub const precision_rad: f64 = std.math.degreesToRadians(3);
+pub const precision_rad: f64 = std.math.degreesToRadians(2);
 
 /// The speed at which auton will drive at
 pub const auton_drive_speed: f64 = 0.5;
 
 /// The *tuned* movement (Y) PID controller
 pub const mov_pid_param = pid.Param {
-    // .kp = 0.0012,
-    .kp = 0.0015,
+    .kp = 0.0012,
+    // .kp = 0.0015,
     .ki = 0,
     .kd = 0,
     .saturation = 1,
@@ -41,8 +41,8 @@ pub const mov_pid_param = pid.Param {
 /// The *tuned* yaw (radians) PID controller
 pub const yaw_pid_param = pid.Param {
     // 1 / max_error
-    // .kp = 0.21, // seems to work perfectly
     .kp = 0.22, // seems to work perfectly
+    // .kp = 0.25,
     // .kp = 1.0 / (std.math.pi / 1.0), // 180 diff full speed
     // proportional alone is enough, due to us setting velocity instead of voltage
     .ki = 0,
@@ -80,14 +80,8 @@ export fn autonomous() callconv(.C) void {
 
     if (comptime std.mem.eql(u8, routine, "left"))
         autonomousLeft(&shadow, &odom_state, &port_buffer)
-    else if (comptime std.mem.eql(u8, routine, "left-parked"))
-        autonomousLeftParked(&shadow, &odom_state, &port_buffer)
-    else if (comptime std.mem.eql(u8, routine, "right"))
-        autonomousRight(&shadow, &odom_state, &port_buffer)
-    else if (comptime std.mem.eql(u8, routine, "skills"))
-        autonomousSkills(&shadow, &odom_state, &port_buffer)
-    else if (comptime std.mem.eql(u8, routine, "simplesk"))
-        autonomousSkillsSimple(&shadow, &odom_state, &port_buffer)
+    else if (comptime std.mem.eql(u8, routine, "left-pland"))
+        autonomousLeftPland(&shadow, &odom_state, &port_buffer)
     else if (comptime std.mem.eql(u8, routine, "park-bank"))
         pros.adi.adi_digital_write(tower.park_port, true)
     else
@@ -103,71 +97,83 @@ pub fn autonomousSkills(shadow: *Shadow, odom_state: *odom.State, port_buffer: *
     autonomousLeft(shadow, odom_state, port_buffer);
 
     // now park
-
-    // move backwards from the long-goal, rotate to face the parking and then full-send it (look at the video it's so cool)
-    // also probably safe to keep this here as it's outside of the 15s time limit for matches
-    shadow.moveMMPID(-700, odom_state, port_buffer);
-    shadow.rotateToDegPID(90, odom_state, port_buffer);
-    drive.driveVel(1.0, 1.0, port_buffer);
-    wait(1700, odom_state, port_buffer);
-    drive.driveVel(0, 0, port_buffer);
-}
-
-pub fn autonomousSkillsSimple(shadow: *Shadow, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
-    // move forwards then backwards
-    shadow.moveMMPID(-400, odom_state, port_buffer);
-    drive.driveVel(1.0, 1.0, port_buffer);
-    wait(900, odom_state, port_buffer);
-    drive.driveVel(0, 0, port_buffer);
 }
 
 /// An auton for the left side that starts aligned to the parking zone and wall of the field.
-pub fn autonomousLeftParked(shadow: *Shadow, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
-    // go forwards to clear the parking (to not hit it when rotating)
-    shadow.moveMMPID(600, odom_state, port_buffer);
-    
-    // rotate towards 3 blocks
-    shadow.rotateToDegPID(-30, odom_state, port_buffer);
+pub fn autonomousLeftPland(shadow: *Shadow, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    // robot starts on the left-front side of the parking
+
+    // OBJECTIVE: grab the 3 blocks near mid
+
+    // moves forwards and rotates towards the 3 blocks near mid
+    shadow.moveMMPID(310, odom_state, port_buffer);
+    shadow.rotateToDegPID(-50, odom_state, port_buffer);
+
+    // activates intake, moves towards them slowly,
+    // once in range, engages little will to hold them there
+    // and then continues to move forwards to intake
+    // 
+    // works PERFECTLY every time
     tower.storeBlocks(1, port_buffer);
-
-    // move into them slowly for a while to intake
-    drive.driveVel(0.28, 0.2, port_buffer);
-    wait(800, odom_state, port_buffer);
-    drive.driveVel(0, 0, port_buffer);
-
-    // IT GOES TO MIDDLE GOAL!!! and score
-    tower.spin(1, port_buffer);
-    wait(1500, odom_state, port_buffer);
-    tower.spin(0, port_buffer);
-
-    // move out of middle goal
-    drive.driveVel(-0.15, -0.15, port_buffer);
-    wait(400, odom_state, port_buffer);
-    drive.driveVel(0, 0, port_buffer);
-
-    // go to match loader
-    shadow.rotateToDegPID(75, odom_state, port_buffer);
-    shadow.moveMMPID(-800, odom_state, port_buffer);
-    shadow.rotateToDegPID(180, odom_state, port_buffer);
+    drive.driveVel(0.25, 0.25, port_buffer);
+    wait(500, odom_state, port_buffer);
     _ = pros.adi.adi_digital_write(tower.little_will_port, true);
-
-    // penetrate match-loader
-    tower.storeBlocks(1, port_buffer);
-    drive.driveVel(0.4, 0.4, port_buffer);
-    wait(480, odom_state, port_buffer);
+    wait(700, odom_state, port_buffer);
     drive.driveVel(0, 0, port_buffer);
-    
-    // stop intake, fly out backwards, disable will
-    shadow.moveMMPID(-100, odom_state, port_buffer);
+
+    // OBJECTIVE: grab one of the two blocks under long-goal (risky)
+
+    // // rotate towards the blocks,
+    // // release little will,
+    // // drive towards them for 1 second before using little will to rake the block
+    // // 
+    // // Works in theory as it hits the block with little will, which might work
+    // // well with an actual little will polycarb in, and a pressurized downwads
+    // // 'clamping'.
+    // shadow.rotateToDegPID(-54.0, odom_state, port_buffer);
+    // _ = pros.adi.adi_digital_write(tower.little_will_port, false);
+    // drive.driveVel(0.25, 0.25, port_buffer);
+    // wait(800, odom_state, port_buffer);
+    // drive.driveVel(0, 0, port_buffer);
+
+    // // rotate into the blocks under the goal
+    // shadow.rotateToDegPID(-90, odom_state, port_buffer);
+    // drive.driveVel(0.25, 0.25, port_buffer);
+    // wait(240, odom_state, port_buffer);
+    // drive.driveVel(0, 0, port_buffer);
+    // _ = pros.adi.adi_digital_write(tower.little_will_port, true);
+
+    // OBJECTIVE: go to long goal and score blocks we already have
+
+    // move back to where you're supposed to be
+    // then rotate 90 and line up for long goal
+    shadow.moveMMPID(0, odom_state, port_buffer);
     _ = pros.adi.adi_digital_write(tower.little_will_port, false);
+    shadow.rotateToDegPID(-95, odom_state, port_buffer);
+    shadow.moveMMPID(1025, odom_state, port_buffer); // 1015
     shadow.rotateToDegPID(0, odom_state, port_buffer);
 
-    // fly into goal, and score
-    shadow.moveMMPID(240, odom_state, port_buffer);
-    shadow.rotateToDegPID(0, odom_state, port_buffer);
+    // move into long-goal and score
+    shadow.moveMMPID(200, odom_state, port_buffer);
+    // drive.driveVel(0.20, 0.20, port_buffer);
+    // wait(200, odom_state, port_buffer);
+    // drive.driveVel(0, 0, port_buffer);
     tower.spin(1, port_buffer);
-    wait(3000, odom_state, port_buffer);
+    wait(1800, odom_state, port_buffer);
     tower.spin(0, port_buffer);
+
+    // OBJECTIVE: go back and matchload
+
+    // move backwards and into matchloader
+    shadow.moveMMPID(-230, odom_state, port_buffer);
+    shadow.rotateToDegPID(179, odom_state, port_buffer);
+    _ = pros.adi.adi_digital_write(tower.little_will_port, true);
+    shadow.moveMMPID(520, odom_state, port_buffer);
+    // intakes from matchloader
+
+    tower.storeBlocks(1, port_buffer);
+    wait(1000, odom_state, port_buffer);
+    tower.storeBlocks(0, port_buffer);
 }
 
 pub fn autonomousLeft(shadow: *Shadow, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
@@ -243,78 +249,6 @@ pub fn autonomousLeft(shadow: *Shadow, odom_state: *odom.State, port_buffer: *po
     drive.driveVel(0, 0, port_buffer);
 }
 
-pub fn autonomousRight(shadow: *Shadow, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
-    // move forwards before pointing towards the 3 mid blocks and start tower storing
-    shadow.moveMMPID(230, odom_state, port_buffer);
-    shadow.rotateToDegPID(45, odom_state, port_buffer);
-    tower.storeBlocks(1, port_buffer);
-
-    // move towards the blocks and stop just before hitting
-    shadow.moveMMPID(315, odom_state, port_buffer); // 415 worked before
-
-    // drive into them slowly in an arc to intake as many blocks as possible
-    drive.driveVel(0.18, 0.135, port_buffer); // 0.15, 0.1 worked before
-    wait(800, odom_state, port_buffer);
-    drive.driveVel(0, 0, port_buffer);
-
-    // go back to where the robot was + a bit (prepare to score)
-    shadow.rotateToDeg(0);
-    shadow.moveMMPID(175, odom_state, port_buffer); // 55 worked before
-
-    // rotate towards and go to the middle goal and score ~half the blocks
-    shadow.rotateToDegPID(-35, odom_state, port_buffer);
-    shadow.moveMMPID(190, odom_state, port_buffer); // 315 worked before
-    tower.spin(-0.8, port_buffer);
-    wait(760, odom_state, port_buffer); // was 700
-    tower.spin(0, port_buffer);
-    shadow.rotateToDegPID(-45, odom_state, port_buffer);
-
-    // move backwards diagonally to the corner, and then move fowards to the long goal before scoring the rest of the blocks
-    shadow.moveMMPID(-1262, odom_state, port_buffer); // -1190 worked before
-
-    // rotate to matchload
-    _ = pros.adi.adi_digital_write(tower.little_will_port, true);
-    shadow.rotateToDegPID(-176, odom_state, port_buffer);
-
-    // move into the matchloader
-    // store the blocks
-    drive.driveVolt(6500, 6500, port_buffer);
-    tower.storeBlocks(1, port_buffer);
-    wait(800, odom_state, port_buffer);
-    drive.driveVolt(0, 0, port_buffer);
-    wait(1000, odom_state, port_buffer);
-
-    // move out
-    drive.driveVel(-0.24, -0.24, port_buffer);
-    wait(150, odom_state, port_buffer);
-    shadow.rotateToDegPID(0, odom_state, port_buffer);
-    _ = pros.adi.adi_digital_write(tower.little_will_port, false);
-    
-    shadow.moveMMPID(350, odom_state, port_buffer);
-    tower.spin(1, port_buffer);
-    wait(2100, odom_state, port_buffer);
-    tower.spin(0, port_buffer);
-
-    // move back out of the long-goal
-    drive.driveVel(-0.48, -0.48, port_buffer);
-    wait(150, odom_state, port_buffer);
-    drive.driveVel(0, 0, port_buffer);
-
-    if (true) return;
-
-    // go back to the starting position offset to be centered to the parking
-    shadow.x = 0;
-    shadow.y = 350;
-    shadow.rotateToDeg(-90);
-    shadow.moveMMPID(270, odom_state, port_buffer);
-
-    // rotate to the parking goal and full-send it
-    shadow.rotateToDegPID(-179, odom_state, port_buffer);
-    drive.driveVel(0.72, 0.72, port_buffer);
-    wait(1250, odom_state, port_buffer);
-    drive.driveVel(0, 0, port_buffer);
-}
-
 /// Waits a certain amount of time, whilst still updating odom
 fn wait(delay_ms: u32, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
     var now = pros.rtos.millis();
@@ -323,4 +257,11 @@ fn wait(delay_ms: u32, odom_state: *odom.State, port_buffer: *port.PortBuffer) v
         odom_state.update(port_buffer);
         pros.rtos.task_delay_until(&now, cycle_delay);
     }
+}
+
+/// Drives for a certain amount of time at a set speed before stopping
+fn driveVelFor(speed: f64, time_ms: u32, odom_state: *odom.State, port_buffer: *port.PortBuffer) void {
+    drive.driveVel(speed, speed, port_buffer);
+    wait(time_ms, odom_state, port_buffer);
+    drive.driveVel(0, 0, port_buffer);
 }
