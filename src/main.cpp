@@ -69,11 +69,11 @@ void competition_initialize() {}
  */
 void autonomous() {}
 
-void opcontrold() {
+void opcontrol() {
 	driverDrive();
 }
 
-void opcontrol() {
+void opcontrold() {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 
 	while (true) {
