@@ -30,7 +30,7 @@ pub const drivetrain_motors = struct {
     pub const l2 = drivetrainMotor(-2);
     pub const l3 = drivetrainMotor(12);
     pub const r1 = drivetrainMotor(10);
-    pub const r2 = drivetrainMotor(17);
+    pub const r2 = drivetrainMotor(9);
     pub const r3 = drivetrainMotor(-14);
 };
 
@@ -86,8 +86,8 @@ pub fn controllerUpdate(drive_state: *DriveState, port_buffer: *port.PortBuffer)
 
         // otherwise rest is just normal arcade drive converted to millivolts
         // const ldr, const rdr = @as(@Vector(2, i32), @intFromFloat(arcadeDrive(x, y) * @as(@Vector(2, f64), @splat(12000.0))));
-        const ldr, const rdr = @as(@Vector(2, i32), @intFromFloat(arcadeDriveMaxDesat(x * 1.2, y) * @as(@Vector(2, f64), @splat(12000.0))));
-        // const ldr, const rdr = @as(@Vector(2, i32), @intFromFloat(arcadeDriveMyDesat(x * 1.2, y) * @as(@Vector(2, f64), @splat(12000.0))));
+        // const ldr, const rdr = @as(@Vector(2, i32), @intFromFloat(arcadeDriveMaxDesat(x * 1.2, y) * @as(@Vector(2, f64), @splat(12000.0))));
+        const ldr, const rdr = @as(@Vector(2, i32), @intFromFloat(arcadeDriveCurveDesat(x * 1.2, y) * @as(@Vector(2, f64), @splat(12000.0))));
         driveVolt(ldr, rdr, port_buffer);
     }
 }
@@ -159,6 +159,14 @@ pub fn arcadeDriveMyDesat(steer: f64, throttle: f64) @Vector(2, f64) {
 
     // if one of them is overflowing then desat relative to it
     return .{ std.math.clamp(ldr, -1, 1) - rof, std.math.clamp(rdr, -1, 1) - lof };
+}
+
+/// Converts -1..=1 x & y values into desaturated left & right drive velocities (my algorithm)
+pub fn arcadeDriveCurveDesat(steer: f64, throttle: f64) @Vector(2, f64) {
+    const ldr = throttle + steer * @min((1.6 - @abs(throttle)), 1.0);
+    const rdr = throttle - steer * @min((1.6 - @abs(throttle)), 1.0);
+
+    return .{ ldr, rdr };
 }
 
 /// Converts -1..=1 x & y values into desaturated left & right drive velocities (diamond shape)

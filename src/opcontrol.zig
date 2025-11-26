@@ -109,10 +109,6 @@ pub fn opcontrol() callconv(.C) void {
     if (cycles % 16 == 0)
         logging.coords(coords_file, odom_state);
 
-    // log odom coordinates every 5 cycles
-    if (cycles % 5 == 0)
-        _ = pros.printf("yaw: %lf, %lf\n", std.math.radiansToDegrees(odom_state.prev_yaw), std.math.radiansToDegrees(odom.getYaw(&port_buffer) orelse 0));
-
     // log odom velocities every tick
     if (comptime options.log_velocity)
         logging.velocity(velocities_file, odom_state);
