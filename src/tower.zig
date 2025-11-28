@@ -18,7 +18,7 @@ pub const motors = struct {
     pub const hood = towerMotor(-6, pros.motors.E_MOTOR_GEAR_200);
     pub const top = towerMotor(-5, pros.motors.E_MOTOR_GEAR_200);
     pub const mid = towerMotor(-5, pros.motors.E_MOTOR_GEAR_600);
-    pub const bottom = towerMotor(18, pros.motors.E_MOTOR_GEAR_200);
+    pub const bottom = towerMotor(16, pros.motors.E_MOTOR_GEAR_200);
 };
 
 /// The tower controller controls

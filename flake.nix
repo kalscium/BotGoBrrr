@@ -18,6 +18,7 @@
             zls
             lldb
             gcc-arm-embedded
+            vscodium
           ];
         };
       });
