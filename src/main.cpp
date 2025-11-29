@@ -1,5 +1,6 @@
 #include "main.h"
 #include "drive.hpp"
+#include "tower.hpp"
 
 extern pros::MotorGroup left_dt;
 extern pros::MotorGroup right_dt;
@@ -70,22 +71,13 @@ void competition_initialize() {}
 void autonomous() {}
 
 void opcontrol() {
-	driverDrive();
-}
-
-void opcontrold() {
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
+	TowerState tower;
 
 	while (true) {
-		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
-		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
-		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);  // Prints status of the emulated screen LCDs
+		driverDrive();
+		tower.controls();
 
-		// Arcade control scheme
-		int dir = master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
-		int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
-		left_dt.move(dir - turn);                      // Sets left motor voltage
-		right_dt.move(dir + turn);                     // Sets right motor voltage
-		pros::delay(20);                               // Run for 20 ms then update
+		// do NOT burn out the CPU
+		pros::delay(20);
 	}
 }

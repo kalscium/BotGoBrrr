@@ -49,6 +49,7 @@
                     gcc-arm-embedded
                     clang
                     bear
+                    vscodium
                   ]
                   ++ (if system == "aarch64-darwin" then [ ] else [ gdb ]);
               };

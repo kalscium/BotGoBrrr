@@ -3,6 +3,9 @@
 #include "drive.hpp"
 #include "api.h"
 #include "lemlib/api.hpp"
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
 
 // Left Drivetrain Motors
 pros::MotorGroup right_dt({ 10, 9, -14 }, pros::MotorGearset::blue);
@@ -63,15 +66,37 @@ void initDt() {
         chassis.calibrate();
 }
 
+// Daniel's magic input scaling function.
+//
+// Logarithmic start to overcome deadzone with a linear end with the gradient of ~0.7.
+// 
+/// https://www.desmos.com/calculator/xj1enleneb
+double danielsMagicScale(double x) {
+        // don't question it
+        const double a = 4.0;
+        const double b = 0.6;
+        const double c = b * log(2.0 * a);
+
+        const double abs_x = std::abs(x); // negatives treated same as pos
+        const double sgn_x = std::copysign(x, 1);
+
+        return exp((log(a) - sqrt(log(a) * log(a) - 4.0 * c * log(abs_x)))/2.0) * sgn_x;
+}
+
+// Curve desaturation of arcade drive (curtesy of my self)
+void curveArcade(double steer, double throttle) {
+        double ldr = throttle + steer * std::min((1.6 - std::abs(throttle)), 1.0);
+        double rdr = throttle - steer * std::min((1.6 - std::abs(throttle)), 1.0);
+
+        // drive it
+        left_dt.move_voltage((int) ldr * 12000.0);
+        right_dt.move_voltage((int) rdr * 12000.0);
+}
+
 void driverDrive() {
-        while (true) {
-                pros::Controller master(pros::E_CONTROLLER_MASTER);
-                int throttle = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-                int steer = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);  
+        pros::Controller master(pros::E_CONTROLLER_MASTER);
+        int throttle = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+        int steer = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);  
 
-                // chassis.arcade(throttle, steer, false, 0.75);
-                chassis.curvature(throttle, steer);
-
-                pros::delay(20);
-        }
+        curveArcade(steer, throttle);
 }
