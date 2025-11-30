@@ -1,9 +1,7 @@
 #include "main.h"
 #include "drive.hpp"
 #include "tower.hpp"
-
-extern pros::MotorGroup left_dt;
-extern pros::MotorGroup right_dt;
+#include "auton.hpp"
 
 /**
  * A callback function for LLEMU's center button.
@@ -68,7 +66,9 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+	autonLeft();
+}
 
 void opcontrol() {
 	TowerState tower;
