@@ -5,14 +5,19 @@
 #include "pros/misc.h"
 #include "tower.hpp"
 
-// The robot tower rollers (everything that's not the hood)
-pros::MotorGroup tower_rollers(
-        { -5, 16 },
+// The robot's middle roller
+pros::MotorGroup tower_middle_intake(
+        { 12, 13 },
         pros::MotorGearset::green
 );
 
-// The robot tower hood
-pros::Motor tower_hood(-6, pros::MotorGearset::green);
+// The robot's intake roller
+
+// The robot tower hood and storage motor
+pros::MotorGroup tower_hood_storage(
+    { 20, 6 },
+    pros::MotorGearset::green
+);
 
 // The ADI port of the little will
 pros::adi::DigitalOut little_will_pnu('A');
@@ -25,13 +30,18 @@ double driverTowerOutSpeed = 1.0;
 pros::adi::DigitalOut park_pnu('H');
 
 void TowerState::storeBlocks(double velocity) {
-        tower_hood.move_velocity(-velocity);
-        tower_rollers.move_velocity(velocity);
+        tower_hood_storage.move_voltage((int) (-velocity * 12000));
+        tower_middle_intake.move_voltage((int) (velocity * 12000));
 }
 
-void TowerState::spin(double velocity) {
-        tower_hood.move_velocity(velocity);
-        tower_rollers.move_velocity(velocity);
+void TowerState::scoreTop(double velocity) {
+        tower_hood_storage.move_voltage((int) (velocity * 12000));
+        tower_middle_intake.move_voltage((int) (velocity * 12000));
+}
+
+void TowerState::scoreBottom(double velocity) {
+        tower_hood_storage.move_voltage((int) (velocity * 12000));
+        tower_middle_intake.move_voltage((int) (-velocity * 12000));
 }
 
 void TowerState::controls() {
@@ -47,16 +57,16 @@ void TowerState::controls() {
         // check for scoring
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
                 intake = false;
-                spin(driverTowerSpeed);
+                scoreTop(driverTowerSpeed);
         } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
                 // outtake
-                spin(-driverTowerOutSpeed);
+                scoreBottom(driverTowerOutSpeed);
                 intake = false;
         } else if (intake) {
                 // store
                 storeBlocks(driverTowerSpeed);
         } else {
-                spin(0.0);
+                scoreTop(0.0);
         }
 
         // check for park

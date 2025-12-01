@@ -16,8 +16,10 @@ class TowerState {
                 }
                 // Store blocks with tower
                 void storeBlocks(double velocity);
-                // Spins the toewr at a certain speed
-                void spin(double velocity);
+                // Scores top goal at a certain speed
+                void scoreTop(double velocity);
+                // Scores bottom goal at a certain speed
+                void scoreBottom(double velocity);
                 // Update tower based upon user controls
                 void controls();
 };
