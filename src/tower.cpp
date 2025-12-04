@@ -15,7 +15,7 @@ pros::MotorGroup tower_middle_intake(
 
 // The robot tower hood and storage motor
 pros::MotorGroup tower_hood_storage(
-    { 20, 6 },
+    { 16, 6 },
     pros::MotorGearset::green
 );
 
@@ -29,17 +29,17 @@ double driverTowerOutSpeed = 1.0;
 // The ADI port of the park
 pros::adi::DigitalOut park_pnu('H');
 
-void TowerState::storeBlocks(double velocity) {
+void storeBlocks(double velocity) {
         tower_hood_storage.move_voltage((int) (-velocity * 12000));
         tower_middle_intake.move_voltage((int) (velocity * 12000));
 }
 
-void TowerState::scoreTop(double velocity) {
+void scoreTop(double velocity) {
         tower_hood_storage.move_voltage((int) (velocity * 12000));
         tower_middle_intake.move_voltage((int) (velocity * 12000));
 }
 
-void TowerState::scoreBottom(double velocity) {
+void scoreBottom(double velocity) {
         tower_hood_storage.move_voltage((int) (velocity * 12000));
         tower_middle_intake.move_voltage((int) (-velocity * 12000));
 }

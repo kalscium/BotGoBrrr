@@ -10,7 +10,7 @@
 // Left Drivetrain Motors
 pros::MotorGroup right_dt({ 10, 9, -14 }, pros::MotorGearset::blue);
 // Right Drivetrain Motors
-pros::MotorGroup left_dt({ -18, -2, 12 }, pros::MotorGearset::blue);
+pros::MotorGroup left_dt({ -16, -15, -2, 20 }, pros::MotorGearset::blue);
 
 // The track-width in mm
 double track_width_mm = 290;
@@ -22,7 +22,7 @@ lemlib::Drivetrain drivetrain(&left_dt, &right_dt, track_width_mm / 25.4, lemlib
 pros::Imu imu(7);
 
 // The odom port
-pros::Rotation lateral_rotation(16);
+pros::Rotation lateral_rotation(5);
 lemlib::TrackingWheel lateral_trackwh(&lateral_rotation, lemlib::Omniwheel::NEW_275, -1.25);
 
 // The odom configs

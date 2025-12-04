@@ -14,12 +14,13 @@ class TowerState {
                         intake = false;
                         park = false;
                 }
-                // Store blocks with tower
-                void storeBlocks(double velocity);
-                // Scores top goal at a certain speed
-                void scoreTop(double velocity);
-                // Scores bottom goal at a certain speed
-                void scoreBottom(double velocity);
                 // Update tower based upon user controls
                 void controls();
 };
+
+// Store blocks with tower
+void storeBlocks(double velocity);
+// Scores top goal at a certain speed
+void scoreTop(double velocity);
+// Scores bottom goal at a certain speed
+void scoreBottom(double velocity);

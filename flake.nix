@@ -50,6 +50,7 @@
                     clang
                     bear
                     vscodium
+                    libsForQt5.kate
                   ]
                   ++ (if system == "aarch64-darwin" then [ ] else [ gdb ]);
               };
