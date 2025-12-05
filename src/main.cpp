@@ -2,6 +2,7 @@
 #include "drive.hpp"
 #include "tower.hpp"
 #include "auton.hpp"
+#include <cstdio>
 
 /**
  * A callback function for LLEMU's center button.

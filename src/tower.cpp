@@ -13,11 +13,20 @@ pros::MotorGroup tower_middle_intake(
 
 // The robot's intake roller
 
-// The robot tower hood and storage motor
-pros::MotorGroup tower_hood_storage(
-    { 16, 6 },
+// The robot tower storage motor
+pros::Motor tower_storage(
+    -6,
     pros::MotorGearset::green
 );
+
+// The robot tower hood motor
+pros::Motor tower_hood(
+    -16,
+    pros::MotorGearset::green
+);
+
+// The port of the optical sensor
+pros::v5::Optical optical(3);
 
 // The ADI port of the little will
 pros::adi::DigitalOut little_will_pnu('A');
@@ -29,19 +38,52 @@ double driverTowerOutSpeed = 1.0;
 // The ADI port of the park
 pros::adi::DigitalOut park_pnu('H');
 
-void storeBlocks(double velocity) {
-        tower_hood_storage.move_voltage((int) (-velocity * 12000));
+void TowerState::storeBlocks(double velocity) {
+        tower_hood.move_voltage((int) (-velocity * 12000));
+        colorSort(velocity);
         tower_middle_intake.move_voltage((int) (velocity * 12000));
 }
 
-void scoreTop(double velocity) {
-        tower_hood_storage.move_voltage((int) (velocity * 12000));
+void TowerState::scoreTop(double velocity) {
+        tower_hood.move_voltage((int) (velocity * 12000));
+        colorSort(velocity);
         tower_middle_intake.move_voltage((int) (velocity * 12000));
 }
 
-void scoreBottom(double velocity) {
-        tower_hood_storage.move_voltage((int) (velocity * 12000));
+void TowerState::scoreBottom(double velocity) {
+        tower_hood.move_voltage((int) (-velocity * 12000));
+        tower_storage.move_voltage((int) (velocity * 12000));
         tower_middle_intake.move_voltage((int) (-velocity * 12000));
+}
+
+bool red_checkBlue() {
+        // blue is really simple to test for (simple range)
+        return optical.get_hue() > 210 and optical.get_hue() < 224 and optical.get_proximity() > 200;
+}
+
+bool blue_checkRed() {
+        // red is complicated since it wraps around <200 -> 350
+        return (optical.get_hue() < 200 or optical.get_hue() > 300) and optical.get_proximity() > 200;
+}
+
+void TowerState::colorSort(double velocity) {
+        optical.set_led_pwm(100);
+        if (use_color_sort)
+        if (red_checkBlue()) // when we are RED
+        // if (blue_checkRed()) // when we are BLUE
+                time_since_optic = pros::rtos::millis();
+
+        if (pros::rtos::millis() - time_since_optic < 400)
+                tower_storage.move_voltage((int) (velocity * 12000));
+        else
+                tower_storage.move_voltage((int) (-velocity * 0));
+}
+
+void opticTest() {
+        while (true) {
+                printf("hue: %lf, proximity: %lf\n", optical.get_hue());
+                pros::delay(50);
+        }
 }
 
 void TowerState::controls() {
@@ -77,6 +119,10 @@ void TowerState::controls() {
                         master.rumble(".-");
                 park_pnu.set_value(park);
         }
+
+        // panic disable color sort
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP))
+                use_color_sort = false;
 
         // little will toggle
         if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
