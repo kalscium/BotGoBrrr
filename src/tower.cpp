@@ -45,6 +45,7 @@ void TowerState::storeBlocks(double velocity) {
 }
 
 void TowerState::scoreTop(double velocity) {
+        // printf("hue: %lf, proximity: %d\n", optical.get_hue(), optical.get_proximity());
         tower_hood.move_voltage((int) (velocity * 12000));
         colorSort(velocity);
         tower_middle_intake.move_voltage((int) (velocity * 12000));
@@ -52,13 +53,13 @@ void TowerState::scoreTop(double velocity) {
 
 void TowerState::scoreBottom(double velocity) {
         tower_hood.move_voltage((int) (-velocity * 12000));
-        tower_storage.move_voltage((int) (velocity * 12000));
+        tower_storage.move_voltage((int) (velocity * 0));
         tower_middle_intake.move_voltage((int) (-velocity * 12000));
 }
 
 bool red_checkBlue() {
         // blue is really simple to test for (simple range)
-        return optical.get_hue() > 210 and optical.get_hue() < 224 and optical.get_proximity() > 200;
+        return optical.get_hue() > 210 and optical.get_hue() < 300 and optical.get_proximity() > 200;
 }
 
 bool blue_checkRed() {
@@ -69,12 +70,14 @@ bool blue_checkRed() {
 void TowerState::colorSort(double velocity) {
         optical.set_led_pwm(100);
         if (use_color_sort)
-        if (red_checkBlue()) // when we are RED
-        // if (blue_checkRed()) // when we are BLUE
+        // if (red_checkBlue()) // when we are RED
+        if (blue_checkRed()) // when we are BLUE
                 time_since_optic = pros::rtos::millis();
 
-        if (pros::rtos::millis() - time_since_optic < 400)
+        if (pros::rtos::millis() - time_since_optic < 160)
                 tower_storage.move_voltage((int) (velocity * 12000));
+        else if (pros::rtos::millis() - time_since_optic < 225)
+                tower_storage.move_voltage((int) (-velocity * 12000));
         else
                 tower_storage.move_voltage((int) (-velocity * 0));
 }
