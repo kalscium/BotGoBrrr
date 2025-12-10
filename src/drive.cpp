@@ -10,7 +10,7 @@
 // Left Drivetrain Motors
 pros::MotorGroup right_dt({ 10, 9, -14 }, pros::MotorGearset::blue);
 // Right Drivetrain Motors
-pros::MotorGroup left_dt({ -16, -15, -2, 20 }, pros::MotorGearset::blue);
+pros::MotorGroup left_dt({ 22, -15, -2, 20 }, pros::MotorGearset::blue);
 
 // The track-width in mm
 double track_width_mm = 290;
@@ -23,7 +23,7 @@ pros::Imu imu(7);
 
 // The odom port
 pros::Rotation lateral_rotation(5);
-lemlib::TrackingWheel lateral_trackwh(&lateral_rotation, lemlib::Omniwheel::NEW_275, -1.25);
+lemlib::TrackingWheel lateral_trackwh(&lateral_rotation, lemlib::Omniwheel::NEW_275, -0.19685);
 
 // The odom configs
 lemlib::OdomSensors odom_sensors(&lateral_trackwh, nullptr, nullptr, nullptr, &imu);
@@ -38,7 +38,7 @@ lemlib::ControllerSettings lateral_controller(
         100, // small error range timeout, in milliseconds
         3, // large error range, in degrees
         500, // large error range timeout, in milliseconds
-        0 // maximum acceleration (slew)
+        20 // maximum acceleration (slew)
 );
 
 // angular PID controller
@@ -51,7 +51,7 @@ lemlib::ControllerSettings angular_controller(
         100, // small error range timeout, in milliseconds
         3, // large error range, in degrees
         500, // large error range timeout, in milliseconds
-        0 // maximum acceleration (slew)
+        20 // maximum acceleration (slew)
 );
 
 // create the chassis
@@ -90,9 +90,9 @@ double danielsMagicScale(double x) {
 }
 
 // Curve desaturation of arcade drive (curtesy of my self)
-void curveArcade(int x, int y) {
-        double throttle = danielsMagicScale(((double) y) / 127.0);
-        double steer = danielsMagicScale(((double) x) / 127.0);
+void curveArcade(double x, double y) {
+        double throttle = danielsMagicScale(y);
+        double steer = danielsMagicScale(x);
 
         double ldr = throttle + steer * std::min((1.6 - std::abs(throttle)), 1.0);
         double rdr = throttle - steer * std::min((1.6 - std::abs(throttle)), 1.0);
@@ -104,8 +104,8 @@ void curveArcade(int x, int y) {
 
 void driverDrive() {
         pros::Controller master(pros::E_CONTROLLER_MASTER);
-        int throttle = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-        int steer = master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);  
+        double throttle = ((double) master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) / 127.0;
+        double steer = ((double) master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) / 127.0;
 
         curveArcade(steer, throttle);
 }

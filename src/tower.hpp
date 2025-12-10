@@ -9,6 +9,8 @@ class TowerState {
                 bool intake;
                 // If the parking is toggled on
                 bool park;
+                // If the snacky is toggled on
+                bool snacky;
                 // If we should use color sort
                 bool use_color_sort;
                 unsigned int time_since_optic;
@@ -16,6 +18,7 @@ class TowerState {
                         little_will = false;
                         intake = false;
                         park = false;
+                        snacky = false;
                         time_since_optic = 0;
                         use_color_sort = true;
                 }

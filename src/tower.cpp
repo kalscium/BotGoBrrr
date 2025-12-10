@@ -31,6 +31,9 @@ pros::v5::Optical optical(3);
 // The ADI port of the little will
 pros::adi::DigitalOut little_will_pnu('A');
 
+// The ADI port of the snacky
+pros::adi::DigitalOut snacky_pnu('F');
+
 // The driver tower speed
 double driverTowerSpeed = 1.0;
 double driverTowerOutSpeed = 1.0;
@@ -70,8 +73,8 @@ bool blue_checkRed() {
 void TowerState::colorSort(double velocity) {
         optical.set_led_pwm(100);
         if (use_color_sort)
-        // if (red_checkBlue()) // when we are RED
-        if (blue_checkRed()) // when we are BLUE
+        if (red_checkBlue()) // when we are RED
+        // if (blue_checkRed()) // when we are BLUE
                 time_since_optic = pros::rtos::millis();
 
         if (pros::rtos::millis() - time_since_optic < 160)
@@ -134,5 +137,14 @@ void TowerState::controls() {
                 if (little_will)
                         master.rumble("-");
                 little_will_pnu.set_value(little_will);
+        }
+
+        // snacky toggle
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) {
+                snacky = !snacky;
+                // rumble if down
+                if (snacky)
+                        master.rumble("-");
+                snacky_pnu.set_value(snacky);
         }
 }
