@@ -8,9 +8,9 @@
 #include <cstdlib>
 
 // Left Drivetrain Motors
-pros::MotorGroup right_dt({ 10, 9, -14 }, pros::MotorGearset::blue);
+pros::MotorGroup right_dt({ 0, 0, 0 }, pros::MotorGearset::blue);
 // Right Drivetrain Motors
-pros::MotorGroup left_dt({ 22, -15, -2, 20 }, pros::MotorGearset::blue);
+pros::MotorGroup left_dt({ 0, 0, 0, 0 }, pros::MotorGearset::blue);
 
 // The track-width in mm
 double track_width_mm = 290;
@@ -19,14 +19,14 @@ double track_width_mm = 290;
 lemlib::Drivetrain drivetrain(&left_dt, &right_dt, track_width_mm / 25.4, lemlib::Omniwheel::NEW_325, 450, 2);
 
 // The IMU port
-pros::Imu imu(7);
+pros::Imu imu(0);
 
 // The odom port
-pros::Rotation lateral_rotation(5);
+pros::Rotation lateral_rotation(0);
 lemlib::TrackingWheel lateral_trackwh(&lateral_rotation, lemlib::Omniwheel::NEW_275, -0.19685);
 
 // The odom configs
-lemlib::OdomSensors odom_sensors(&lateral_trackwh, nullptr, nullptr, nullptr, &imu);
+lemlib::OdomSensors odom_sensors(&lateral_trackwh, nullptr, nullptr, nullptr, &imu, nullptr);
 
 // lateral PID controller
 lemlib::ControllerSettings lateral_controller(
@@ -80,7 +80,7 @@ double danielsMagicScale(double x) {
         const double abs_x = std::abs(x); // negatives treated same as pos
         double sgn_x;
         if (x == 0)
-                sgn_x = 0;
+                return 0; // if sgn_x is 0, the result will always be zero
         else if (x > 0)
                 sgn_x = 1;
         else

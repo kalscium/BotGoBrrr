@@ -30,13 +30,12 @@
             pkgs.mkShell.override
               {
                 # Override stdenv in order to change compiler:
-                # stdenv = pkgs.clangStdenv;
+                stdenv = pkgs.clangStdenv;
               }
               {
                 packages =
                   with pkgs;
                   [
-                    clang-tools
                     cmake
                     codespell
                     conan
@@ -46,8 +45,14 @@
                     lcov
                     vcpkg
                     vcpkg-tool
-                    gcc-arm-embedded
+                    gcc-arm-embedded-13
                     clang
+                    clang-tools
+                    # (lib.hiPrio (
+                    #   pkgs.writeShellScriptBin "clangd" ''
+                    #     ${pkgs.llvmPackages.clang-unwrapped}/bin/clangd --query-driver="$(command -v $CC)" "$@"
+                    #   ''
+                    # ))
                     bear
                     vscodium
                     libsForQt5.kate

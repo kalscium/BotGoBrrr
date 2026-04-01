@@ -4,6 +4,7 @@
 #include "pros/imu.hpp"
 #include "lemlib/asset.hpp"
 #include "lemlib/chassis/trackingWheel.hpp"
+#include "lemlib/chassis/mcl.hpp"
 #include "lemlib/pose.hpp"
 #include "lemlib/pid.hpp"
 #include "lemlib/exitcondition.hpp"
@@ -41,12 +42,13 @@ class OdomSensors {
          * @endcode
          */
         OdomSensors(TrackingWheel* vertical1, TrackingWheel* vertical2, TrackingWheel* horizontal1,
-                    TrackingWheel* horizontal2, pros::Imu* imu);
+                    TrackingWheel* horizontal2, pros::Imu* imu, std::vector<lemlib::Beamer>* beamers);
         TrackingWheel* vertical1;
         TrackingWheel* vertical2;
         TrackingWheel* horizontal1;
         TrackingWheel* horizontal2;
         pros::Imu* imu;
+        std::vector<lemlib::Beamer>* beamers;
 };
 
 /**

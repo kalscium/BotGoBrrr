@@ -35,6 +35,7 @@ void initialize() {
 
 	// other stuff
 	initDt();
+	initTower();
 }
 
 /**
@@ -78,6 +79,6 @@ void opcontrol() {
 		tower.controls();
 
 		// do NOT burn out the CPU
-		pros::delay(20);
+		pros::delay(70);
 	}
 }

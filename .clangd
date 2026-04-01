@@ -1,0 +1,5 @@
+CompileFlags:
+  Add:
+    - --target=arm-none-eabi
+    - --sysroot=/nix/store/z9xwknqy6hxpgadzpnl9n9i6f5j8z9lc-gcc-arm-embedded-13.3.rel1/bin/../arm-none-eabi
+    - -I/nix/store/z9xwknqy6hxpgadzpnl9n9i6f5j8z9lc-gcc-arm-embedded-13.3.rel1/bin/../lib/gcc/arm-none-eabi/13.3.1/include

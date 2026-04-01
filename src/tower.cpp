@@ -5,28 +5,14 @@
 #include "pros/misc.h"
 #include "tower.hpp"
 
-// The robot's middle roller
-pros::MotorGroup tower_middle_intake(
-        { 12, 13 },
+// The robot's intake roller
+pros::Motor tower_intake(
+        -4,
         pros::MotorGearset::green
 );
 
-// The robot's intake roller
-
-// The robot tower storage motor
-pros::Motor tower_storage(
-    -6,
-    pros::MotorGearset::green
-);
-
-// The robot tower hood motor
-pros::Motor tower_hood(
-    -16,
-    pros::MotorGearset::green
-);
-
 // The port of the optical sensor
-pros::v5::Optical optical(3);
+pros::Optical optical(0);
 
 // The ADI port of the little will
 pros::adi::DigitalOut little_will_pnu('A');
@@ -34,30 +20,41 @@ pros::adi::DigitalOut little_will_pnu('A');
 // The ADI port of the snacky
 pros::adi::DigitalOut snacky_pnu('F');
 
-// The driver tower speed
-double driverTowerSpeed = 1.0;
-double driverTowerOutSpeed = 1.0;
+// The ADI port of the 'barrel'
+pros::adi::DigitalOut barrel_pnu('B');
 
-// The ADI port of the park
-pros::adi::DigitalOut park_pnu('H');
+// The lever motor port
+pros::Motor lever_motor(
+        -6,
+        pros::MotorGearset::green
+);
+// The lever rotation sensor port
+pros::Rotation lever_rotation(2);
+
+// The tower outtake speed
+double outtake_speed = 0.5;
+
+// Lever scoring middle goal speed
+double lever_middle_speed = 0.5;
 
 void TowerState::storeBlocks(double velocity) {
-        tower_hood.move_voltage((int) (-velocity * 12000));
-        colorSort(velocity);
-        tower_middle_intake.move_voltage((int) (velocity * 12000));
+        tower_intake.move_voltage((int) (velocity * 12000));
 }
 
-void TowerState::scoreTop(double velocity) {
-        // printf("hue: %lf, proximity: %d\n", optical.get_hue(), optical.get_proximity());
-        tower_hood.move_voltage((int) (velocity * 12000));
-        colorSort(velocity);
-        tower_middle_intake.move_voltage((int) (velocity * 12000));
+void TowerState::moveLever(double velocity) {
+        lever_motor.move_velocity(velocity * 200);
 }
 
-void TowerState::scoreBottom(double velocity) {
-        tower_hood.move_voltage((int) (-velocity * 12000));
-        tower_storage.move_voltage((int) (velocity * 0));
-        tower_middle_intake.move_voltage((int) (-velocity * 12000));
+void initTower() {
+        lever_rotation.reset_position();
+}
+
+// check if the lever is in bounds, if not, stop it
+void TowerState::leverBoundCheck() {
+        int32_t rotation = lever_rotation.get_position();
+        // check if the lever's toggled backwards or forwards
+        if (!lever_active && rotation < 4000 || lever_active && rotation > 40000) // toggled on and already in the back
+                moveLever(0);
 }
 
 bool red_checkBlue() {
@@ -71,23 +68,23 @@ bool blue_checkRed() {
 }
 
 void TowerState::colorSort(double velocity) {
-        optical.set_led_pwm(100);
-        if (use_color_sort)
-        if (red_checkBlue()) // when we are RED
-        // if (blue_checkRed()) // when we are BLUE
-                time_since_optic = pros::rtos::millis();
+        // optical.set_led_pwm(100);
+        // if (use_color_sort)
+        // if (red_checkBlue()) // when we are RED
+        // // if (blue_checkRed()) // when we are BLUE
+        //         time_since_optic = pros::rtos::millis();
 
-        if (pros::rtos::millis() - time_since_optic < 160)
-                tower_storage.move_voltage((int) (velocity * 12000));
-        else if (pros::rtos::millis() - time_since_optic < 225)
-                tower_storage.move_voltage((int) (-velocity * 12000));
-        else
-                tower_storage.move_voltage((int) (-velocity * 0));
+        // if (pros::rtos::millis() - time_since_optic < 160)
+        //         tower_storage.move_voltage((int) (velocity * 12000));
+        // else if (pros::rtos::millis() - time_since_optic < 225)
+        //         tower_storage.move_voltage((int) (-velocity * 12000));
+        // else
+        //         tower_storage.move_voltage((int) (-velocity * 0));
 }
 
 void opticTest() {
         while (true) {
-                printf("hue: %lf, proximity: %lf\n", optical.get_hue());
+                printf("hue: %lf, proximity: %lf\n", optical.get_hue(), optical.get_proximity());
                 pros::delay(50);
         }
 }
@@ -95,40 +92,52 @@ void opticTest() {
 void TowerState::controls() {
         pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-        // check for the intake toggle
-        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
+        // check for the intake toggle and out-take hold
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)) {
                 intake = !intake;
-                if (intake) // rumble when down
+                if (intake) { // rumble when active
                         master.rumble(".");
-        }
-
-        // check for scoring
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+                        storeBlocks(1.0);
+                } else {
+                        storeBlocks(0.0);
+                }
+        } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+                storeBlocks(-outtake_speed); // otherwise out-take at a slow speed
                 intake = false;
-                scoreTop(driverTowerSpeed);
-        } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-                // outtake
-                scoreBottom(driverTowerOutSpeed);
+        }
+        if (master.get_digital_new_release(pros::E_CONTROLLER_DIGITAL_L1)) {
+                storeBlocks(0.0);
                 intake = false;
-        } else if (intake) {
-                // store
-                storeBlocks(driverTowerSpeed);
-        } else {
-                scoreTop(0.0);
         }
 
-        // check for park
-        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)) {
-                park = !park;
-                // rumble if down
-                if (park)
-                        master.rumble(".-");
-                park_pnu.set_value(park);
-        }
 
-        // panic disable color sort
+        // check for scoring with lever toggle (top and middle)
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)) {
+                lever_active = !lever_active;
+                if (lever_active)
+                        moveLever(1.0);
+                else
+                        moveLever(-0.5);
+        }
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
+                lever_active = !lever_active;
+                if (lever_active)
+                        moveLever(lever_middle_speed);
+                else
+                        moveLever(-0.5);
+        }
+        // lever bounds check
+        leverBoundCheck();
+
+        // barrel toggle (score top or score mid)
         if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP))
-                use_color_sort = false;
+                barrel_pnu.set_value(true);
+        else if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN))
+                barrel_pnu.set_value(false);
+
+        // // panic disable color sort
+        // if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP))
+        //         use_color_sort = false;
 
         // little will toggle
         if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
