@@ -37,7 +37,7 @@ double outtake_speed = 0.5;
 // Lever scoring middle goal speed
 double lever_middle_speed = 0.5;
 
-void TowerState::storeBlocks(double velocity) {
+void TowerState::spinIntake(double velocity) {
         tower_intake.move_voltage((int) (velocity * 12000));
 }
 
@@ -53,8 +53,10 @@ void initTower() {
 void TowerState::leverBoundCheck() {
         int32_t rotation = lever_rotation.get_position();
         // check if the lever's toggled backwards or forwards
-        if (!lever_active && rotation < 4000 || lever_active && rotation > 40000) // toggled on and already in the back
+        if (!lever_active && rotation < 4000 || lever_active && rotation > 40000) { // toggled on and already in the back
+                // stop the lever
                 moveLever(0);
+        }
 }
 
 bool red_checkBlue() {
@@ -93,47 +95,48 @@ void TowerState::controls() {
         pros::Controller master(pros::E_CONTROLLER_MASTER);
 
         // check for the intake toggle and out-take hold
-        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)) {
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
                 intake = !intake;
                 if (intake) { // rumble when active
                         master.rumble(".");
-                        storeBlocks(1.0);
+                        spinIntake(1.0);
                 } else {
-                        storeBlocks(0.0);
+                        spinIntake(0.0);
                 }
-        } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-                storeBlocks(-outtake_speed); // otherwise out-take at a slow speed
+        } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
+                spinIntake(-outtake_speed); // otherwise out-take at a slow speed
                 intake = false;
         }
-        if (master.get_digital_new_release(pros::E_CONTROLLER_DIGITAL_L1)) {
-                storeBlocks(0.0);
+        if (master.get_digital_new_release(pros::E_CONTROLLER_DIGITAL_UP)) {
+                spinIntake(0.0);
                 intake = false;
         }
 
 
         // check for scoring with lever toggle (top and middle)
-        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)) {
-                lever_active = !lever_active;
-                if (lever_active)
-                        moveLever(1.0);
-                else
-                        moveLever(-0.5);
-        }
         if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
                 lever_active = !lever_active;
-                if (lever_active)
-                        moveLever(lever_middle_speed);
-                else
+                if (lever_active) {
+                        // spinIntake(1.0); // yoink
+                        if (score_top)
+                                moveLever(1.0);
+                        else
+                                moveLever(0.5);
+                } else {
+                        // spinIntake(-1); // unjam
                         moveLever(-0.5);
+                }
         }
         // lever bounds check
         leverBoundCheck();
 
         // barrel toggle (score top or score mid)
-        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP))
-                barrel_pnu.set_value(true);
-        else if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN))
-                barrel_pnu.set_value(false);
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1) && !lever_active) {
+                score_top = !score_top;
+                barrel_pnu.set_value(score_top);
+                if (score_top) // rumble on barrel scoring top
+                        master.rumble(".");
+        }
 
         // // panic disable color sort
         // if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP))

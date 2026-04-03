@@ -19,6 +19,7 @@ class TowerState {
 
                 TowerState() {
                         lever_active = false;
+                        score_top = false;
                         little_will = false;
                         intake = false;
                         snacky = false;
@@ -38,9 +39,7 @@ class TowerState {
                 void leverBoundCheck();
 
                 // Store blocks with tower
-                void storeBlocks(double velocity);
-                // Scores top goal at a certain speed
-                void scoreTop(double velocity);
+                void spinIntake(double velocity);
 };
 
 /// A test for the optical sensor
