@@ -8,9 +8,9 @@
 #include <cstdlib>
 
 // Left Drivetrain Motors
-pros::MotorGroup right_dt({ 0, 0, 0 }, pros::MotorGearset::blue);
+pros::MotorGroup left_dt({ -15, 10, -7 }, pros::MotorGearset::blue);
 // Right Drivetrain Motors
-pros::MotorGroup left_dt({ 0, 0, 0, 0 }, pros::MotorGearset::blue);
+pros::MotorGroup right_dt({ 0, 16, -8, 9 }, pros::MotorGearset::blue);
 
 // The track-width in mm
 double track_width_mm = 290;

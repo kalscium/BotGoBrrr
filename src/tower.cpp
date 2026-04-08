@@ -7,7 +7,7 @@
 
 // The robot's intake roller
 pros::Motor tower_intake(
-        -4,
+        -13,
         pros::MotorGearset::green
 );
 
@@ -15,21 +15,24 @@ pros::Motor tower_intake(
 pros::Optical optical(0);
 
 // The ADI port of the little will
-pros::adi::DigitalOut little_will_pnu('A');
+pros::adi::DigitalOut little_will_pnu('E');
 
 // The ADI port of the snacky
 pros::adi::DigitalOut snacky_pnu('F');
 
 // The ADI port of the 'barrel'
-pros::adi::DigitalOut barrel_pnu('B');
+pros::adi::DigitalOut barrel_pnu('A');
+
+// The ADI port of the 'gate'
+pros::adi::DigitalOut gate_pnu('B');
 
 // The lever motor port
 pros::Motor lever_motor(
-        -6,
+        -20,
         pros::MotorGearset::green
 );
 // The lever rotation sensor port
-pros::Rotation lever_rotation(2);
+pros::Rotation lever_rotation(19);
 
 // The tower outtake speed
 double outtake_speed = 0.5;
@@ -117,13 +120,13 @@ void TowerState::controls() {
         if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
                 lever_active = !lever_active;
                 if (lever_active) {
-                        // spinIntake(1.0); // yoink
+                        gate_pnu.set_value(true);
                         if (score_top)
                                 moveLever(1.0);
                         else
                                 moveLever(0.5);
                 } else {
-                        // spinIntake(-1); // unjam
+                        gate_pnu.set_value(false);
                         moveLever(-0.5);
                 }
         }
