@@ -1,13 +1,15 @@
 // Robot tower and pneumatics
 
 #include "api.h"
+#include "pros/abstract_motor.hpp"
 #include "pros/adi.hpp"
+#include "pros/error.h"
 #include "pros/misc.h"
 #include "tower.hpp"
 
 // The robot's intake roller
 pros::Motor tower_intake(
-        -13,
+        -14,
         pros::MotorGearset::green
 );
 

@@ -8,9 +8,9 @@
 #include <cstdlib>
 
 // Left Drivetrain Motors
-pros::MotorGroup left_dt({ -15, 10, -7 }, pros::MotorGearset::blue);
+pros::MotorGroup right_dt({ 15, -10, 7 }, pros::MotorGearset::blue);
 // Right Drivetrain Motors
-pros::MotorGroup right_dt({ 0, 16, -8, 9 }, pros::MotorGearset::blue);
+pros::MotorGroup left_dt({ 0, -16, 8, -9 }, pros::MotorGearset::blue);
 
 // The track-width in mm
 double track_width_mm = 290;
@@ -66,6 +66,32 @@ void initDt() {
         chassis.calibrate();
 }
 
+// Cubic nice graph?
+//
+// Logarithmic start and exponential end
+// 
+// https://www.desmos.com/calculator/qgufa0j0p3
+double cubicMagicScale(double x) {
+        // constants
+        const double a = 4; // dialation
+        const double b = -0.15;
+        const double c = 0.5; // x translation
+        const double d = 0.35; // y translation
+
+        const double abs_x = std::abs(x);
+        double sgn_x;
+        if (abs_x < 0.01) // stick drift
+                return 0;
+        else if (x > 0)
+                sgn_x = 1;
+        else
+                sgn_x = -1;
+
+        double abs_y = a * (abs_x - c)*(abs_x - c) * (abs_x - c - b) + d;
+
+        return abs_y * sgn_x;
+}
+
 // Daniel's magic input scaling function.
 //
 // Logarithmic start to overcome deadzone with a linear end with the gradient of ~0.7.
@@ -91,11 +117,11 @@ double danielsMagicScale(double x) {
 
 // Curve desaturation of arcade drive (curtesy of my self)
 void curveArcade(double x, double y) {
-        double throttle = danielsMagicScale(y);
-        double steer = danielsMagicScale(x);
+        double throttle = cubicMagicScale(y);
+        double steer = cubicMagicScale(x);
 
-        double ldr = throttle + steer * std::min((1.6 - std::abs(throttle)), 1.0);
-        double rdr = throttle - steer * std::min((1.6 - std::abs(throttle)), 1.0);
+        double ldr = throttle + steer * std::min((1.75 - std::abs(throttle)), 1.0);
+        double rdr = throttle - steer * std::min((1.75 - std::abs(throttle)), 1.0);
 
         // drive it
         left_dt.move_voltage((int) (ldr * 12000.0));
