@@ -9,7 +9,7 @@
 
 // The robot's intake roller
 pros::Motor tower_intake(
-        -14,
+        -2,
         pros::MotorGearset::green
 );
 
@@ -24,6 +24,7 @@ pros::adi::DigitalOut snacky_pnu('F');
 
 // The ADI port of the 'barrel'
 pros::adi::DigitalOut barrel_pnu('A');
+pros::adi::DigitalOut barrel_pnu2('C');
 
 // The ADI port of the 'gate'
 pros::adi::DigitalOut gate_pnu('B');
@@ -34,10 +35,10 @@ pros::Motor lever_motor(
         pros::MotorGearset::green
 );
 // The lever rotation sensor port
-pros::Rotation lever_rotation(19);
+pros::Rotation lever_rotation(14);
 
 // The tower outtake speed
-double outtake_speed = 0.5;
+double outtake_speed = 1.0;
 
 // Lever scoring middle goal speed
 double lever_middle_speed = 0.5;
@@ -57,10 +58,22 @@ void initTower() {
 // check if the lever is in bounds, if not, stop it
 void TowerState::leverBoundCheck() {
         int32_t rotation = lever_rotation.get_position();
-        // check if the lever's toggled backwards or forwards
-        if (!lever_active && rotation < 4000 || lever_active && rotation > 40000) { // toggled on and already in the back
-                // stop the lever
-                moveLever(0);
+
+        // if the rotation sensor disconnects
+        if (rotation == PROS_ERR) {
+                if (lever_motor.get_current_draw() > 2400)
+                        moveLever(0);
+                return;
+        }
+
+        // check if the lever hits the lower bound
+        if (!lever_active && rotation < 4000)
+                moveLever(0); // stop the lever
+
+        // check if the lever hits the upper bound
+        if (lever_active && rotation > 40000) {
+                lever_active = false;
+                moveLever(-1.0); // move the lever back
         }
 }
 
@@ -100,7 +113,7 @@ void TowerState::controls() {
         pros::Controller master(pros::E_CONTROLLER_MASTER);
 
         // check for the intake toggle and out-take hold
-        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN) && !lever_active) { // only when lever is down
                 intake = !intake;
                 if (intake) { // rumble when active
                         master.rumble(".");
@@ -129,7 +142,7 @@ void TowerState::controls() {
                                 moveLever(0.5);
                 } else {
                         gate_pnu.set_value(false);
-                        moveLever(-0.5);
+                        moveLever(-1.0);
                 }
         }
         // lever bounds check
@@ -139,6 +152,7 @@ void TowerState::controls() {
         if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1) && !lever_active) {
                 score_top = !score_top;
                 barrel_pnu.set_value(score_top);
+                barrel_pnu2.set_value(score_top);
                 if (score_top) // rumble on barrel scoring top
                         master.rumble(".");
         }

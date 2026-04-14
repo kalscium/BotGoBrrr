@@ -80,7 +80,7 @@ double cubicMagicScale(double x) {
 
         const double abs_x = std::abs(x);
         double sgn_x;
-        if (abs_x < 0.01) // stick drift
+        if (abs_x == 0) // stick drift
                 return 0;
         else if (x > 0)
                 sgn_x = 1;
@@ -118,10 +118,12 @@ double danielsMagicScale(double x) {
 // Curve desaturation of arcade drive (curtesy of my self)
 void curveArcade(double x, double y) {
         double throttle = cubicMagicScale(y);
-        double steer = cubicMagicScale(x);
+        double steer = x;
 
         double ldr = throttle + steer * std::min((1.75 - std::abs(throttle)), 1.0);
         double rdr = throttle - steer * std::min((1.75 - std::abs(throttle)), 1.0);
+        // double ldr = throttle * std::min((1.8 - std::abs(steer)), 1.0) + steer;
+        // double rdr = throttle * std::min((1.8 - std::abs(steer)), 1.0) - steer;
 
         // drive it
         left_dt.move_voltage((int) (ldr * 12000.0));
